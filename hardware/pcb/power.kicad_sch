@@ -3283,6 +3283,12 @@
 		(uuid "c6de1aad-ed2c-4c5a-a008-f4d7f120b30d")
 	)
 	(junction
+		(at 86.36 66.04)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2add564e-97ca-40fe-b8bc-21945cb389c6")
+	)
+	(junction
 		(at 38.1 96.52)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3295,6 +3301,12 @@
 		(uuid "415a91f8-00e4-4c2e-8c4f-1160e02ccabc")
 	)
 	(junction
+		(at 86.36 157.48)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "5e0cc6bf-0290-42ec-9f66-14186806d361")
+	)
+	(junction
 		(at 53.34 78.74)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3305,6 +3317,18 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "78fe47f5-daee-4334-9ea0-3a195a230654")
+	)
+	(junction
+		(at 76.2 63.5)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "8afe8c4e-6148-4af5-9fbd-4414be4d35da")
+	)
+	(junction
+		(at 76.2 154.94)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "cd420452-5d37-4db2-afe9-1bac2cd94af9")
 	)
 	(junction
 		(at 53.34 170.18)
@@ -3386,6 +3410,26 @@
 	)
 	(wire
 		(pts
+			(xy 86.36 66.04) (xy 88.9 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7281e952-59d9-49aa-b322-bcb85cccedfe")
+	)
+	(wire
+		(pts
+			(xy 76.2 63.5) (xy 88.9 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7ae222bf-9d96-4811-bf8f-9c109c4d9b09")
+	)
+	(wire
+		(pts
 			(xy 53.34 157.48) (xy 86.36 157.48)
 		)
 		(stroke
@@ -3423,6 +3467,16 @@
 			(type default)
 		)
 		(uuid "a5e8badc-3419-4c35-8dd8-1d59529fed60")
+	)
+	(wire
+		(pts
+			(xy 76.2 154.94) (xy 88.9 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a9533d5d-7dce-4d28-891b-67b017a6ed3e")
 	)
 	(wire
 		(pts
@@ -3493,6 +3547,16 @@
 			(type default)
 		)
 		(uuid "e71f3285-de91-4c48-bb1f-f00141e928f5")
+	)
+	(wire
+		(pts
+			(xy 86.36 157.48) (xy 88.9 157.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e78ae7e9-d608-434e-aef5-f935f9ae651e")
 	)
 	(wire
 		(pts
@@ -3814,6 +3878,30 @@
 		)
 		(uuid "ee538558-2ef6-4c95-8b63-f421c7679893")
 	)
+	(global_label "CC1_B"
+		(shape passive)
+		(at 88.9 63.5 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "02deefa7-8d3a-45ee-81fd-6df213247b46")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 96.761 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
 	(global_label "USB_B_D+"
 		(shape input)
 		(at 76.2 93.98 180)
@@ -4051,6 +4139,30 @@
 			)
 		)
 	)
+	(global_label "CC2_B"
+		(shape passive)
+		(at 88.9 66.04 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "548cc3fb-b771-4352-9773-1b649cab3300")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 96.761 66.04 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
 	(global_label "USB_A_D+"
 		(shape bidirectional)
 		(at 55.88 170.18 0)
@@ -4088,6 +4200,30 @@
 		(uuid "5fc5375f-98cf-4340-a0fa-a3e5f1e1ee8d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 99.2028 93.98 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
+	(global_label "CC2_A"
+		(shape passive)
+		(at 88.9 157.48 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "79dba72c-6198-4438-915e-135ff16c3748")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 96.5796 157.48 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4254,6 +4390,30 @@
 		(uuid "d947ed21-c0b5-478d-8ff1-c90f50eed0b1")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 99.2028 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
+	(global_label "CC1_A"
+		(shape passive)
+		(at 88.9 154.94 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "db7d0229-b1f5-4bc7-9920-3516128aeeae")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 96.5796 154.94 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6112,7 +6272,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12"
 			(at 41.91 73.66 0)
 			(hide yes)
 			(show_name no)
@@ -6136,6 +6296,17 @@
 		)
 		(property "Description" "USB 2.0-only 16P Type-C Receptacle connector"
 			(at 38.1 73.66 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C165948"
+			(at 41.91 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10971,7 +11142,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12"
 			(at 41.91 165.1 0)
 			(hide yes)
 			(show_name no)
@@ -10995,6 +11166,17 @@
 		)
 		(property "Description" "USB 2.0-only 16P Type-C Receptacle connector"
 			(at 38.1 165.1 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C165948"
+			(at 41.91 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

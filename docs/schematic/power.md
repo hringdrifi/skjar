@@ -25,6 +25,8 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 ## 2. USB-C コネクタ（2個：J_A = Port A、J_B = Port B）
 
 シンボル：`Connector:USB_C_Receptacle_USB2.0_16P`
+部品：HRO TYPE-C-31-M-12（LCSC **C165948**）
+フットプリント：`Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12`
 
 | ピン | 接続 |
 |---|---|
