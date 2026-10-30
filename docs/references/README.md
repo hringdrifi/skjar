@@ -135,3 +135,18 @@ IPEX-1 のアンテナ端子は、右の辺の上寄り（下の辺から 17.225
 | ファイル | 内容 |
 |---|---|
 | `tps2121.pdf` | TPS2120 / TPS2121 データシート（SLVSEA3F）。出典: [TI](https://www.ti.com/lit/ds/symlink/tps2121.pdf) |
+| `tps22965.pdf` | TPS22965 データシート（SLVSBJ0F）。出典: [TI](https://www.ti.com/lit/ds/symlink/tps22965.pdf) |
+
+## rtc/ — RTC
+
+| ファイル | 内容 |
+|---|---|
+| `pcf8563.pdf` | PCF8563 データシート（NXP、Rev. 11.1）。出典: [NXP](https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf) |
+| `rv-8263-c7.pdf` | RV-8263-C7 データシート（概要版）。出典: [Micro Crystal](https://www.microcrystal.com/fileadmin/Media/Products/RTC/Datasheet/RV-8263-C7.pdf)。**不採用**（PCF8563T に変更） |
+
+**PCF8563T（SO-8）の要点**
+- ピン配置：1 OSCI、2 OSCO、3 INT、4 VSS、5 SDA、6 SCL、7 CLKOUT、8 VDD。
+- 計時は VDD 1.0〜5.5 V、I²C は 1.8 V 以上。
+- SDA / SCL / OSCI の入力の絶対最大定格は −0.5〜+6.5 V で、VDD に依存しない。
+- INT と CLKOUT はオープンドレイン。発振用のコンデンサを内蔵している。
+- 特性表は、負荷容量 8 pF、Rs 40 kΩ の水晶が前提。

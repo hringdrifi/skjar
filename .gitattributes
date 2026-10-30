@@ -1,0 +1,6 @@
+# 3D models are redistributed unmodified; never convert their line endings
+*.step -text
+*.stp -text
+*.wrl -text
+*.pdf binary
+*.png binary

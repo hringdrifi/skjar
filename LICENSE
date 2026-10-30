@@ -24,3 +24,9 @@ Third-party materials (datasheets, drawings, certification reports, and
 other documents published by their respective owners) are NOT included
 in this repository. docs/references/README.md only links to their
 original sources and summarizes the facts used in the design.
+
+Exception: the 3D models under hardware/pcb/lib/3dmodels/koktoh/ are
+the work of koktoh (https://github.com/koktoh/keyswitch_model) and are
+redistributed unmodified under the author's CC BY-NC-SA license. They
+are NOT covered by the SKJÁR licenses above. See
+hardware/pcb/lib/3dmodels/koktoh/README.md.

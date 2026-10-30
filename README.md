@@ -67,7 +67,7 @@ SKJÁR では、ディスプレイを「おまけ」として扱いません。�
 | キーボード用マイコン | RP2040（PC への HID、電源の判断、CC の判定） |
 | ディスプレイ | Waveshare 8.8inch DSI LCD または 8.8-DSI-TOUCH-A（480×1920、10点タッチ、DSI 2レーン） |
 | 電源 | USB-C ×2、5 V 専用（PD なし）、上限 15 W。TPS2121 で切り替え |
-| RTC | RV-8263-C7 ＋ CR2032 |
+| RTC | PCF8563T ＋ 32.768 kHz 水晶 ＋ CR2032 |
 | 音声 | MAX98357A（I²S アンプ）＋ スピーカー（後付け） |
 | OS | Raspberry Pi OS Lite。デスクトップ環境は使わず、専用 UI を直接起動する |
 
@@ -85,12 +85,23 @@ SKJÁR では、ディスプレイを「おまけ」として扱いません。�
 
 ```text
 README.md                 この文書
-docs/
+LICENSE, LICENSES/        ライセンスの説明と全文
+docs/                     文書（CC BY-SA 4.0）
 ├─ design-decisions.md    設計判断の記録
 ├─ open-items.md          残件
+├─ protocol.md            RP2040 ↔ CM0 の通信仕様
+├─ pin-assignment.md      ピンの割り当てとシート間の信号
+├─ schematic/             回路図のシートごとの仕様（部品、接続、定数）
 └─ references/README.md   参照した一次資料の出典と要点
-LICENSE                   ライセンスの説明
-LICENSES/                 各ライセンスの全文
+hardware/                 ハードウェア（CERN-OHL-S-2.0）
+├─ pcb/                   KiCad 10 のプロジェクト（lib/：専用部品、production/：製造用データ）
+├─ layout/                キー配列
+└─ case/                  ケース
+firmware/                 ファームウェア（MIT）
+└─ rp2040/                キーボードと電源管理
+software/                 CM0 側のソフトウェア（MIT）
+├─ ui/                    専用 UI
+└─ os/                    OS の設定とイメージ作成
 ```
 
 他社の資料（データシート、図面、技適の試験成績書など）は、著作権の都合でリポジトリに含めていません。出典のリンクは [docs/references/README.md](docs/references/README.md) にあります。
