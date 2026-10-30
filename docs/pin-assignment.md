@@ -14,7 +14,7 @@
 | `+5V` | power | TPS2121 の出力。常に入っている 5V | 全シート |
 | `+5V_LCD` | power | LCD 用の負荷スイッチ（TPS22965）の出力 | display |
 | `+3V3` | power | `+5V` から作る常時 ON の 3.3V（RP2040 用のレギュレータ） | rp2040、peripherals（RTC の電源の片側）、プルアップ |
-| `CM0_3V3` | cm0 | CM0 の 3.3V 出力。CM0 が OFF のときは 0V | cm0（GPIO_VREF、UART のバッファ）、display（FPC の 3V3） |
+| `+3V3_CM0` | cm0 | CM0 の 3.3V 出力。CM0 が OFF のときは 0V | cm0（GPIO_VREF、UART のバッファ）、display（FPC の 3V3） |
 | `VBAT` | peripherals | CR2032 | peripherals のみ |
 
 ---
@@ -32,7 +32,7 @@
 | `LCD_EN` | rp2040 → power | LCD 用の負荷スイッチの ON。プルダウンして初期状態は OFF |
 | `CM0_PWROFF` | rp2040 → cm0 | GLOBAL_EN を Low に引く N-MOSFET のゲート。**High で CM0 が OFF**。プルアップして初期状態は OFF |
 | `BOOT_EN` | rp2040 → cm0 | CM0 の USB ブート要求。cm0 シートの N-MOSFET（Q202）で nRPI_BOOT を Low に引く。スイッチ（`BOOT_SW`）は rp2040 シート内だけで完結する |
-| `RP_TXD` | rp2040 → cm0 | RP2040 の UART TX。cm0 シートのバッファ（SN74LVC1G125、CM0_3V3 で動作）を通して CM0 の GPIO15 へ |
+| `RP_TXD` | rp2040 → cm0 | RP2040 の UART TX。cm0 シートのバッファ（SN74LVC1G125、+3V3_CM0 で動作）を通して CM0 の GPIO15 へ |
 | `CM0_TXD` | cm0 → rp2040 | CM0 の GPIO14 → RP2040 の UART RX |
 | `CM0_RUN_PG` | cm0 → rp2040 | CM0 の RUN_PG（電源正常、CPU 動作中） |
 | `CM0_HALT` | cm0 → rp2040 | シャットダウン完了の通知（CM0 の `gpio-poweroff`） |
@@ -96,7 +96,7 @@
 | nRPI_BOOT（121） | ← N-MOSFET（Q202）のドレイン | 内部でプルアップあり。RP2040 の `BOOT_EN` で Low に引く |
 | WiFi_ON（116）/ BT_ON（117） | 未接続 | 内部でプルアップされ、有効になる |
 | LED_nACT（118） | テストパッド（または LED） | |
-| GPIO_VREF（120） | `CM0_3V3` | 3.3V の信号にする |
+| GPIO_VREF（120） | `+3V3_CM0` | 3.3V の信号にする |
 | SD_VREF（122）、SD_*（124〜131） | 未接続 | CM0Lite 専用 |
 | GPIO0〜1、4〜13、16〜17、20、23〜25 | 未使用 | テストパッドを付ける候補 |
 

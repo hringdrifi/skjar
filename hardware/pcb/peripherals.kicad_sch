@@ -2594,29 +2594,7 @@
 		)
 		(uuid "e3958245-bcab-4e01-8446-94d3f72ba83e")
 	)
-	(global_label "CM0_3V3"
-		(shape passive)
-		(at 170.18 95.25 90)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "02f4c8b9-3571-40bb-993e-3b31dd53d2fb")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 170.18 95.25 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+
 	(global_label "I2C1_SCL"
 		(shape passive)
 		(at 137.16 83.82 0)
@@ -4737,6 +4715,62 @@
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
 					(reference "#PWR122")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 170.18 95.25 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "884a0441-8197-49a9-a5f9-8686ef5f9c8a")
+		(property "Reference" "#PWR185"
+			(at 170.18 95.25 0)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3_CM0"
+			(at 170.18 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 170.18 95.25 0)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 170.18 95.25 0)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c723a22b-ddf3-42f1-b466-1531eea848ae")
+		)
+		(instances
+			(project "skjar"
+				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
+					(reference "#PWR185")
 					(unit 1)
 				)
 			)

@@ -19,7 +19,7 @@
 
 | ユニット | 接続 |
 |---|---|
-| Power | 5V（67, 68）→ `+5V`（10 µF ＋ 100 nF）。CM0_3.3V（41, 119）→ `CM0_3V3`。GPIO_VREF（120）・SD_VREF（122）→ `CM0_3V3`。CM0_1.8V（64, 65）→ `CM0_1V8`（テストパッドのみ）。GND（43本）→ GND |
+| Power | 5V（67, 68）→ `+5V`（10 µF ＋ 100 nF）。CM0_3.3V（41, 119）→ `+3V3_CM0`。GPIO_VREF（120）・SD_VREF（122）→ `+3V3_CM0`。CM0_1.8V（64, 65）→ `+1V8_CM0`（テストパッドのみ）。GND（43本）→ GND |
 | Display/Camera | DSI の 4 レーンとクロック → `DSI_*`（display へ）。SDA0 / SCL0 → `I2C_DSI_SDA` / `I2C_DSI_SCL`。CSI、HDMI、CVBS、CAM_GPIO は未接続 |
 | GPIO | GPIO2 / 3 → `I2C1_SDA` / `I2C1_SCL`。GPIO14 → `CM0_TXD`。GPIO15 ← `CM0_RXD`（バッファの出力）。GPIO18 / 19 / 21 → `I2S_BCLK` / `I2S_LRCLK` / `I2S_DOUT`。GPIO22 → `AMP_SD`。GPIO26 → `CM0_HALT`。GPIO27 ← `RTC_INT`。ほかは未接続 |
 | System | USB_P / USB_N ← `USB_B_D+` / `USB_B_D-`。GLOBAL_EN ← Q201。RUN_PG → `CM0_RUN_PG`。nRPI_BOOT ← Q202。WiFi_ON / BT_ON / LED_nACT → テストパッドのみ。USB_OTG、SD_*、NC は未接続 |
@@ -44,14 +44,14 @@
 | ~OE（1） | GND（常に有効） |
 | A（2） | `RP_TXD`（RP2040 の TX） |
 | Y（4） | `CM0_RXD`（CM0 の GPIO15） |
-| VCC（5） | `CM0_3V3`（100 nF） |
+| VCC（5） | `+3V3_CM0`（100 nF） |
 | GND（3） | GND |
 
-- CM0 が OFF だと `CM0_3V3` が 0V になり、バッファの出力が切り離される（Ioff）。
+- CM0 が OFF だと `+3V3_CM0` が 0V になり、バッファの出力が切り離される（Ioff）。
 
 ## 6. テストパッド
 
-`CM0_3V3`、`CM0_1V8`、`CM0_RUN_PG`、GLOBAL_EN、nRPI_BOOT、`CM0_TXD`、`CM0_RXD`、LED_nACT、WiFi_ON、BT_ON。
+`+3V3_CM0`、`+1V8_CM0`、`CM0_RUN_PG`、GLOBAL_EN、nRPI_BOOT、`CM0_TXD`、`CM0_RXD`、LED_nACT、WiFi_ON、BT_ON。
 
 ## 7. シート外とつなぐグローバルラベル
 
@@ -61,4 +61,4 @@
 | `CM0_TXD`、`CM0_RUN_PG`、`CM0_HALT`、`DSI_*`（10 本）、`I2S_*`（3 本）、`AMP_SD` | 出力 |
 | `I2C_DSI_SDA` / `I2C_DSI_SCL`、`I2C1_SDA` / `I2C1_SCL` | 双方向 |
 
-**`CM0_3V3` はシートをまたぐ電源**（display、peripherals でも使う）。グローバルラベルか、専用の電源シンボルで扱う。
+**`+3V3_CM0` はシートをまたぐ電源**（display、peripherals でも使う）。`power:+3V3` の値を `+3V3_CM0` に書き換えた電源記号で扱う（`+1V8_CM0` も同じく `power:+1V8` から）。
