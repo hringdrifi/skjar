@@ -4244,7 +4244,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Crystal:Crystal_SMD_3215-2Pin_3.2x1.5mm"
 			(at 93.98 88.9 0)
 			(hide yes)
 			(show_name no)
@@ -4277,7 +4277,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C32346"
+		(property "LCSC" "C479190"
 			(at 93.98 88.9 0)
 			(hide yes)
 			(show_name no)

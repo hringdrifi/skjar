@@ -7,7 +7,7 @@
 | 記号 | 部品 | シンボル | LCSC |
 |---|---|---|---|
 | U401 | PCF8563T（SO-8） | `Timer_RTC:PCF8563T` | C7440（Preferred） |
-| Y401 | 32.768 kHz（Epson FC-135、負荷容量 12.5 pF） | `Device:Crystal` | C32346（Basic） |
+| Y401 | 32.768 kHz（JGHC S3132768092070、負荷容量 9 pF。フットプリント `Crystal:Crystal_SMD_3215-2Pin_3.2x1.5mm`） | `Device:Crystal` | C479190（Extended、手持ち） |
 | D401 | BAT54C | `Diode:BAT54C` | Extended |
 | BT401 | CR2032 ホルダー MY-2032-08 | `Device:Battery_Cell` | C964831 |
 
