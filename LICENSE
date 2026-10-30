@@ -1,0 +1,26 @@
+SKJÁR licensing
+===============
+
+Copyright (c) 2026 hringdrifi
+
+This repository contains hardware designs, software, and documentation.
+Each part is released under a different license:
+
+- Hardware design files (schematics, PCB layouts, enclosure designs)
+  are licensed under the CERN Open Hardware Licence Version 2 -
+  Strongly Reciprocal (CERN-OHL-S-2.0).
+  See LICENSES/CERN-OHL-S-2.0.txt.
+
+- Software (firmware, UI applications, scripts)
+  is licensed under the MIT License.
+  See LICENSES/MIT.txt.
+
+- Documentation (README.md and files under docs/)
+  is licensed under the Creative Commons Attribution-ShareAlike 4.0
+  International License (CC BY-SA 4.0).
+  See LICENSES/CC-BY-SA-4.0.txt.
+
+Third-party materials (datasheets, drawings, certification reports, and
+other documents published by their respective owners) are NOT included
+in this repository. docs/references/README.md only links to their
+original sources and summarizes the facts used in the design.

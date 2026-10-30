@@ -1,0 +1,13 @@
+# 他社の資料（再配布の可否が不明なため、手元にだけ置く）
+docs/references/**/*.pdf
+docs/references/**/*.stp
+docs/references/**/*.step
+docs/references/**/*.zip
+docs/references/**/*.dwg
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
