@@ -1,0 +1,149 @@
+// SKJAR audio: TLV320DAC3100 on I2C1 (0x18) and I2S (GPIO18/19/21)
+//
+// Build and install (on the CM0):
+//   dtc -@ -I dts -O dtb -o skjar-audio.dtbo skjar-audio-overlay.dts
+//   sudo cp skjar-audio.dtbo /boot/firmware/overlays/
+//
+// config.txt:
+//   dtparam=i2c_arm=on
+//   dtparam=i2s=on
+//   dtparam=audio=off
+//   dtoverlay=skjar-audio
+//
+// A 12 MHz oscillator (Y402) drives MCLK and the codec is the I2S clock
+// master; the Pi only receives BCLK and LRCLK. simple-audio-card calls
+// set_sysclk() with clk_id 0 (MCLK), which is what this setup needs, so
+// the stock tlv320aic31xx driver works as is. See README.md.
+//
+// GPIO17 (HP_DET) is low when a plug is inserted. GPIO22 is the codec
+// reset (active low).
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	// I2S, codec drives BCLK and LRCLK
+	fragment@0 {
+		target = <&i2s_clk_consumer>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	// Fixed supplies (all always on)
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			vdd_5v_spk: skjar-audio-5v {
+				compatible = "regulator-fixed";
+				regulator-name = "skjar-spkvdd";
+				regulator-min-microvolt = <5000000>;
+				regulator-max-microvolt = <5000000>;
+				regulator-always-on;
+			};
+
+			vdd_3v3_audio: skjar-audio-3v3 {
+				compatible = "regulator-fixed";
+				regulator-name = "skjar-avdd";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+
+			vdd_1v8_audio: skjar-audio-1v8 {
+				compatible = "regulator-fixed";
+				regulator-name = "skjar-dvdd";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+		};
+	};
+
+	// Codec on I2C1 (PCF8563 at 0x51 is added by i2c-rtc,pcf8563)
+	fragment@2 {
+		target = <&i2c1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			dac3100: codec@18 {
+				compatible = "ti,tlv320dac3100";
+				reg = <0x18>;
+				#sound-dai-cells = <0>;
+				reset-gpios = <&gpio 22 1>;	// GPIO_ACTIVE_LOW
+
+				HPVDD-supply = <&vdd_3v3_audio>;
+				SPRVDD-supply = <&vdd_5v_spk>;
+				SPLVDD-supply = <&vdd_5v_spk>;
+				AVDD-supply = <&vdd_3v3_audio>;
+				IOVDD-supply = <&vdd_3v3_audio>;
+				DVDD-supply = <&vdd_1v8_audio>;
+
+				status = "okay";
+			};
+		};
+	};
+
+	// HP_DET: input, internal pull off (the default pull-down on
+	// GPIO17 would fight the 100k board pull-up)
+	fragment@3 {
+		target = <&gpio>;
+		__overlay__ {
+			skjar_audio_pins: skjar_audio_pins {
+				brcm,pins = <17>;
+				brcm,function = <0>;	// input
+				brcm,pull = <0>;	// none
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <&sound>;
+		sound_overlay: __overlay__ {
+			compatible = "simple-audio-card";
+			simple-audio-card,name = "skjar";
+			simple-audio-card,format = "i2s";
+			simple-audio-card,bitclock-master = <&codec_dai>;
+			simple-audio-card,frame-master = <&codec_dai>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&skjar_audio_pins>;
+
+			// Creates the "Headphones Jack" control and enables
+			// the Headphones pin only while a plug is in
+			simple-audio-card,hp-det-gpios = <&gpio 17 1>;	// active low
+
+			simple-audio-card,widgets =
+				"Headphone", "Headphones",
+				"Speaker", "Internal Speaker";
+			simple-audio-card,routing =
+				"Headphones", "HPL",
+				"Headphones", "HPR",
+				"Internal Speaker", "SPK";
+			// "Internal Speaker Switch", muted from userspace
+			// while "Headphones Jack" is on
+			simple-audio-card,pin-switches = "Internal Speaker";
+
+			status = "okay";
+
+			simple-audio-card,cpu {
+				sound-dai = <&i2s_clk_consumer>;
+			};
+
+			// MCLK from Y402. No mclk-fs: the rate is fixed and
+			// the driver picks its PLL settings from this value.
+			codec_dai: simple-audio-card,codec {
+				sound-dai = <&dac3100>;
+				system-clock-frequency = <12000000>;
+			};
+		};
+	};
+
+	__overrides__ {
+		card-name = <&sound_overlay>, "simple-audio-card,name";
+	};
+};

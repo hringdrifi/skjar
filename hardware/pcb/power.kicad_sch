@@ -1779,6 +1779,163 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Regulator_Linear:AP2127N-3.3"
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U"
+				(at -3.81 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "AP2127N-3.3"
+				(at 0 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+				(at 0 5.715 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+				)
+			)
+			(property "Datasheet" "https://www.diodes.com/assets/Datasheets/AP2127.pdf"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "300mA low dropout linear regulator, shutdown pin, 2.5V-6V input voltage, 3.3V fixed positive output, SOT-23 package"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "linear regulator ldo fixed positive"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "AP2127N-3.3_0_1"
+				(rectangle
+					(start -5.08 1.905)
+					(end 5.08 -5.08)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "AP2127N-3.3_1_1"
+				(pin power_in line
+					(at 0 -7.62 90)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 7.62 0 180)
+					(length 2.54)
+					(name "VO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -7.62 0 0)
+					(length 2.54)
+					(name "VI"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Regulator_Linear:XC6206PxxxMR"
 			(pin_names
 				(offset 0.254)
@@ -2292,7 +2449,7 @@
 					)
 				)
 			)
-			(property "Footprint" ""
+			(property "Footprint" "Package_SON:Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm"
 				(at 0 -16.51 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -3185,158 +3342,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Regulator_Linear:AP2127N-3.3"
-			(pin_names
-				(offset 0.254)
-			)
-			(property "Reference" "U"
-				(at -3.81 3.175 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "AP2127N-3.3"
-				(at 0 3.175 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-				(at 0 5.715 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(italic yes)
-					)
-				)
-			)
-			(property "Datasheet" "https://www.diodes.com/assets/Datasheets/AP2127.pdf"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "300mA low dropout linear regulator, shutdown pin, 2.5V-6V input voltage, 3.3V fixed positive output, SOT-23 package"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "linear regulator ldo fixed positive"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "SOT?23*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(embedded_fonts no)
-				(symbol "AP2127N-3.3_0_1"
-				(rectangle
-					(start -5.08 1.905)
-					(end 5.08 -5.08)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-			)
-			(symbol "AP2127N-3.3_1_1"
-				(pin power_in line
-					(at 0 -7.62 90)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_out line
-					(at 7.62 0 180)
-					(length 2.54)
-					(name "VO"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -7.62 0 0)
-					(length 2.54)
-					(name "VI"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-		)
 	)
 	(text "常時 ON 3.3V"
 		(exclude_from_sim no)
@@ -4137,7 +4142,7 @@
 		(uuid "fcef6071-9d23-4af3-a014-780dc7a4975e")
 	)
 	(global_label "CC1_B"
-		(shape passive)
+		(shape output)
 		(at 101.6 86.36 0)
 		(fields_autoplaced yes)
 		(effects
@@ -4233,7 +4238,7 @@
 		)
 	)
 	(global_label "USB_A_D-"
-		(shape input)
+		(shape bidirectional)
 		(at 88.9 210.82 180)
 		(fields_autoplaced yes)
 		(effects
@@ -4257,7 +4262,7 @@
 		)
 	)
 	(global_label "USB_A_D+"
-		(shape input)
+		(shape bidirectional)
 		(at 88.9 208.28 180)
 		(fields_autoplaced yes)
 		(effects
@@ -4305,7 +4310,7 @@
 		)
 	)
 	(global_label "PWR_ST"
-		(shape input)
+		(shape output)
 		(at 233.68 170.18 270)
 		(fields_autoplaced yes)
 		(effects
@@ -4329,7 +4334,7 @@
 		)
 	)
 	(global_label "USB_A_D+"
-		(shape input)
+		(shape bidirectional)
 		(at 99.06 208.28 0)
 		(fields_autoplaced yes)
 		(effects
@@ -4353,7 +4358,7 @@
 		)
 	)
 	(global_label "CC2_B"
-		(shape passive)
+		(shape output)
 		(at 101.6 88.9 0)
 		(fields_autoplaced yes)
 		(effects
@@ -4425,7 +4430,7 @@
 		)
 	)
 	(global_label "CC2_A"
-		(shape passive)
+		(shape output)
 		(at 101.6 180.34 0)
 		(fields_autoplaced yes)
 		(effects
@@ -4449,7 +4454,7 @@
 		)
 	)
 	(global_label "USB_A_D-"
-		(shape input)
+		(shape bidirectional)
 		(at 99.06 210.82 0)
 		(fields_autoplaced yes)
 		(effects
@@ -4569,7 +4574,7 @@
 		)
 	)
 	(global_label "CC1_A"
-		(shape passive)
+		(shape output)
 		(at 101.6 177.8 0)
 		(fields_autoplaced yes)
 		(effects
@@ -4636,17 +4641,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C15849"
-			(at 358.14 173.99 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 358.14 173.99 0)
 			(hide yes)
@@ -4659,6 +4653,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 358.14 173.99 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C15849"
 			(at 358.14 173.99 0)
 			(hide yes)
 			(show_name no)
@@ -4715,7 +4720,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 223.52 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -4881,17 +4886,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C31850"
-			(at 198.12 110.49 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 198.12 110.49 0)
 			(hide yes)
@@ -4904,6 +4898,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 198.12 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C31850"
 			(at 198.12 110.49 0)
 			(hide yes)
 			(show_name no)
@@ -4960,7 +4965,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 238.76 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -5036,7 +5041,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 208.28 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -5279,17 +5284,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C23196"
-			(at 171.45 110.49 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 171.45 110.49 0)
 			(hide yes)
@@ -5302,6 +5296,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 171.45 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23196"
 			(at 171.45 110.49 0)
 			(hide yes)
 			(show_name no)
@@ -5600,17 +5605,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C15849"
-			(at 337.82 173.99 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 337.82 173.99 0)
 			(hide yes)
@@ -5623,6 +5617,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 337.82 173.99 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C15849"
 			(at 337.82 173.99 0)
 			(hide yes)
 			(show_name no)
@@ -5679,7 +5684,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 193.04 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -5845,17 +5850,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C22984"
-			(at 226.06 105.41 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 226.06 105.41 0)
 			(hide yes)
@@ -5868,6 +5862,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 226.06 105.41 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C22984"
 			(at 226.06 105.41 0)
 			(hide yes)
 			(show_name no)
@@ -6013,17 +6018,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C23172"
-			(at 189.23 110.49 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 189.23 110.49 0)
 			(hide yes)
@@ -6036,6 +6030,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 189.23 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23172"
 			(at 189.23 110.49 0)
 			(hide yes)
 			(show_name no)
@@ -6105,17 +6110,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C1588"
-			(at 359.41 87.63 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 359.41 87.63 0)
 			(hide yes)
@@ -6128,6 +6122,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 359.41 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C1588"
 			(at 359.41 87.63 0)
 			(hide yes)
 			(show_name no)
@@ -6197,17 +6202,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C23186"
-			(at 99.06 186.69 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 99.06 186.69 0)
 			(hide yes)
@@ -6220,6 +6214,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 99.06 186.69 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23186"
 			(at 99.06 186.69 0)
 			(hide yes)
 			(show_name no)
@@ -6747,17 +6752,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C15849"
-			(at 160.02 85.09 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 160.02 85.09 0)
 			(hide yes)
@@ -6770,6 +6764,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 160.02 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C15849"
 			(at 160.02 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -7460,17 +7465,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C23186"
-			(at 88.9 95.25 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 88.9 95.25 0)
 			(hide yes)
@@ -7483,6 +7477,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 88.9 95.25 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23186"
 			(at 88.9 95.25 0)
 			(hide yes)
 			(show_name no)
@@ -7552,17 +7557,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C25803"
-			(at 189.23 102.87 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 189.23 102.87 0)
 			(hide yes)
@@ -7575,6 +7569,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 189.23 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C25803"
 			(at 189.23 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -7644,17 +7649,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C25803"
-			(at 171.45 102.87 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 171.45 102.87 0)
 			(hide yes)
@@ -7667,6 +7661,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 171.45 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C25803"
 			(at 171.45 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -7736,17 +7741,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C25803"
-			(at 180.34 102.87 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 180.34 102.87 0)
 			(hide yes)
@@ -7759,6 +7753,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 180.34 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C25803"
 			(at 180.34 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -7891,7 +7896,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 254 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -8073,17 +8078,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C25804"
-			(at 228.6 85.09 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 228.6 85.09 0)
 			(hide yes)
@@ -8096,6 +8090,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 228.6 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C25804"
 			(at 228.6 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -8318,17 +8323,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
-			(at 240.03 105.41 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 240.03 105.41 0)
 			(hide yes)
@@ -8341,6 +8335,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 240.03 105.41 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C14663"
 			(at 240.03 105.41 0)
 			(hide yes)
 			(show_name no)
@@ -8410,17 +8415,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C31850"
-			(at 180.34 110.49 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 180.34 110.49 0)
 			(hide yes)
@@ -8433,6 +8427,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 180.34 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C31850"
 			(at 180.34 110.49 0)
 			(hide yes)
 			(show_name no)
@@ -8730,17 +8735,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C25803"
-			(at 198.12 102.87 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 198.12 102.87 0)
 			(hide yes)
@@ -8753,6 +8747,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 198.12 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C25803"
 			(at 198.12 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -8991,7 +8996,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 177.8 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -9219,7 +9224,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_SON:Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm"
 			(at 347.98 97.79 0)
 			(hide yes)
 			(show_name no)
@@ -9418,7 +9423,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Skjar:Texas_RUX_VQFN-HR-12_2.5x2mm_P0.5mm"
 			(at 213.36 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -9791,17 +9796,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C23186"
-			(at 99.06 95.25 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 99.06 95.25 0)
 			(hide yes)
@@ -9814,6 +9808,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 99.06 95.25 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23186"
 			(at 99.06 95.25 0)
 			(hide yes)
 			(show_name no)
@@ -9870,7 +9875,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
 			(at 162.56 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -10111,17 +10116,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C96446"
-			(at 365.76 80.01 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 365.76 80.01 0)
 			(hide yes)
@@ -10134,6 +10128,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 365.76 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C96446"
 			(at 365.76 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -10507,17 +10512,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C15849"
-			(at 317.5 80.01 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 317.5 80.01 0)
 			(hide yes)
@@ -10530,6 +10524,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 317.5 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C15849"
 			(at 317.5 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -10751,17 +10756,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C15849"
-			(at 160.02 104.14 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 160.02 104.14 0)
 			(hide yes)
@@ -10774,6 +10768,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 160.02 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C15849"
 			(at 160.02 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -11300,17 +11305,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C96446"
-			(at 276.86 85.09 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 276.86 85.09 0)
 			(hide yes)
@@ -11323,6 +11317,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 276.86 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C96446"
 			(at 276.86 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -11545,17 +11550,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C96446"
-			(at 264.16 85.09 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 264.16 85.09 0)
 			(hide yes)
@@ -11568,6 +11562,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 264.16 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C96446"
 			(at 264.16 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -12217,7 +12222,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x7.7"
 			(at 252.4252 88.9 0)
 			(hide yes)
 			(show_name no)
@@ -12240,6 +12245,17 @@
 			)
 		)
 		(property "Description" "Polarized capacitor"
+			(at 251.46 85.09 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C46550459"
 			(at 251.46 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -12385,17 +12401,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C23186"
-			(at 88.9 186.69 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 88.9 186.69 0)
 			(hide yes)
@@ -12408,6 +12413,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 88.9 186.69 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23186"
 			(at 88.9 186.69 0)
 			(hide yes)
 			(show_name no)
@@ -12629,17 +12645,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C25803"
-			(at 334.01 87.63 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Datasheet" ""
 			(at 334.01 87.63 0)
 			(hide yes)
@@ -12652,6 +12657,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 334.01 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C25803"
 			(at 334.01 87.63 0)
 			(hide yes)
 			(show_name no)

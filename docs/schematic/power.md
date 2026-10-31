@@ -22,7 +22,7 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 
 ---
 
-## 2. USB-C コネクタ（2個：J_A = Port A、J_B = Port B）
+## 2. USB-C コネクタ（2個：J2 = Port A、J1 = Port B）
 
 シンボル：`Connector:USB_C_Receptacle_USB2.0_16P`
 部品：HRO TYPE-C-31-M-12（LCSC **C165948**）
@@ -63,7 +63,7 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 - **抜き差しの瞬間の跳ね上がり：** TPS2121 は入力が落ち着くのを待ってから、ソフトスタートで出力を出す。そのため、跳ね上がりは TPS2121 の入力で止まり、`+5V` には届かない。入力側は 22 V まで耐える。
 - **故障した充電器が高い電圧を出し続ける場合：** OV1 / OV2 でその入力を遮断する。TVS は一瞬のサージ向けで、続く過電圧には向かない。
 
-## 5. 電源切り替え：TPS2121（U_MUX）
+## 5. 電源切り替え：TPS2121（U3）
 
 シンボル：`Skjar:TPS2121RUX`（LCSC C485916）
 
@@ -95,9 +95,9 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 - 470〜1000 µF の低 ESR コンデンサ（ポリマー）＋ 10 µF のセラミック × 2。
 - USB の規格では VBUS に直接つないでよい容量は 10 µF までだが、TPS2121 より後ろなので、ソフトスタートで突入電流が抑えられる。
 
-## 6. LCD 用の負荷スイッチ：TPS22965（U_LCDSW）
+## 6. LCD 用の負荷スイッチ：TPS22965（U4）
 
-シンボル：`Skjar:TPS22965DSG`（LCSC C122837）
+シンボル：`Skjar:TPS22965DSG`（LCSC C122837）。フットプリント：`Package_SON:Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm`
 
 | ピン | 接続 | 定数 |
 |---|---|---|
@@ -108,7 +108,7 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 | VOUT（7, 8） | `+5V_LCD` | 10 µF のセラミックコンデンサを GND へ |
 | GND（5, 9） | GND | 9 は裏面の放熱パッド |
 
-## 7. 常時 ON の 3.3V：LDO（U_LDO）
+## 7. 常時 ON の 3.3V：LDO（U5）
 
 **AP2127N-3.3TRG1（Diodes、LCSC C176954、Extended。手持ちの在庫を使う）**。シンボルは `Regulator_Linear:AP2127N-3.3`、パッケージは SOT-23（1 GND、2 VOUT、3 VIN）。データシート DS36478 Rev. 7。
 
@@ -128,7 +128,7 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 
 | ラベル | 向き |
 |---|---|
-| `USB_A_D+` / `USB_A_D-` | 出力（→ rp2040） |
+| `USB_A_D+` / `USB_A_D-` | 双方向（↔ rp2040） |
 | `USB_B_D+` / `USB_B_D-` | 出力（→ cm0） |
 | `CC1_A` / `CC2_A` / `CC1_B` / `CC2_B` | 出力（→ rp2040） |
 | `PWR_ST` | 出力（→ rp2040） |
