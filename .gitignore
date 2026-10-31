@@ -10,6 +10,8 @@ hardware/pcb/lib/3dmodels/*
 !hardware/pcb/lib/3dmodels/README.md
 # koktoh 氏のモデルは再配布が許可されているので含める（CC BY-NC-SA。koktoh/README.md 参照）
 !hardware/pcb/lib/3dmodels/koktoh/
+# 自作モデル（寸法図から起こしたもの。lib/3dmodels/README.md 参照）
+!hardware/pcb/lib/3dmodels/8.8-DSI-TOUCH-A.step
 
 # KiCad の一時ファイルと個人の表示設定
 *-backups/
