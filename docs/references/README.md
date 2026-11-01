@@ -150,3 +150,15 @@ IPEX-1 のアンテナ端子は、右の辺の上寄り（下の辺から 17.225
 - SDA / SCL / OSCI の入力の絶対最大定格は −0.5〜+6.5 V で、VDD に依存しない。
 - INT と CLKOUT はオープンドレイン。発振用のコンデンサを内蔵している。
 - 特性表は、負荷容量 8 pF、Rs 40 kΩ の水晶が前提。
+
+## switch/ — キースイッチ
+
+| ファイル | 内容 |
+|---|---|
+| `SPEC-CPG135301D01_Kailh_Choc_V2_Low_Profile_Red_Switch.pdf` | Kailh Choc V2（PG1353、Red）の仕様書と図面（2020-04-15 版）。出典: [Kailh の仕様書（Shopify の CDN）](https://cdn.shopify.com/s/files/1/0657/6075/5954/files/SPEC-CPG135301D01_Kailh_Choc_V2_Low_Profile_Red_Switch.pdf?v=1666690444)（取得日 2026-11-01） |
+
+**推奨の穴の配置（Recommended PCB Layout、パターン面から見た図）の要点**
+- 中心の穴は Ø5.00。端子の穴は Ø1.20 が 2 個で、中心からの位置は 5.90 と、3.80 / 5.00。
+- ガイドピンの穴は 2 × 1.5 の長穴。中心から 5.15 / 5.00 の位置にある。
+- **LED は中心から 4.93**。端子と反対の側にある（キーの RGB の位置。[design-decisions.md](../design-decisions.md) の 6.1）。
+- 本体は 13.95 × 13.95 mm、天面は 15 × 15 mm。全ストロークは 3.2 mm、動作点は 1.3 mm。
