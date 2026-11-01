@@ -14,4 +14,4 @@ clone した人は、入手元から取得してこのフォルダに置く。
 
 | ファイル | 使っているフットプリント | 入手元 | ライセンス |
 |---|---|---|---|
-| `Low Profile Keycap 1U.step` | SW_Kailh_Choc_Hotswap | （未記入） | （未記入） |
+| `Low Profile Keycap <幅>U.step`（1U・1.25U・1.75U・2.25U・2.75U） | CPG135001S30_<幅>U | 前の基板 blad の `pcb/smidr.3dshapes/` からコピー（元の入手元は未記入） | （未記入） |

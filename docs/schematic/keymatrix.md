@@ -6,7 +6,7 @@
 
 | 記号 | 部品 | シンボル | フットプリント | LCSC |
 |---|---|---|---|---|
-| SW501〜SW542 | Kailh Choc V2 系（ホットスワップ） | `Switch:SW_Push` | `Skjar:SW_Kailh_Choc_Hotswap` | ソケットは仮に CPG135001S30（C5333465） |
+| SW501〜SW542 | Kailh Choc V2 系（ホットスワップ） | `Switch:SW_Push` | `Skjar:CPG135001S30_<幅>U`（`Size` 欄の幅に合わせる） | ソケットは仮に CPG135001S30（C5333465） |
 | D501〜D542 | 1N4148W | `Device:D_Small` | `Diode_SMD:D_SOD-123` | C81598（Basic） |
 | LED501〜LED542 | SK6812MINI-E | `LED:SK6812MINI-E` | `LED_SMD:LED_SK6812MINI-E_3.2x2.8mm_P1.5mm_ReverseMount` | C5149201 |
 | C501〜C542 | 100 nF（各 LED の VDD） | `Device:C` | 0603 | C14663（Basic） |
