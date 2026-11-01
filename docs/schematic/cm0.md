@@ -2,7 +2,7 @@
 
 回路図を描くための仕様。ピンの割り当ては [pin-assignment.md](../pin-assignment.md) の「4. CM0 の GPIO と専用ピン」、決めた理由は [design-decisions.md](../design-decisions.md) を参照。
 
-**手本：** [cm0-reference.pdf](cm0-reference.pdf)（画像は [cm0-reference.png](cm0-reference.png)）。`hardware/pcb/cm0.kicad_sch` には同じ配置で部品だけを並べてある。
+**手本：** [cm0-reference.pdf](cm0-reference.pdf)（画像は [cm0-reference.png](cm0-reference.png)）。最初の配置を書き出したもので、その後の変更（microSD、キー入力の I²C など）は入っていない。正は `hardware/pcb/cm0.kicad_sch`。
 
 ---
 
@@ -36,7 +36,7 @@
 
 - **Q202（2N7002）：** ゲート ← `BOOT_EN`（RP2040 の GPIO23）、ソース → GND、ドレイン → nRPI_BOOT（121）。
 - **R202（100 kΩ）：** ゲートを GND にプルダウンする（初期状態は通常起動）。
-- **スイッチは RP2040 側だけにつなぐ**（rp2040 シートの SW102 → `BOOT_SW`）。押されたら RP2040 が `BOOT_EN` を High にしてから CM0 の電源を入れる。CM0 のピンに外から電圧をかけることがない。
+- **要求は RP2040 が出す**（キーの組み合わせ）。RP2040 が `BOOT_EN` を High にしてから CM0 の電源を入れる。CM0 のピンに外から電圧をかけることがない。
 - RP2040 からのコマンドでも USB ブートに入れられる（復旧に使える）。
 
 ## 5. UART の受信バッファ（U202）

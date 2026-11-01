@@ -4,7 +4,7 @@
 
 定数は計算値。**[要決定]** は、描く前に決める項目。
 
-**手本：** 全ピンにネットラベルを付けた版を [power-reference.pdf](power-reference.pdf)（画像は [power-reference.png](power-reference.png)）に書き出してある。`hardware/pcb/power.kicad_sch` には、同じ配置で部品だけを並べてある（配線なし）。
+**手本：** 全ピンにネットラベルを付けた版を [power-reference.pdf](power-reference.pdf)（画像は [power-reference.png](power-reference.png)）に書き出してある。最初の配置を書き出したもので、その後の変更は入っていない。正は `hardware/pcb/power.kicad_sch`。
 
 ---
 

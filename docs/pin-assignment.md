@@ -13,6 +13,7 @@
 | `VBUS_A` / `VBUS_B` | power | 各 USB-C の VBUS | power（TPS2121 の IN2 / IN1） |
 | `+5V` | power | TPS2121 の出力。常に入っている 5V | 全シート |
 | `+5V_LCD` | power | LCD 用の負荷スイッチ（TPS22965）の出力 | display |
+| `+5V_LED` | keymatrix | キーの RGB 用。`+5V` を P-MOSFET（AO3401A）で切った出力 | keymatrix のみ |
 | `+3V3` | power | `+5V` から作る常時 ON の 3.3V（RP2040 用のレギュレータ） | rp2040、peripherals（RTC の電源の片側）、プルアップ |
 | `+3V3_CM0` | cm0 | CM0 の 3.3V 出力。CM0 が OFF のときは 0V | cm0（GPIO_VREF、UART のバッファ）、display（FPC の 3V3） |
 | `VBAT` | peripherals | CR2032 | peripherals のみ |
@@ -31,7 +32,7 @@
 | `PWR_ST` | power → rp2040 | TPS2121 の ST（High：Port B から給電、Low：Port A から給電） |
 | `LCD_EN` | rp2040 → power | LCD 用の負荷スイッチの ON。プルダウンして初期状態は OFF |
 | `CM0_PWROFF` | rp2040 → cm0 | GLOBAL_EN を Low に引く N-MOSFET のゲート。**High で CM0 が OFF**。プルアップして初期状態は OFF |
-| `BOOT_EN` | rp2040 → cm0 | CM0 の USB ブート要求。cm0 シートの N-MOSFET（Q202）で nRPI_BOOT を Low に引く。スイッチ（`BOOT_SW`）は rp2040 シート内だけで完結する |
+| `BOOT_EN` | rp2040 → cm0 | CM0 の USB ブート要求。cm0 シートの N-MOSFET（Q202）で nRPI_BOOT を Low に引く。要求はキーの組み合わせで出す |
 | `RP_TXD` | rp2040 → cm0 | RP2040 の UART TX。cm0 シートのバッファ（SN74LVC1G125、+3V3_CM0 で動作）を通して CM0 の GPIO15 へ |
 | `CM0_TXD` | cm0 → rp2040 | CM0 の GPIO14 → RP2040 の UART RX |
 | `CM0_RUN_PG` | cm0 → rp2040 | CM0 の RUN_PG（電源正常、CPU 動作中） |
@@ -47,6 +48,8 @@
 | `KB_SDA` / `KB_SCL` | rp2040 ↔ cm0 | キー入力の I²C（HID over I²C。CM0 側は `i2c-gpio`。4.7 kΩ で `+3V3_CM0` にプルアップ） |
 | `KB_INT` | rp2040 → cm0 | キー入力の割り込み（Low で通知。10 kΩ で `+3V3_CM0` にプルアップ） |
 | `ROW0`〜`ROW6`、`COL0`〜`COL5` | rp2040 ↔ keymatrix | キーマトリクス（7 行 × 6 列 ＝ 42 キー、13 本） |
+| `RGB_DATA` | rp2040 → keymatrix | キーの RGB（SK6812MINI-E）のデータ。keymatrix シートのバッファ（SN74AHCT1G125、`+5V_LED` で動作）で 5 V にする |
+| `RGB_EN` | rp2040 → keymatrix | キーの RGB の電源（`+5V_LED`）の ON。High で ON。プルダウンして初期状態は OFF |
 
 ---
 
@@ -57,13 +60,13 @@
 | 0〜6 | `ROW0`〜`ROW6` | 出力 | キーマトリクスの行 |
 | 7〜12 | `COL0`〜`COL5` | 入力（プルアップ） | キーマトリクスの列 |
 | 13 | `KB_INT` | 出力（オープンドレイン） | Low で CM0 にキー入力を知らせる |
-| 14 | 予備 | — | |
+| 14 | `RGB_DATA` | 出力 | キーの RGB のデータ（PIO） |
 | 15 | `CM0_PWROFF` | 出力 | High で CM0 が OFF |
 | 16 | `RP_TXD` | 出力 | UART0 TX |
 | 17 | `CM0_TXD` | 入力（**プルなし**） | UART0 RX |
 | 18 | `LCD_EN` | 出力 | |
 | 19 | `PWR_ST` | 入力（割り込み） | |
-| 20 | `BOOT_SW` | 入力 | CM0 の USB ブート要求スイッチ（10 kΩ でプルアップ） |
+| 20 | `RGB_EN` | 出力 | High でキーの RGB の電源が ON |
 | 21 | `CM0_RUN_PG` | 入力（**プルなし**） | |
 | 22 | `CM0_HALT` | 入力（**プルなし**） | |
 | 23 | `BOOT_EN` | 出力 | High で CM0 の nRPI_BOOT を Low に引く |
@@ -74,7 +77,7 @@
 | 28 | `CC1_B` | ADC2 | |
 | 29 | `CC2_B` | ADC3 | |
 
-- **合計：** 29 / 30 本（予備1本：GPIO14）。
+- **合計：** 30 / 30 本（予備なし）。GPIO20 は、CM0 の USB ブート要求のスイッチ（`BOOT_SW`）を廃止して空けた。
 - **CM0 から来る信号はプルなしにする：** CM0 が OFF のときに、RP2040 から CM0 に電圧をかけないため。
 - **UART0：** TX / RX は GPIO16 / 17 を使う（RP2040 で UART0 を割り当てられるピンの組）。
 

@@ -7,7 +7,7 @@
 > [!WARNING]
 > **開発中のプロジェクトです。** 回路図・基板はまだ試作も動作確認もしていません。誤りが含まれている可能性が高いので、**このままの設計データで基板を発注したり、部品を買いそろえたりしないでください。** 内容は予告なく大きく変わります。
 
-**状態：** 回路図を作成中（基板の配置・配線は未着手）。決めたことは [docs/design-decisions.md](docs/design-decisions.md)、残っていることは [docs/open-items.md](docs/open-items.md) にあります。
+**状態：** 回路図を作成中。基板は部品の仮置きまで（配線は未着手）。決めたことは [docs/design-decisions.md](docs/design-decisions.md)、残っていることは [docs/open-items.md](docs/open-items.md) にあります。
 
 ---
 
@@ -35,6 +35,8 @@ SKJÁR では、ディスプレイを「おまけ」として扱いません。�
 - 上部に 8.8″ の横長タッチディスプレイ
 - Linux を搭載
 - PC からは普通の USB HID キーボードとして見える
+- 本体の Linux からも普通のキーボードとして見える（HID over I²C。素の Raspberry Pi OS のドライバで動く）
+- キーごとの RGB バックライト
 - タッチ UI を物理キーの拡張として使う
 - Cyberdeck 的な自由度
 - ケーブル1本でも全機能が動く（相手が 5 V / 1.5 A 以上を出せる場合）
@@ -55,24 +57,26 @@ SKJÁR では、ディスプレイを「おまけ」として扱いません。�
          │                 │ 5V              │
     ┌────┴─────┐  UART  ┌──┴───────────┐     │
     │  RP2040  ├────────┤     CM0      ├─USB─┘
-    │ HID・電源の│        │  Linux・UI   │
-    │ 判断・CC   │        └──┬────┬────┬─┘
-    └────┬─────┘           │    │    │
-         │              DSI   I²C   I²S
-   キーマトリクス          │    │    │
-     （40%）        8.8″ LCD  RTC  アンプ
-                     （タッチ）（CR2032）（スピーカー）
+    │ HID・電源の│ I²C HID│  Linux・UI   │
+    │ 判断・CC   ├────────┤              ├── microSD
+    └────┬─────┘        └──┬────┬────┬─┘
+         │                 │    │    │
+   キーマトリクス        DSI   I²C   I²S
+   ＋キーの RGB           │    │    │
+     （40%）        8.8″ LCD  RTC  コーデック
+                     （タッチ）（CR2032）（スピーカー・イヤホン）
 ```
 
 | 部分 | 内容 |
 |---|---|
-| メインコンピュータ | Raspberry Pi Compute Module 0（CM0100008：Cortex-A53 ×4 / 1 GHz、512 MB、eMMC 8 GB、Wi-Fi / BT） |
-| キーボード用マイコン | RP2040（PC への HID、電源の判断、CC の判定） |
+| メインコンピュータ | Raspberry Pi Compute Module 0（CM0100000：CM0Lite、Cortex-A53 ×4 / 1 GHz、512 MB、Wi-Fi / BT）。microSD から起動 |
+| キーボード用マイコン | RP2040（PC への USB HID、CM0 への HID over I²C、キーの RGB、電源の判断、CC の判定） |
+| キー | Kailh Choc V2 系（ホットスワップ）×42。キーごとに RGB LED（SK6812MINI-E） |
 | ディスプレイ | Waveshare 8.8inch DSI LCD または 8.8-DSI-TOUCH-A（480×1920、10点タッチ、DSI 2レーン） |
 | 電源 | USB-C ×2、5 V 専用（PD なし）、上限 15 W。TPS2121 で切り替え |
 | RTC | PCF8563T ＋ 32.768 kHz 水晶 ＋ CR2032 |
-| 音声 | MAX98357A（I²S アンプ）＋ スピーカー（後付け） |
-| OS | Raspberry Pi OS Lite。デスクトップ環境は使わず、専用 UI を直接起動する |
+| 音声 | TLV320DAC3100（I²S コーデック。スピーカーアンプとイヤホン出力を内蔵）＋ スピーカー ＋ 3.5 mm イヤホンジャック |
+| OS | Raspberry Pi OS Lite。デスクトップ環境は使わず、専用 UI を直接起動する。カーネルとドライバは標準のまま、オーバーレイと `config.txt` だけで大体の機能が動くようにする |
 
 詳しい仕様と理由は [docs/design-decisions.md](docs/design-decisions.md) を見てください。
 
