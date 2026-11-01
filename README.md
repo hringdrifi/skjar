@@ -45,27 +45,7 @@ SKJÁR では、ディスプレイを「おまけ」として扱いません。�
 
 ## 構成
 
-```text
-        PC                          充電器 / PC（開発・書き込み）
-         │                                   │
-  Port A (USB-C)                      Port B (USB-C)
-  HID ＋ 給電                          開発・rpiboot ＋ 給電
-         │                                   │
-         │      ┌──────────────────────┐     │
-         ├─VBUS─┤ TPS2121（電源切り替え）├─VBUS┤   B 優先・5 µs で切り替え
-         │      └──────────┬───────────┘     │
-         │                 │ 5V              │
-    ┌────┴─────┐  UART  ┌──┴───────────┐     │
-    │  RP2040  ├────────┤     CM0      ├─USB─┘
-    │ HID・電源の│ I²C HID│  Linux・UI   │
-    │ 判断・CC   ├────────┤              ├── microSD
-    └────┬─────┘        └──┬────┬────┬─┘
-         │                 │    │    │
-   キーマトリクス        DSI   I²C   I²S
-   ＋キーの RGB           │    │    │
-     （40%）        8.8″ LCD  RTC  コーデック
-                     （タッチ）（CR2032）（スピーカー・イヤホン）
-```
+![SKJÁR の構成：USB-C 2 口を TPS2121 で切り替え、RP2040 と CM0 を UART と I²C HID でつなぐ](docs/images/architecture.svg)
 
 | 部分 | 内容 |
 |---|---|
@@ -99,6 +79,7 @@ docs/                     文書（CC BY-SA 4.0）
 ├─ protocol.md            RP2040 ↔ CM0 の通信仕様
 ├─ pin-assignment.md      ピンの割り当てとシート間の信号
 ├─ schematic/             回路図のシートごとの仕様（部品、接続、定数）
+├─ images/                図（構成図など）
 └─ references/README.md   参照した一次資料の出典と要点
 hardware/                 ハードウェア（CERN-OHL-S-2.0）
 ├─ pcb/                   KiCad 10 のプロジェクト（lib/：専用部品、production/：製造用データ）
