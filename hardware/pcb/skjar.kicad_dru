@@ -22,3 +22,13 @@
 (rule "JLCPCB: pad to silkscreen"
 	(constraint silk_clearance (min 0.15mm))
 	(condition "A.Type == 'Pad' && B.Layer == '?.Silkscreen'"))
+
+# GND pour: 0.5 mm from everything, except the GCPW pairs, which run 0.2 mm from it.
+# The zone itself is set to 0.2 so that these rules decide. Dimensions: docs/design-decisions.md
+(rule "GND pour clearance"
+	(constraint clearance (min 0.5mm))
+	(condition "A.Type == 'Zone' && A.NetName == 'GND' && B.NetClass != 'DSI' && B.NetClass != 'USB'"))
+
+(rule "GCPW: pair to GND pour"
+	(constraint clearance (min 0.2mm))
+	(condition "A.Type == 'Zone' && A.NetName == 'GND' && (B.NetClass == 'DSI' || B.NetClass == 'USB')"))
