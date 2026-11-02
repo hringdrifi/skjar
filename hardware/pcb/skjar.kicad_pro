@@ -76,7 +76,16 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "copper_edge_clearance|118250000|156650000|fe04fa2c-a7f9-4b49-8e95-f33a3812fd42|10e5b36d-0ab2-4961-bf74-271513da7583",
+          ""
+        ],
+        [
+          "copper_edge_clearance|165875000|156650000|d382832a-df54-4f94-8e9a-6ba63d18b425|2b8a3c25-055a-4623-a29c-5f52349e9d20",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -245,6 +254,18 @@
         {
           "diameter": 0.0,
           "drill": 0.0
+        },
+        {
+          "diameter": 0.6,
+          "drill": 0.3
+        },
+        {
+          "diameter": 0.8,
+          "drill": 0.4
+        },
+        {
+          "diameter": 0.9,
+          "drill": 0.45
         }
       ],
       "zones_allow_external_fillets": false

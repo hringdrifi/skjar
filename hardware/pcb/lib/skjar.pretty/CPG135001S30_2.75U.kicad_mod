@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "Kailh CPG135001S30 hotswap socket for Choc V1 / V2, 2.75U key, center origin")
+	(descr "Kailh CPG135001S30 hotswap socket, Choc V2 only, 2.75U key, center origin")
 	(tags "Kailh Choc hotswap CPG135001S30 keyboard switch 2.75U")
 	(property "Reference" "REF**"
 		(at 0 -11.025 0)
@@ -232,13 +232,6 @@
 			)
 		)
 	)
-	(pad "" np_thru_hole circle
-		(at -5.5 0)
-		(size 1.9 1.9)
-		(drill 1.9)
-		(layers "*.Cu" "*.Mask")
-		(uuid "d6c2c413-2322-4e6a-870c-ea0490681c53")
-	)
 	(pad "" np_thru_hole oval
 		(at -5 -5.15)
 		(size 1.5 2)
@@ -252,13 +245,6 @@
 		(drill 5)
 		(layers "*.Cu" "*.Mask")
 		(uuid "1afaadd6-7cb2-4183-967b-91301cf985bf")
-	)
-	(pad "" np_thru_hole circle
-		(at 5.5 0)
-		(size 1.9 1.9)
-		(drill 1.9)
-		(layers "*.Cu" "*.Mask")
-		(uuid "d9e0ca76-39ef-4b95-a438-97db05247231")
 	)
 	(pad "1" thru_hole circle
 		(at 5 3.8)
