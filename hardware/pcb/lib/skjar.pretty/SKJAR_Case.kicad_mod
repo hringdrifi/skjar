@@ -1,0 +1,80 @@
+(footprint "SKJAR_Case"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "3D view of the SKJAR case (top frame and tray, hardware/case/make_case.py). Place at (0, 0), rotation 0, on the front. The case outline is drawn on the board layer User.1 (Case), which make_case.py reads. The models assume a 1.2 mm board")
+	(tags "SKJAR case 3D")
+	(property "Reference" "CASE1"
+		(at 148.43 10 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6a9ad7e5-4c5c-4453-a199-e568e7b5bb73")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "SKJAR_Case"
+		(at 148.43 169 0)
+		(layer "F.Fab")
+		(uuid "8d2d6db2-a2a5-43c9-9690-087185caeb57")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2b24e61a-fe96-4ce7-9537-20fb21ef811a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1be23ab8-110a-44c0-a41a-4933bea34904")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr board_only exclude_from_pos_files exclude_from_bom)
+	(duplicate_pad_numbers_are_jumpers no)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/../case/skjar-case-tray.step"
+		(offset
+			(xyz 0 0 -1.2)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+	(model "${KIPRJMOD}/../case/skjar-case-top.step"
+		(offset
+			(xyz 0 0 -1.2)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

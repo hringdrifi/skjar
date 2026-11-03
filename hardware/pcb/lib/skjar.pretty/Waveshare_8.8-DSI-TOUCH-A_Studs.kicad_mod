@@ -1,0 +1,341 @@
+(footprint "Waveshare_8.8-DSI-TOUCH-A_Studs"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Clearance holes for the back studs of the Waveshare 8.8-DSI-TOUCH-A (the panel is screwed to the case). The four inner holes are slots that also take the Raspberry Pi pattern studs of the 8.8inch DSI LCD. Origin at the glass centre, seen from the front. From the Waveshare 2D drawing (2025-12-15) and STEP")
+	(tags "Waveshare 8.8 DSI TOUCH-A display stud clearance")
+	(property "Reference" "REF**"
+		(at 0 -36 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "262539f2-b771-4f64-bef3-000d69f323ce")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Waveshare_8.8-DSI-TOUCH-A_Studs"
+		(at 0 36 0)
+		(layer "F.Fab")
+		(uuid "80dc22ca-bb65-4875-8e2d-cda968cbf562")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://www.waveshare.com/wiki/8.8-DSI-TOUCH-A"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e4708247-60ef-4d2f-b737-b15c90229272")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "aa40047b-2a37-4ea9-bed3-51506728f4ac")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr board_only exclude_from_pos_files exclude_from_bom)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -118.25 -34)
+		(end 118.25 -34)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "65a94887-5da2-41c0-aac1-032ac5e24616")
+	)
+	(fp_line
+		(start 120.25 -32)
+		(end 120.25 32)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "29a846ad-b93d-4f54-88bf-487096ea5f50")
+	)
+	(fp_line
+		(start 118.25 34)
+		(end -118.25 34)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ee1f6999-daf2-46f2-be97-8229589f1b96")
+	)
+	(fp_line
+		(start -120.25 32)
+		(end -120.25 -32)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "e4105369-5ff5-4506-b100-ff0c5807b1a0")
+	)
+	(fp_arc
+		(start 118.25 -34)
+		(mid 119.6642 -33.4142)
+		(end 120.25 -32)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "6d176d67-0a52-4e60-a1d9-8330be2816bb")
+	)
+	(fp_arc
+		(start 120.25 32)
+		(mid 119.6642 33.4142)
+		(end 118.25 34)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "17c45db2-7fce-498f-bcce-768fe6f0d4e3")
+	)
+	(fp_arc
+		(start -118.25 34)
+		(mid -119.6642 33.4142)
+		(end -120.25 32)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "07ba1cfb-1a8d-4e06-8bd5-9f60fc3e03af")
+	)
+	(fp_arc
+		(start -120.25 -32)
+		(mid -119.6642 -33.4142)
+		(end -118.25 -34)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "5a22064f-6bb9-420a-bffb-073bec8d9f7f")
+	)
+	(fp_rect
+		(start -114.35 -33.05)
+		(end 118.15 33.05)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "a365bc37-1069-4faf-aeda-e5a3f3ffd90f")
+	)
+	(fp_rect
+		(start -63.3 -20)
+		(end -43.3 20)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "96c84c3e-3067-4605-98ef-a1e5546f3163")
+	)
+	(fp_circle
+		(center -106.8 -28.5)
+		(end -104.7 -28.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "3b19555b-d612-4301-8a34-8ff8bba47dea")
+	)
+	(fp_circle
+		(center -106.8 28.5)
+		(end -104.7 28.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "94cad862-f81e-4c95-b8ae-1c249b23f798")
+	)
+	(fp_circle
+		(center 111.2 -28.5)
+		(end 113.3 -28.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "fdf6b1d6-392c-40a1-ab3a-a069b0327795")
+	)
+	(fp_circle
+		(center 111.2 28.5)
+		(end 113.3 28.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "d576fa53-f7db-4377-a063-2de7a552f10c")
+	)
+	(fp_circle
+		(center -36.8 -24.5)
+		(end -34.7 -24.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "cb11cf04-aeaf-4a29-96e8-44215caef815")
+	)
+	(fp_circle
+		(center -36.8 24.5)
+		(end -34.7 24.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "eb7f2b89-dcd4-4407-ae72-79a14a2305cc")
+	)
+	(fp_circle
+		(center 21.2 -24.5)
+		(end 23.3 -24.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "2c38b381-5271-4d01-bc4f-d6a84c7b7797")
+	)
+	(fp_circle
+		(center 21.2 24.5)
+		(end 23.3 24.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "febff303-8142-495d-9be4-cb00053401bc")
+	)
+	(fp_text user "FPC"
+		(at -53.3 0 90)
+		(layer "F.Fab")
+		(uuid "8bf150d4-1033-42a4-9f10-f039734fa99c")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "1e31ac4a-eaeb-461f-9b34-26765564dd86")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "" np_thru_hole circle
+		(at -106.8 -28.5)
+		(size 6.5 6.5)
+		(drill 6.5)
+		(layers "*.Cu" "*.Mask")
+		(uuid "e226ba55-aa47-4a43-96c4-c7eff9ae5b51")
+	)
+	(pad "" np_thru_hole circle
+		(at -106.8 28.5)
+		(size 6.5 6.5)
+		(drill 6.5)
+		(layers "*.Cu" "*.Mask")
+		(uuid "68a3e209-e1cd-4d02-a0c3-36704721f04d")
+	)
+	(pad "" np_thru_hole circle
+		(at 111.2 -28.5)
+		(size 6.5 6.5)
+		(drill 6.5)
+		(layers "*.Cu" "*.Mask")
+		(uuid "45a7b30d-899a-4a81-921f-a16521e136b7")
+	)
+	(pad "" np_thru_hole circle
+		(at 111.2 28.5)
+		(size 6.5 6.5)
+		(drill 6.5)
+		(layers "*.Cu" "*.Mask")
+		(uuid "9a950fc8-d667-4d07-a280-fb22a850032b")
+	)
+	(pad "" np_thru_hole oval
+		(at -36.55 -26.5)
+		(size 7 11)
+		(drill oval 7 11)
+		(layers "*.Cu" "*.Mask")
+		(uuid "317456eb-628b-495a-8376-c9bc04ccffd1")
+	)
+	(pad "" np_thru_hole oval
+		(at -36.55 22.5)
+		(size 7 11)
+		(drill oval 7 11)
+		(layers "*.Cu" "*.Mask")
+		(uuid "cc007305-0820-4cb3-a054-f6b98ff9235c")
+	)
+	(pad "" np_thru_hole oval
+		(at 21.45 -26.5)
+		(size 7 11)
+		(drill oval 7 11)
+		(layers "*.Cu" "*.Mask")
+		(uuid "e01d973e-bfba-4a40-b07e-aa0753067680")
+	)
+	(pad "" np_thru_hole oval
+		(at 21.45 22.5)
+		(size 7 11)
+		(drill oval 7 11)
+		(layers "*.Cu" "*.Mask")
+		(uuid "0a102bdb-11c2-49c4-b96b-544e780f45d7")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/lib/3dmodels/8.8-DSI-TOUCH-A.step"
+		(offset
+			(xyz 0 0 -5.4)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
