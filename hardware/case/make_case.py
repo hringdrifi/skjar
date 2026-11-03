@@ -1,4 +1,4 @@
-"""Generate the SKJÁR tray-mount case (top frame + bottom tray) as STEP.
+"""Generate the SKJÁR case (one piece) as STEP.
 
 Run with FreeCAD's command-line Python (1.1):
     "C:/Program Files/FreeCAD 1.1/bin/freecadcmd.exe" make_case.py
@@ -6,8 +6,12 @@ Run with FreeCAD's command-line Python (1.1):
 Coordinates match the board STEP exported by KiCad (kicad-cli pcb export step):
 X = KiCad x, Y = -KiCad y, Z = 0 at the bottom of the board. Positions below are written in KiCad
 coordinates (mm, y down) so they can be read straight off the board; the script flips y.
-The board lies flat in this frame; the typing angle (ANGLE) is in the wedge of the tray, so to see the
+The board lies flat in this frame; the typing angle (ANGLE) is in the wedge of the bottom, so to see the
 case on a desk, rotate it -ANGLE degrees about X (front edge down).
+
+One piece: the connectors on the back edge of the board stick out into the holes of the back wall, so the board
+goes in tilted (back edge first) and is then laid down; the top of the key area is lowered (DECK_DROP) to leave room
+for that. Modelled after the user's Fusion model skjar-case.step (2026-11-03).
 
 Read from the board file (save the board first):
 - the case outline (plan view): the lines, arcs, rectangles and circles on the user layer CASE_LAYER;
@@ -44,15 +48,20 @@ LOWEST_PART = -1.9              # bottom of the key sockets (the parts at the fr
 
 # ---- Case ------------------------------------------------------------------------------------------
 ANGLE = 3.5                     # typing angle, degrees
+DECK_DROP = 4.0                 # the key area is this much lower than the glass
+DECK_START = 1.2                # the step starts this far in front of the glass pocket
+RAMP_ANGLE = 15.0               # slope of the step, degrees
+RAMP_R = 9.0                    # radius of the rounds at both ends of the slope
+GLASS_GAP = 0.22                # glass pocket around the glass, each side
 BEZEL = 3.75                    # top bezel around the glass (back, left, right)
 FRONT_BEZEL = 3.75              # from the key well to the front edge
 CORNER_R = 6.0                  # outer corner radius (plan view)
 EDGE_FILLET = 1.0               # round-over of the top outer edge (made smaller if it does not fit)
+BOTTOM_FILLET = 0.3             # round-over of the bottom outer edge
 GAP = 0.45                      # board to wall (the walls left, right and front are 7.0 mm)
-FLOOR = 1.6                     # tray floor thickness
+FLOOR = 1.6                     # floor thickness
 FLOOR_GAP = 0.6                 # lowest part to the inside of the floor (at the front)
-SPLIT = 2.0                     # top frame / tray parting plane (between the board and the plate)
-GLASS_LEDGE = 0.2               # the frame steps in under the overhanging glass, this far below it
+GLASS_LEDGE = 0.2               # the case steps in under the overhanging glass, this far below it
 COVER_GAP = 0.5                 # around the back cover of the display
 
 # Display studs: bosses up from the floor, screwed from below (M2.5)
@@ -72,16 +81,6 @@ PCB_SCREWS_DEFAULT = [(71.88, 23.98), (119.5, 35.5), (166.5, 38.0),
               (71.88, 79.97), (147.88, 78.72), (246.5, 79.0),
               (124.63, 133.22), (219.88, 133.22),
               (56.38, 151.97), (147.88, 151.97), (241.13, 151.97)]
-
-# Top frame to tray: screws from below through the side walls into the frame (M2 into heat-set inserts)
-FRAME_SCREW_D = 2.4
-FRAME_HEAD_D = 4.2
-FRAME_SCREW_LEN = 8.0           # from the head to the parting plane + into the frame
-FRAME_INSERT_D = 3.2
-FRAME_INSERT_DEPTH = 5.0
-FRAME_SCREW_Y = [30.0, 95.0, 150.0]   # KiCad y, on the left and right walls (x is the middle of the wall)
-FRAME_WALL_MIN = 0.8            # wall left on each side of an insert; a screw moves forward until it fits
-FRAME_SCREW_PITCH = 15.0        # a screw that moved closer than this to another one is dropped
 
 # Openings in the back wall: (part, x offset from the part, z centre, width, height, corner radius)
 BACK_PORTS = [("J2", 0.0, -1.63, 12.5, 7.0, 3.0),            # USB-C
@@ -192,8 +191,8 @@ DISPLAY_ANGLE = footprint_at(board_text, "DISP1", angle=True)   # the display ca
 STUDS = [turned(p, DISPLAY_ANGLE) for p in STUDS]
 COVER = turned_rect(COVER, DISPLAY_ANGLE)
 DISPLAY_FRAME = turned_rect(DISPLAY_FRAME, DISPLAY_ANGLE)
-DISPLAY_FRAME = (DISPLAY_CENTRE[0] + DISPLAY_FRAME[0], DISPLAY_CENTRE[1] + DISPLAY_FRAME[1],
-                 DISPLAY_CENTRE[0] + DISPLAY_FRAME[2], DISPLAY_CENTRE[1] + DISPLAY_FRAME[3])
+DISPLAY_FRAME = (DISPLAY_CENTRE[0] + DISPLAY_FRAME[0] - GLASS_GAP, DISPLAY_CENTRE[1] + DISPLAY_FRAME[1] - GLASS_GAP,
+                 DISPLAY_CENTRE[0] + DISPLAY_FRAME[2] + GLASS_GAP, DISPLAY_CENTRE[1] + DISPLAY_FRAME[3] + GLASS_GAP)
 PARTS = {ref: footprint_at(board_text, ref) for ref in [p[0] for p in BACK_PORTS + FLOOR_HOLES]}
 print("board: %.2f..%.2f x %.2f..%.2f; display at %.3f, %.3f, %g deg" % (BOARD[0], BOARD[2], BOARD[1], BOARD[3],
                                                                    DISPLAY_CENTRE[0], DISPLAY_CENTRE[1], DISPLAY_ANGLE))
@@ -271,100 +270,95 @@ if OUTLINE_EDGES:
 else:
     outer = rrect(X0, Y0, X1, Y1, CORNER_R, DEEP, TOP)
 board_well = (BOARD[0] - GAP, BOARD[1] - GAP, BOARD[2] + GAP, BOARD[3] + GAP)
-cover_well = (cx + COVER[0] - COVER_GAP, cy + COVER[1] - COVER_GAP, cx + COVER[2] + COVER_GAP, cy + COVER[3] + COVER_GAP)
+cover_well = [cx + COVER[0] - COVER_GAP, cy + COVER[1] - COVER_GAP, cx + COVER[2] + COVER_GAP, cy + COVER[3] + COVER_GAP]
+# where the cover well pokes past the board well by a hair, leave the wall straight instead of a thin notch
+for i, sign in ((0, -1), (1, -1), (2, 1), (3, 1)):
+    if 0 < sign * (cover_well[i] - board_well[i]) < 0.2:
+        cover_well[i] = board_well[i]
 
 
-def frame_screws():
-    """In the middle of the left and right walls (outline to the board or the display cover). A screw where the
-    wall is too thin for the insert moves forward until it fits."""
-    r = FRAME_INSERT_D / 2 + FRAME_WALL_MIN
-    screws = []
-    for side in (0, 1):
-        for y0 in FRAME_SCREW_Y:
-            y = y0
-            while y < Y1 - CORNER_R:
-                cover = cover_well[1] - r < y < cover_well[3] + r
-                if side == 0:
-                    inner = min(board_well[0], cover_well[0]) if cover else board_well[0]
-                else:
-                    inner = max(board_well[2], cover_well[2]) if cover else board_well[2]
-                outer_x = X0 if side == 0 else X1
-                if abs(inner - outer_x) >= 2 * r:
-                    break
-                y += 0.5
-            else:
-                print("frame screw at y %.0f (%s) does not fit" % (y0, "left" if side == 0 else "right"))
-                continue
-            name = "left" if side == 0 else "right"
-            if any(abs(y - sy) < FRAME_SCREW_PITCH for sx, sy in screws if (sx < (X0 + X1) / 2) == (side == 0)):
-                print("frame screw at y %.0f (%s) dropped: too close to another one" % (y0, name))
-                continue
-            if y != y0:
-                print("frame screw at y %.0f (%s) moved to y %.1f: the wall is too thin" % (y0, name, y))
-            screws.append(((inner + outer_x) / 2, y))
-    return screws
+
+def deck():
+    """Solid under the top surface: at the glass height over the display, then a rounded slope down to the key
+    area (DECK_DROP lower), seen from the side (KiCad y, z) and extruded across the case."""
+    a, r, d = math.radians(RAMP_ANGLE), RAMP_R, DECK_DROP
+    y1 = DISPLAY_FRAME[3] + DECK_START
+    run = (d - 2 * r * (1 - math.cos(a))) / math.sin(a)          # straight part of the slope
+    y2, z2 = y1 + r * math.sin(a), TOP - r * (1 - math.cos(a))
+    y3, z3 = y2 + run * math.cos(a), z2 - run * math.sin(a)
+    y4 = y3 + r * math.sin(a)
+    m1 = (y1 + r * math.sin(a / 2), TOP - r * (1 - math.cos(a / 2)))
+    m2 = (y4 - r * math.sin(a / 2), TOP - d + r * (1 - math.cos(a / 2)))
+    ya, yb, zb = Y0 - 20, Y1 + 20, DEEP - 1
+
+    def q(y, z):
+        return V(-10, -y, z)
+    edges = [Part.LineSegment(q(ya, TOP), q(y1, TOP)).toShape(),
+             Part.Arc(q(y1, TOP), q(*m1), q(y2, z2)).toShape(),
+             Part.LineSegment(q(y2, z2), q(y3, z3)).toShape(),
+             Part.Arc(q(y3, z3), q(*m2), q(y4, TOP - d)).toShape(),
+             Part.LineSegment(q(y4, TOP - d), q(yb, TOP - d)).toShape(),
+             Part.LineSegment(q(yb, TOP - d), q(yb, zb)).toShape(),
+             Part.LineSegment(q(yb, zb), q(ya, zb)).toShape(),
+             Part.LineSegment(q(ya, zb), q(ya, TOP)).toShape()]
+    return Part.Face(Part.Wire(edges)).extrude(V(330, 0, 0))
 
 
-FRAME_SCREWS = frame_screws()
+def on_rim(e, rim, top=True):
+    """An edge along the outside of the top surface (top) or of the bottom: on the outline, not vertical."""
+    p = e.valueAt((e.FirstParameter + e.LastParameter) / 2)
+    ends = [v.Point for v in e.Vertexes]
+    vertical = len(ends) == 2 and abs(ends[0].x - ends[1].x) < 1e-6 and abs(ends[0].y - ends[1].y) < 1e-6
+    level = p.z > TOP - DECK_DROP - 0.5 if top else p.z < bottom(Y1) + 0.5
+    return not vertical and level and rim.distToShape(Part.Vertex(V(p.x, p.y, 0)))[0] < 1e-4
 
-# ---- Top frame -------------------------------------------------------------------------------------
-frame = outer.common(Part.makeBox(1000, 1000, TOP - SPLIT, V(-300, -700, SPLIT)))
-ledge = GLASS_BOTTOM - GLASS_LEDGE
-cut = rrect(*board_well, 2.3, SPLIT - 1, ledge)                       # board, plate and keys
-cut = cut.fuse(rrect(*cover_well, 1.0, SPLIT - 1, ledge))             # display body under the glass
-cut = cut.fuse(rrect(*DISPLAY_FRAME, 2.0, ledge, TOP + 1))            # glass pocket
-cut = cut.fuse(rrect(board_well[0], DISPLAY_FRAME[3] - 1.0, board_well[2], board_well[3], 2.3, ledge, TOP + 1))   # key well
-frame = frame.cut(cut)
-for x, y in FRAME_SCREWS:
-    frame = frame.cut(cyl(x, y, FRAME_INSERT_D, SPLIT - 1, SPLIT + FRAME_INSERT_DEPTH))
-frame = frame.removeSplitter()
-if EDGE_FILLET > 0:
-    top_face = max((f for f in frame.Faces if abs(f.BoundBox.ZMin - TOP) < 1e-6 and abs(f.BoundBox.ZMax - TOP) < 1e-6),
-                   key=lambda f: f.Area)
-    outer_top = top_face.OuterWire.Edges
-    for radius in (EDGE_FILLET, EDGE_FILLET * 0.8, EDGE_FILLET * 0.6, EDGE_FILLET * 0.4):
+
+def round_over(shape, edges, radius, name):
+    """Fillet, made smaller if it does not fit; the sharp edge is kept rather than fail."""
+    for r in (radius, radius * 0.8, radius * 0.6, radius * 0.4):
         try:
-            filleted = frame.makeFillet(radius, outer_top)
+            filleted = shape.makeFillet(r, edges)
         except Exception:
             continue
         if filleted.isValid():
-            frame = filleted
-            if radius != EDGE_FILLET:
-                print("top edge fillet reduced to %.2f mm" % radius)
-            break
-    else:   # keep the sharp edge rather than fail
-        print("top edge fillet skipped")
+            if r != radius:
+                print("%s fillet reduced to %.2f mm" % (name, r))
+            return filleted
+    print("%s fillet skipped" % name)
+    return shape
 
-# ---- Tray ------------------------------------------------------------------------------------------
-tray = outer.common(wedge(bottom, SPLIT))
-cavity = rrect(*board_well, 2.3, DEEP, SPLIT + 1).common(wedge(floor_in, SPLIT + 1))
-tray = tray.cut(cavity)
-tray = tray.cut(rrect(*cover_well, 1.0, BOARD_TOP - 0.2, SPLIT + 1))   # the display's back cover hangs past the board edge
-solid_outline = wedge(bottom, SPLIT)
-bosses = []
+
+# ---- One-piece case --------------------------------------------------------------------------------
+case = outer.common(wedge(bottom, TOP)).common(deck())
+ledge = GLASS_BOTTOM - GLASS_LEDGE
+cut = rrect(*board_well, 2.3, DEEP, ledge).common(wedge(floor_in, ledge))   # board, plate and keys, above the floor
+cut = cut.fuse(rrect(*cover_well, 1.0, BOARD_TOP - 0.2, ledge))      # the display's back cover hangs past the board edge
+cut = cut.fuse(rrect(*DISPLAY_FRAME, 2.0, ledge, TOP + 1))            # glass pocket
+cut = cut.fuse(rrect(board_well[0], DISPLAY_FRAME[3] - 1.0, board_well[2], board_well[3], 2.3, ledge, TOP + 1))   # key well
+case = case.cut(cut)
+solid_outline = outer.common(wedge(bottom, TOP))
+for sx, sy in STUDS:
+    case = case.fuse(cyl(cx + sx, cy + sy, STUD_BOSS_D, DEEP, STUD_TIP).common(solid_outline))
+for x, y in PCB_SCREWS:
+    case = case.fuse(cyl(x, y, PCB_BOSS_D, DEEP, 0.0).common(solid_outline))
 for sx, sy in STUDS:
     x, y = cx + sx, cy + sy
-    bosses.append(cyl(x, y, STUD_BOSS_D, DEEP, STUD_TIP))
+    case = case.cut(cyl(x, y, STUD_SCREW_D, DEEP, STUD_TIP + 1))
+    case = case.cut(cyl(x, y, STUD_HEAD_D, DEEP, STUD_TIP - STUD_SCREW_LEN))
 for x, y in PCB_SCREWS:
-    bosses.append(cyl(x, y, PCB_BOSS_D, DEEP, 0.0))
-for b in bosses:
-    tray = tray.fuse(b.common(solid_outline))
-for sx, sy in STUDS:
-    x, y = cx + sx, cy + sy
-    tray = tray.cut(cyl(x, y, STUD_SCREW_D, DEEP, STUD_TIP + 1))
-    tray = tray.cut(cyl(x, y, STUD_HEAD_D, DEEP, STUD_TIP - STUD_SCREW_LEN))
-for x, y in PCB_SCREWS:
-    tray = tray.cut(cyl(x, y, PCB_INSERT_D, -PCB_INSERT_DEPTH, 1.0))
-for x, y in FRAME_SCREWS:
-    tray = tray.cut(cyl(x, y, FRAME_SCREW_D, DEEP, SPLIT + 1))
-    tray = tray.cut(cyl(x, y, FRAME_HEAD_D, DEEP, SPLIT - (FRAME_SCREW_LEN - FRAME_INSERT_DEPTH + 1.0)))
+    case = case.cut(cyl(x, y, PCB_INSERT_D, -PCB_INSERT_DEPTH, 1.0))
 for ref, dx, z, w, h, r in BACK_PORTS:
-    tray = tray.cut(slot_y(PARTS[ref][0] + dx, z, w, h, r, Y0 - 1, board_well[1] + 1))
+    case = case.cut(slot_y(PARTS[ref][0] + dx, z, w, h, r, Y0 - 1, board_well[1] + 1))
 for ref, d in FLOOR_HOLES:
-    tray = tray.cut(cyl(PARTS[ref][0], PARTS[ref][1], d, DEEP, SPLIT))
-tray = tray.removeSplitter()
+    case = case.cut(cyl(PARTS[ref][0], PARTS[ref][1], d, DEEP, 0.0))
+case = case.removeSplitter()
+rim = _wire if OUTLINE_EDGES else Part.Wire(rrect(X0, Y0, X1, Y1, CORNER_R, 0, 1).Faces[0].OuterWire.Edges)
+if EDGE_FILLET > 0:
+    case = round_over(case, [e for e in case.Edges if on_rim(e, rim)], EDGE_FILLET, "top edge")
+if BOTTOM_FILLET > 0:
+    case = round_over(case, [e for e in case.Edges if on_rim(e, rim, top=False)], BOTTOM_FILLET, "bottom edge")
 
-for shape, name in ((frame, "skjar-case-top.step"), (tray, "skjar-case-tray.step")):
+for shape, name in ((case, "skjar-case-onepiece.step"),):
     path = os.path.join(HERE, name)
     shape.exportStep(path)
     bb = shape.BoundBox

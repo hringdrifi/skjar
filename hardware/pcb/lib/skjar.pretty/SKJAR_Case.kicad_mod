@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "3D view of the SKJAR case (top frame and tray, hardware/case/make_case.py). Place at (0, 0), rotation 0, on the front. The case outline is drawn on the board layer User.1 (Case), which make_case.py reads. The models assume a 1.2 mm board")
+	(descr "3D view of the SKJAR case (one piece, hardware/case/make_case.py). Place at (0, 0), rotation 0, on the front. The case outline is drawn on the board layer User.1 (Case), which make_case.py reads. The models assume a 1.2 mm board")
 	(tags "SKJAR case 3D")
 	(property "Reference" "CASE1"
 		(at 148.43 10 0)
@@ -55,18 +55,7 @@
 	(attr board_only exclude_from_pos_files exclude_from_bom)
 	(duplicate_pad_numbers_are_jumpers no)
 	(embedded_fonts no)
-	(model "${KIPRJMOD}/../case/skjar-case-tray.step"
-		(offset
-			(xyz 0 0 -1.2)
-		)
-		(scale
-			(xyz 1 1 1)
-		)
-		(rotate
-			(xyz 0 0 0)
-		)
-	)
-	(model "${KIPRJMOD}/../case/skjar-case-top.step"
+	(model "${KIPRJMOD}/../case/skjar-case-onepiece.step"
 		(offset
 			(xyz 0 0 -1.2)
 		)
