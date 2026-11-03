@@ -629,7 +629,7 @@
       "netlist": "",
       "plot": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "skjar.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
