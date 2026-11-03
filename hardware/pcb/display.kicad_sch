@@ -2345,7 +2345,8 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x22")
-		(at 177.8 101.6 0)
+		(at 177.8 104.14 0)
+		(mirror x)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -2374,7 +2375,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Skjar:FPC_0.5mm_22P_DualContact_HYH2.0"
+		(property "Footprint" "Connector_FFC-FPC:Hirose_FH12-22S-0.5SH_1x22-1MP_P0.50mm_Horizontal"
 			(at 177.8 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -2385,7 +2386,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.hirose.com/product/series/FH12"
 			(at 177.8 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -2407,7 +2408,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C6364665"
+		(property "LCSC" "C597981"
 			(at 177.8 101.6 0)
 			(hide yes)
 			(show_name no)
