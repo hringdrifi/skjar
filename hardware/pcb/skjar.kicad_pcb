@@ -104313,6 +104313,1314 @@
 			)
 		)
 	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "0a9baf90-7836-436b-ae43-f9f419e00640")
+		(at 56.38 151.97)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H10"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "a4150f5e-e170-42b7-ac80-92e2d4b16997")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "aa16f7fb-5755-4ca5-824e-13a7630f7d8e")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b1a443ab-349b-41f5-97ef-4903837644b8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3b3f38c0-7d12-4450-a8ff-74afdc18c141")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "040a57fa-6659-4c8a-b0dd-0e27f022549f")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "4a01e09b-ed33-48e0-b13a-36e67a1f1f6c")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "1811df4e-97a9-4a5f-9497-aaaa658641d6")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "833a2447-6754-4731-8cba-79d9dc7dd9ec")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "66356653-72ee-4865-b769-b9aa8f3ab3af")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "229e69b0-99e0-4fbd-ba60-2715cdfd0bed")
+		(at 124.63 133.22)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H8"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "65ff4e20-19bc-4faf-9532-23f10cbe52cb")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "f0229730-847a-495d-b389-84823fd4d031")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "09b8fc6d-6ff6-4e79-8f4b-c127154df707")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "15985dc1-a58c-4377-b36d-0c8fda677b6b")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "34cfde01-15be-47aa-9c13-fef8371cdb5f")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "6e283e70-fdd8-4bab-8e27-04a3b9819e49")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "0b4835e3-5154-4362-91dc-407ee7888627")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "c9b0a0bc-c364-4798-8a40-41ac50b19a14")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "cec098a0-c2f1-4626-9948-945a81c15ddf")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "3598029f-8686-4108-8bb6-5d6ec52479c0")
+		(at 246.5 79)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H7"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "9300a08e-eb8c-4761-aa44-b284d12648e0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "22e189b9-0568-4e1a-9aca-838945600d99")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "a16301dc-07a2-4d05-80ae-38eb31b5938c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "62976927-7ba1-4801-8cf7-6ad2b865e0e8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "c487fc93-5cee-4457-9dd6-0d535a007466")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "82180612-000e-4035-92c2-ad75fa938fcc")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "ed71368a-d338-4c35-a494-a91fa63015c1")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "36855693-dd3c-4c3f-8b30-2355624c99bd")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "5f7757f2-755a-41a4-bd8f-d2d294b8b3f7")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "5970e511-7449-48a1-b564-da55915b0589")
+		(at 44.88 51.98)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H4"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "294dc76e-07d3-44f2-b347-69888442b027")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "85cff58e-b15c-49aa-8b6f-11db1b22c84f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "e9c144d9-d67e-47e8-a7b1-d5a54bfacacb")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3c93e4a5-d290-457a-a990-6eb84cb72da3")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "80303ec1-82be-4777-bed8-570da298000c")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "9619b604-8055-4718-a788-c9ba3635de11")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "7c26950c-546b-4c2d-b80b-4ea94d51bb81")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "ddbe3e4b-3f7c-43c0-aea6-6c44888f86b2")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "8f9aeb36-ad0c-46bc-be3b-ca4f0b2c4852")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "6230f572-6111-4d5c-94d5-e6792c1df1f4")
+		(at 219.88 133.22)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H9"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "06dff1c4-4a84-4d84-8392-6b510cc09db0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "ad34ec73-99f1-4010-9450-eb417a66fecf")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2a0ac109-9d3a-40c3-948b-b3bbb498545d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2609ff06-71f0-452a-99c9-5b3dcdff0d18")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "66084e99-641b-4572-b9e6-349f30d3dc2d")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "01c3831a-66e2-4af7-9b5c-f4e673f12337")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "fd97eb58-1c78-4ced-a12e-b24c49a25318")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "ff5e1b11-906f-444a-9d0d-f656425356c1")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "ab3415e5-97f5-4e5c-9124-9b8e220660f6")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "8a995edc-8299-4153-9643-018cfed0ef37")
+		(at 147.88 78.72)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H6"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "9cae128f-ec6c-49d7-af63-d458bdee902f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "7e3f4c14-6c6c-4f57-aaa3-175b85ab49af")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "4ea608fd-c89f-444b-a987-9a1a3c120c64")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b61ba045-6867-4525-842a-88dda04bf08d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "43051660-bc14-4d20-959e-f11b01406a61")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "13b0ab87-b019-4496-98dc-7e1d25cd83ac")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "24818aae-4731-413a-983b-40bdeba32095")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "d403532b-164c-4929-b38f-55e90c183f6d")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "162ae39a-9da1-4f59-8772-cd251d84c779")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "bfee52f5-b7c4-42eb-90ec-66338fe1dccd")
+		(at 119.5 35.5)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H2"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "652e262b-9a45-4266-85b8-4ec5b726aa1f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "da3fa80e-9aba-49a9-b311-c2020774ede5")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3c1cebe9-ad1f-444b-8062-7a8c1c6cf2c6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "66ffb457-ef8c-4c20-9df2-8775fb799890")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "c8008324-d829-45a8-94fc-8b4e6fecc3af")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "a2ab7eb5-ce19-4ae0-9a22-409f016b5711")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "a19a8fbf-3899-4d41-ac27-71e80996e38c")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "ae7a12f2-9327-47e6-95ec-7bd4dbf7bd7b")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "e061eedd-79eb-42eb-ac4c-822f50b33d2c")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "d788c106-9487-4181-8092-ecd41dc4e30c")
+		(at 147.88 151.97)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H11"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "72553191-ea0a-4d2c-a4fb-d7a1b2bae6d8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "9ffbf30d-9884-4ddc-8e6e-bfcf7ab80dc7")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "df17f0a8-de60-41b8-a5b6-2438d68dc5d5")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "9f8c5a77-051b-4732-8dfb-9113d6aa3535")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "cbc79936-fe1c-47d8-804a-78b149c63d2d")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "07fe34f5-d2e7-4041-8068-c6e5e931da26")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "2c531c04-8ca8-4582-afdf-67f0e3a1b17d")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "54904636-754a-4392-9f66-229de7b0ff29")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "d1768c33-5a91-4552-853a-3c75595d4db5")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "e11328ca-d558-49d7-9d49-11cd9c70760c")
+		(at 241.13 151.97)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H12"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "9291a97b-4671-4f81-8cfe-82daed016593")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3adced08-02d7-4c81-9e36-1d8454673e71")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "ccc5c143-fa8d-4f55-bffc-f11eb08c7fbd")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "edd1082c-3880-4e0a-9c2c-66bc3ca823b6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "f34fde3c-deda-4955-90a8-9b120161b41e")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "1ec390fa-2543-4666-aeb0-39439925c51e")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "3001c531-ebf2-4d56-b5fe-18019d2a8061")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "2162c0c1-aacf-4ca5-a5c7-d7edb7538087")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "43a6b16f-83d8-455d-8dd9-51b2c6ed435b")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "e312ed9b-dea4-4ca7-aead-e2f302a8a26e")
+		(at 166.5 38)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H3"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "5d472cc0-aed1-486f-a098-1cb640709789")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "53dd813b-dda5-402a-91ad-aca9eaecd534")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "fed5fa1c-2144-4384-b16b-30ad404910b4")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "c7d57209-8de6-4bc5-8b95-525731716d9c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "37ea8e75-0167-4de8-8e82-6d81b4e75d3f")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "945cabd5-5fbe-4ced-a781-63d4d8d259c6")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "32e89617-137f-4082-9e4a-96cd3f286207")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "51785499-6324-4b9e-8823-e0f589ee9d7e")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "3adb8602-e055-4c4e-b480-6044f7ae62a1")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "ed26d2b0-6407-4563-9534-2e80e291c5ca")
+		(at 71.88 23.98)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H1"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "0ab9642c-eff9-4563-8fdd-6751a53e40cc")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "fb0bd3e0-7917-4d39-a0b5-57f64123e48c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "4c526646-9da4-4ab0-904d-5de01a2bab8f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "8b2d6433-33ab-488e-8bb8-e71858aa18f7")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "f9ae06a9-6b11-415d-8d24-82b3b70677ba")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "bd68d390-c6de-4a0f-ac3b-07d543014586")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "15a19830-beab-431d-b477-e4fe5fb8dc4e")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "3365925a-4bab-4bba-8a3a-b429010548a0")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "221a1e5f-bf5e-4376-8148-ad6c8290f126")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "Skjar:MountingHole_M2_CaseBoss"
+		(layer "F.Cu")
+		(uuid "f3a3c043-67f7-44d8-ba1b-42dd245349d9")
+		(at 71.88 79.97)
+		(descr "M2 hole for screwing the board down onto a boss of the case from the top (heat-set insert in the boss). The case script hardware/case/make_case.py puts a boss under every footprint whose reference is H<n>. Front: the screw head (pan head up to 4.0 mm). Back: the boss (5.0 mm) under the board")
+		(tags "mounting hole M2 case boss")
+		(property "Reference" "H5"
+			(at 0 -3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "52958cb4-9ecd-4b3e-b532-a73a29eb5230")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "MountingHole_M2_CaseBoss"
+			(at 0 3.2 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "7d8ae31a-3d38-4224-9d5e-585480b8ebbf")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "9807d4ec-9d03-484e-9be5-460ba544107b")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "ddac0f78-ad02-4d18-ae0f-6ccb7f4235ae")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(attr board_only exclude_from_pos_files exclude_from_bom)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 0 0)
+			(end 2.75 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "5322c911-abb6-4f01-8a15-6475f48c8ce7")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.25 0)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "8c6b5cd6-2607-4cd6-87a6-e246ddd240a0")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2.5 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.Fab")
+			(uuid "1a17221f-1805-446f-8632-943811a945b6")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 2 0)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.Fab")
+			(uuid "b5b91bfa-dd67-45f2-b18e-81e5c6035f28")
+		)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size 2.2 2.2)
+			(drill 2.2)
+			(layers "*.Cu" "*.Mask")
+			(uuid "95b5030c-ff55-4748-abba-10f5d1547212")
+		)
+		(embedded_fonts no)
+	)
 	(gr_line
 		(start 34.13125 18.653125)
 		(end 34.13125 13.890625)
