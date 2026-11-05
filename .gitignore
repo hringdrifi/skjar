@@ -23,6 +23,9 @@ fp-info-cache
 *.kicad_prl
 *.bak
 
+# 基板から書き出した 3D（他社のモデルを含む。いつでも書き出し直せる）
+hardware/pcb/skjar.step
+
 # OS / エディタ
 .DS_Store
 Thumbs.db
