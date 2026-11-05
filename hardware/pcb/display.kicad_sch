@@ -2099,9 +2099,38 @@
 			)
 		)
 	)
+	(junction
+		(at 147.32 129.54)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "eca35228-52c4-4b64-8e04-ec0dd7a40c3b")
+	)
+	(text "J301 のピン番号は Raspberry Pi 5 / CM4 の逆順。付属の FFC（両端で接点の向きが逆）で、基板の n 番がパネルの n 番につながる。\n片面接点（下接点）の Hirose FH12 を使い、逆向きには接点が当たらないようにしている。\n詳細：docs/schematic/display.md"
+		(exclude_from_sim no)
+		(at 40.64 215.9 0)
+		(effects
+			(font
+				(size 1.524 1.524)
+			)
+			(justify left top)
+		)
+		(uuid "c7eba65e-5638-4424-8c12-0727d2f87988")
+	)
+	(text "メモ"
+		(exclude_from_sim no)
+		(at 40.64 213.36 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "fa3e363f-9ea1-479c-8b30-44bc735cc2c1")
+	)
 	(symbol
 		(lib_id "Device:C")
-		(at 139.7 154.94 0)
+		(at 147.32 133.35 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -2111,7 +2140,7 @@
 		(dnp no)
 		(uuid "0ca0343b-3823-445e-adcc-5df618091b90")
 		(property "Reference" "C301"
-			(at 140.335 152.4 0)
+			(at 149.86 132.08 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2122,7 +2151,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 140.335 157.48 0)
+			(at 149.86 134.62 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2133,7 +2162,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 140.6652 158.75 0)
+			(at 148.2852 137.16 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2144,7 +2173,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 154.94 0)
+			(at 147.32 133.35 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2155,7 +2184,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 139.7 154.94 0)
+			(at 147.32 133.35 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2166,7 +2195,7 @@
 			)
 		)
 		(property "LCSC" "C14663"
-			(at 139.7 154.94 0)
+			(at 147.32 133.35 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2266,83 +2295,7 @@
 				)
 			)
 		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 139.7 151.13 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "290ade58-c861-43aa-8995-dfb43f72dca7")
-		(property "Reference" "#PWR183"
-			(at 139.7 151.13 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3_CM0"
-			(at 139.7 147.32 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 139.7 151.13 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 139.7 151.13 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 139.7 151.13 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "3743267a-2c02-4415-b196-4c5663022849")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/a0d89e2a-0804-4656-835c-28eaccbeaafa"
-					(reference "#PWR183")
-					(unit 1)
-				)
-			)
-		)
-	)
+	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x22")
 		(at 177.8 104.14 0)
@@ -2573,7 +2526,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 139.7 158.75 0)
+		(at 147.32 137.16 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -2583,7 +2536,7 @@
 		(dnp no)
 		(uuid "5f48faf3-7e22-4862-a4c1-07f1e5fc4ccc")
 		(property "Reference" "#PWR114"
-			(at 139.7 158.75 0)
+			(at 147.32 137.16 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2594,7 +2547,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 139.7 162.56 0)
+			(at 147.32 140.97 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2604,7 +2557,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 139.7 158.75 0)
+			(at 147.32 137.16 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2615,7 +2568,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 158.75 0)
+			(at 147.32 137.16 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2626,7 +2579,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 139.7 158.75 0)
+			(at 147.32 137.16 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
