@@ -12,6 +12,7 @@ SKJÁR の設計検討で参照した一次資料の出典と、読み取った�
 |---|---|
 | `RP-009251-DS-3-cm0-datasheet.pdf` | CM0 データシート（第3版、21ページ） |
 | `RP-009404-MM-1-cm0-product-brief.pdf` | CM0 製品概要 |
+| `852dcec091622f16a3f6f7aef0e3d4e5.pdf` | EDATEC の CM0 と開発キット（CM0 Dev Board）の資料（中国語、26ページ、[unikeyic.com](https://pf.unikeyic.com/datasheet/85/2d/cec0/852dcec091622f16a3f6f7aef0e3d4e5.pdf) から）。10 ページの上面図に、eMMC・SoC・無線モジュールの枠が縮尺どおりに描いてある（寸法の数字は外形だけ） |
 
 ### データシートの要点
 
