@@ -3099,17 +3099,7 @@
 			(type default)
 		)
 		(uuid "1f2ea4ae-ae50-4345-b93a-3e21a9ba5025")
-	)
-	(wire
-		(pts
-			(xy 231.14 170.18) (xy 231.14 167.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "24b73c60-3ab6-4ae9-a9f0-1cfd736cface")
-	)
+	)
 	(wire
 		(pts
 			(xy 238.76 116.84) (xy 228.6 116.84)
@@ -3369,20 +3359,10 @@
 			(type default)
 		)
 		(uuid "7c83d9ce-2d4d-4636-a9ef-fcb8edeaa7f0")
-	)
+	)
 	(wire
 		(pts
-			(xy 231.14 177.8) (xy 228.6 177.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "83f0846d-f577-4113-938b-7d6ed02125ce")
-	)
-	(wire
-		(pts
-			(xy 228.6 152.4) (xy 237.49 152.4)
+			(xy 228.6 152.4) (xy 238.76 152.4)
 		)
 		(stroke
 			(width 0)
@@ -3409,17 +3389,7 @@
 			(type default)
 		)
 		(uuid "8bab8a9b-baf9-4822-a897-7bda121db5eb")
-	)
-	(wire
-		(pts
-			(xy 231.14 177.8) (xy 231.14 180.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8d0917fd-008f-45af-98f8-da37e74bc878")
-	)
+	)
 	(wire
 		(pts
 			(xy 238.76 111.76) (xy 228.6 111.76)
@@ -3489,17 +3459,7 @@
 			(type default)
 		)
 		(uuid "97d4f65f-951e-448f-b888-4044b2cc407b")
-	)
-	(wire
-		(pts
-			(xy 228.6 170.18) (xy 231.14 170.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9850a4f1-b755-46fb-92e4-eb0914084bea")
-	)
+	)
 	(wire
 		(pts
 			(xy 160.02 82.55) (xy 170.18 82.55)
@@ -3519,17 +3479,7 @@
 			(type default)
 		)
 		(uuid "a0aad0c4-1015-42c9-92a2-70de0b4e0384")
-	)
-	(wire
-		(pts
-			(xy 228.6 175.26) (xy 231.14 175.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b47fad1e-16be-4835-aed6-bd686c94bb00")
-	)
+	)
 	(wire
 		(pts
 			(xy 163.83 116.84) (xy 163.83 114.3)
@@ -3579,17 +3529,7 @@
 			(type default)
 		)
 		(uuid "c409bd77-aa00-4e42-bd0f-c2911fb4bb6c")
-	)
-	(wire
-		(pts
-			(xy 228.6 172.72) (xy 231.14 172.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c5694319-d56a-42a0-93ac-5e64f326fc94")
-	)
+	)
 	(wire
 		(pts
 			(xy 147.32 167.64) (xy 147.32 165.1)
@@ -4057,7 +3997,7 @@
 	)
 	(global_label "CC2_A"
 		(shape input)
-		(at 238.76 172.72 0)
+		(at 252.73 187.96 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4067,7 +4007,7 @@
 		)
 		(uuid "0ae4b239-b74f-4099-9ea5-9ab727c4db82")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 247.5509 172.72 0)
+			(at 252.73 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4200,7 +4140,7 @@
 	)
 	(global_label "CC2_B"
 		(shape input)
-		(at 238.76 180.34 0)
+		(at 252.73 198.12 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4210,7 +4150,7 @@
 		)
 		(uuid "3332905f-9d39-4cbf-b7a8-edfedf83204b")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 247.7323 180.34 0)
+			(at 252.73 198.12 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4224,7 +4164,7 @@
 	)
 	(global_label "CC1_A"
 		(shape input)
-		(at 238.76 167.64 0)
+		(at 252.73 182.88 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4234,7 +4174,7 @@
 		)
 		(uuid "3415bae3-2de9-4e78-a55e-e29ac7e1008e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 247.5509 167.64 0)
+			(at 252.73 182.88 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4629,7 +4569,7 @@
 	)
 	(global_label "CC1_B"
 		(shape input)
-		(at 238.76 175.26 0)
+		(at 252.73 193.04 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4639,7 +4579,7 @@
 		)
 		(uuid "d9d0fa69-b279-4f3c-a7bf-17ebe849491e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 247.7323 175.26 0)
+			(at 252.73 193.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4677,17 +4617,17 @@
 	)
 	(global_label "RGB_EN"
 		(shape output)
-		(at 237.49 152.4 180)
+		(at 238.76 152.4 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify left)
 		)
 		(uuid "dee84800-de49-40fb-a443-7ddd71362fae")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 237.49 152.4 0)
+			(at 238.76 152.4 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4793,6 +4733,149 @@
 				(justify left)
 			)
 		)
+	)
+	(wire
+		(pts
+			(xy 233.68 198.12) (xy 245.11 198.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f1915b2-eb1a-4461-8588-132cff8de753")
+	)
+	(wire
+		(pts
+			(xy 233.68 177.8) (xy 233.68 198.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1452fefd-5bb2-46d4-9aff-cb92925749f5")
+	)
+	(wire
+		(pts
+			(xy 228.6 177.8) (xy 233.68 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4d762026-cc20-4289-9a01-5d06641b9054")
+	)
+	(wire
+		(pts
+			(xy 236.22 193.04) (xy 245.11 193.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a255c2c-cb3f-42c5-9842-fbb61dfa18f7")
+	)
+	(wire
+		(pts
+			(xy 236.22 175.26) (xy 236.22 193.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "04522c4a-3b6f-4466-b1b4-9a62b1cc1ffa")
+	)
+	(wire
+		(pts
+			(xy 228.6 175.26) (xy 236.22 175.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "800492ff-7e66-4454-9370-ca6070c99f8c")
+	)
+	(wire
+		(pts
+			(xy 238.76 187.96) (xy 245.11 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d57f0b0e-d64d-4e98-aeee-725b1f2d11da")
+	)
+	(wire
+		(pts
+			(xy 238.76 172.72) (xy 238.76 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a719c958-9321-4279-9a54-6cb429675b86")
+	)
+	(wire
+		(pts
+			(xy 228.6 172.72) (xy 238.76 172.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c90ce67-ae77-4550-b58f-e7406c66a287")
+	)
+	(wire
+		(pts
+			(xy 241.3 182.88) (xy 245.11 182.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "09b9369e-c7a7-4e77-9371-d632746439a9")
+	)
+	(wire
+		(pts
+			(xy 241.3 170.18) (xy 241.3 182.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c9846786-4ee3-48da-ba5f-5f0a28d3c61e")
+	)
+	(wire
+		(pts
+			(xy 228.6 170.18) (xy 241.3 170.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c42493e2-6712-46bd-a546-3332d6631ab9")
+	)
+	(text "キーボードのコントローラ。キーマトリクスと RGB を受け持ち、PC へは Port A の USB HID、CM0 へは I²C（KB_SDA / KB_SCL / KB_INT）で送る。\nCM0 の電源（CM0_PWROFF → GLOBAL_EN）と起動モード（BOOT_EN → nRPI_BOOT）も RP2040 が操作する。\nCC1_A〜CC2_B は 1 kΩ を通して ADC へ（PC がつながっているかの判定）。\nファームは BOOTSEL を押しながら Port A から UF2 で書き込む。SWD はテストパッドだけ。\n詳細：docs/schematic/rp2040.md、GPIO は docs/pin-assignment.md"
+		(exclude_from_sim no)
+		(at 40.64 215.9 0)
+		(effects
+			(font
+				(size 1.524 1.524)
+			)
+			(justify left top)
+		)
+		(uuid "39345139-3697-45fd-91ef-66553dd7691c")
+	)
+	(text "メモ"
+		(exclude_from_sim no)
+		(at 40.64 213.36 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "79aec64f-39a8-4dfb-b168-5cc5d2c0349c")
 	)
 	(symbol
 		(lib_id "power:+3V3")
@@ -7615,7 +7698,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 234.95 172.72 270)
+		(at 248.92 187.96 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7625,7 +7708,7 @@
 		(dnp no)
 		(uuid "79a468fd-14df-4403-9ba6-733c9fb6708a")
 		(property "Reference" "R108"
-			(at 234.95 170.18 90)
+			(at 248.92 185.42 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7635,7 +7718,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 234.95 172.72 90)
+			(at 248.92 187.96 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7645,7 +7728,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 234.95 170.942 0)
+			(at 248.92 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7656,7 +7739,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 234.95 172.72 0)
+			(at 248.92 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7667,7 +7750,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 234.95 172.72 0)
+			(at 248.92 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7678,7 +7761,7 @@
 			)
 		)
 		(property "LCSC" "C21190"
-			(at 234.95 172.72 0)
+			(at 248.92 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8562,7 +8645,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 234.95 167.64 270)
+		(at 248.92 182.88 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -8572,7 +8655,7 @@
 		(dnp no)
 		(uuid "c2b4751d-61c1-4f36-ab29-4dcaba12b45d")
 		(property "Reference" "R107"
-			(at 234.95 165.1 90)
+			(at 248.92 180.34 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8582,7 +8665,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 234.95 167.64 90)
+			(at 248.92 182.88 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8592,7 +8675,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 234.95 165.862 0)
+			(at 248.92 182.88 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8603,7 +8686,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 234.95 167.64 0)
+			(at 248.92 182.88 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8614,7 +8697,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 234.95 167.64 0)
+			(at 248.92 182.88 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8625,7 +8708,7 @@
 			)
 		)
 		(property "LCSC" "C21190"
-			(at 234.95 167.64 0)
+			(at 248.92 182.88 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9032,7 +9115,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 234.95 175.26 270)
+		(at 248.92 193.04 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9042,7 +9125,7 @@
 		(dnp no)
 		(uuid "e1242813-b0a9-4804-97c0-5878905e8e89")
 		(property "Reference" "R109"
-			(at 234.95 177.8 90)
+			(at 248.92 190.5 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9052,7 +9135,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 234.95 175.26 90)
+			(at 248.92 193.04 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9062,7 +9145,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 234.95 173.482 0)
+			(at 248.92 193.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9073,7 +9156,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 234.95 175.26 0)
+			(at 248.92 193.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9084,7 +9167,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 234.95 175.26 0)
+			(at 248.92 193.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9095,7 +9178,7 @@
 			)
 		)
 		(property "LCSC" "C21190"
-			(at 234.95 175.26 0)
+			(at 248.92 193.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9122,7 +9205,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 234.95 180.34 270)
+		(at 248.92 198.12 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9132,7 +9215,7 @@
 		(dnp no)
 		(uuid "e47f37f7-9bc0-416c-ae62-24874971f4dc")
 		(property "Reference" "R110"
-			(at 234.95 182.88 90)
+			(at 248.92 195.58 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9142,7 +9225,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 234.95 180.34 90)
+			(at 248.92 198.12 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9152,7 +9235,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 234.95 178.562 0)
+			(at 248.92 198.12 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9163,7 +9246,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 234.95 180.34 0)
+			(at 248.92 198.12 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9174,7 +9257,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 234.95 180.34 0)
+			(at 248.92 198.12 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9185,7 +9268,7 @@
 			)
 		)
 		(property "LCSC" "C21190"
-			(at 234.95 180.34 0)
+			(at 248.92 198.12 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

@@ -5425,6 +5425,149 @@
 			)
 		)
 	)
+	(junction
+		(at 137.16 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "38c2fafa-4ea9-4bf4-9132-ecf28177aa48")
+	)
+	(junction
+		(at 127 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0186eef6-f321-4667-8ef3-8a9a7e7d9ad6")
+	)
+	(junction
+		(at 127 88.9)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a72514df-3a61-4ac7-8528-1f067c9c7bad")
+	)
+	(wire
+		(pts
+			(xy 127 93.98) (xy 137.16 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b0a1e930-10bc-476f-ba16-19d49f754d6a")
+	)
+	(wire
+		(pts
+			(xy 127 88.9) (xy 116.84 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f43787a5-b178-457f-af55-bb9c0255279d")
+	)
+	(wire
+		(pts
+			(xy 127 93.98) (xy 127 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a95e611-10b3-435a-9829-2ec1f8e89e27")
+	)
+	(wire
+		(pts
+			(xy 127 88.9) (xy 127 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "af63ece6-6e99-4ad4-a5d6-1086685c6127")
+	)
+	(wire
+		(pts
+			(xy 127 83.82) (xy 127 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "49d7de9e-e137-4420-a3e0-5b1079b387b9")
+	)
+	(wire
+		(pts
+			(xy 134.62 78.74) (xy 139.7 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b8b64ce4-4261-4a3f-b8fb-d91bc755ddf6")
+	)
+	(junction
+		(at 111.76 78.74)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0fc0589b-057b-44f9-8080-ffe84406d89a")
+	)
+	(junction
+		(at 106.68 78.74)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "fdcc5824-3ee1-497a-80ea-37bff83393fc")
+	)
+	(wire
+		(pts
+			(xy 111.76 78.74) (xy 119.38 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4f240022-8876-46e5-90e3-ed697cabaa1a")
+	)
+	(wire
+		(pts
+			(xy 106.68 78.74) (xy 111.76 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "03c1b42c-1e10-477e-bcae-b825d10a0ff6")
+	)
+	(wire
+		(pts
+			(xy 93.98 78.74) (xy 106.68 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f35a612f-0e0a-42b8-b905-73082e7a7d91")
+	)
+	(text "RTC は +3V3（常時 ON）と CR2032 の高い方から BAT54C で給電する。CM0 が OFF でも時刻を保つ。\nI2C1 のプルアップは CM0 の内部（1.8 kΩ）を使う。\n音声 IC は SPKVDD だけ +5V、ほかは CM0 の 3.3 V / 1.8 V から取り、CM0 と一緒に ON / OFF する（データシートの推奨順序に合う）。\n詳細：docs/schematic/peripherals.md"
+		(exclude_from_sim no)
+		(at 40.64 157.48 0)
+		(effects
+			(font
+				(size 1.524 1.524)
+			)
+			(justify left top)
+		)
+		(uuid "91d89da4-9def-4be2-8579-45313b609399")
+	)
+	(text "メモ"
+		(exclude_from_sim no)
+		(at 40.64 154.94 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "02763c8d-d5d1-4ee7-8f19-e92c9e2ca80f")
+	)
 	(symbol
 		(lib_id "power:+1V8")
 		(at 309.88 148.59 0)
@@ -5599,7 +5742,7 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 182.88 78.74 180)
+		(at 137.16 93.98 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -5609,7 +5752,7 @@
 		(dnp no)
 		(uuid "0b20cac5-eb38-4824-93a0-d7de16ff6b83")
 		(property "Reference" "#FLG004"
-			(at 182.88 78.74 0)
+			(at 137.16 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5620,7 +5763,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 182.88 82.55 0)
+			(at 137.16 97.79 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5630,7 +5773,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 182.88 78.74 0)
+			(at 137.16 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5641,7 +5784,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 182.88 78.74 0)
+			(at 137.16 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5652,7 +5795,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 182.88 78.74 0)
+			(at 137.16 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5827,7 +5970,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 160.02 82.55 0)
+		(at 116.84 92.71 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -5837,7 +5980,7 @@
 		(dnp no)
 		(uuid "1199536c-2732-4c55-bf7e-3482f93562c4")
 		(property "Reference" "C401"
-			(at 160.655 80.01 0)
+			(at 118.745 91.44 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5848,7 +5991,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 160.655 85.09 0)
+			(at 118.745 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5859,7 +6002,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 160.9852 86.36 0)
+			(at 117.8052 96.52 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5870,7 +6013,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 160.02 82.55 0)
+			(at 116.84 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5881,7 +6024,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 160.02 82.55 0)
+			(at 116.84 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5892,7 +6035,7 @@
 			)
 		)
 		(property "LCSC" "C14663"
-			(at 160.02 82.55 0)
+			(at 116.84 92.71 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6978,6 +7121,7 @@
 	(symbol
 		(lib_id "Diode:BAT54C")
 		(at 127 78.74 0)
+		(mirror y)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6994,7 +7138,7 @@
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
 		(property "Value" "BAT54C"
@@ -7414,7 +7558,7 @@
 	)
 	(symbol
 		(lib_id "power:+BATT")
-		(at 93.98 78.74 0)
+		(at 106.68 78.74 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7424,7 +7568,7 @@
 		(dnp no)
 		(uuid "42280b08-589d-4c5f-a1a0-466f3ab79e3b")
 		(property "Reference" "#PWR187"
-			(at 93.98 78.74 0)
+			(at 106.68 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7435,7 +7579,7 @@
 			)
 		)
 		(property "Value" "VBAT"
-			(at 93.98 74.93 0)
+			(at 106.68 74.93 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7445,7 +7589,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 93.98 78.74 0)
+			(at 106.68 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7456,7 +7600,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 93.98 78.74 0)
+			(at 106.68 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7467,7 +7611,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 93.98 78.74 0)
+			(at 106.68 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7576,7 +7720,7 @@
 		(dnp no)
 		(uuid "45f7e2a2-a470-42c2-847e-3ea053507a51")
 		(property "Reference" "Y402"
-			(at 233.68 87.63 0)
+			(at 240.03 87.63 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8312,83 +8456,7 @@
 				)
 			)
 		)
-	)
-	(symbol
-		(lib_id "power:+BATT")
-		(at 134.62 78.74 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "7cfae753-b383-4376-b7f5-8aa896715273")
-		(property "Reference" "#PWR186"
-			(at 134.62 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VBAT"
-			(at 138.43 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 134.62 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 134.62 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 134.62 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "5d63e35b-620a-48e4-889d-02f73a561077")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
-					(reference "#PWR186")
-					(unit 1)
-				)
-			)
-		)
-	)
+	)
 	(symbol
 		(lib_id "power:+3.3VA")
 		(at 302.26 76.2 0)
@@ -8541,83 +8609,7 @@
 				)
 			)
 		)
-	)
-	(symbol
-		(lib_id "power:VDD")
-		(at 127 101.6 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "931d1850-494e-44c6-aa04-9ba75b82f1d4")
-		(property "Reference" "#PWR190"
-			(at 127 101.6 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VDD_RTC"
-			(at 127 97.79 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 127 101.6 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 127 101.6 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 127 101.6 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "50480da1-9a0e-480d-9a0d-774e242c9f67")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
-					(reference "#PWR190")
-					(unit 1)
-				)
-			)
-		)
-	)
+	)
 	(symbol
 		(lib_id "Device:FerriteBead")
 		(at 332.74 72.39 0)
@@ -8785,83 +8777,7 @@
 				)
 			)
 		)
-	)
-	(symbol
-		(lib_id "power:+BATT")
-		(at 73.66 78.74 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "a148681f-d858-4109-b9d2-8dc5702924bb")
-		(property "Reference" "#PWR188"
-			(at 73.66 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VBAT"
-			(at 73.66 74.93 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 73.66 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 73.66 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 73.66 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "54899d54-148f-4c2c-8695-068748a4a101")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
-					(reference "#PWR188")
-					(unit 1)
-				)
-			)
-		)
-	)
+	)
 	(symbol
 		(lib_id "Device:C")
 		(at 219.71 90.17 0)
@@ -8956,7 +8872,7 @@
 	)
 	(symbol
 		(lib_id "power:VDD")
-		(at 160.02 78.74 0)
+		(at 137.16 93.98 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -8966,7 +8882,7 @@
 		(dnp no)
 		(uuid "b6bdf1ff-c09c-4814-a167-66c5ec84e077")
 		(property "Reference" "#PWR191"
-			(at 160.02 78.74 0)
+			(at 137.16 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8977,7 +8893,7 @@
 			)
 		)
 		(property "Value" "VDD_RTC"
-			(at 160.02 74.93 0)
+			(at 137.16 90.17 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8987,7 +8903,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 160.02 78.74 0)
+			(at 137.16 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8998,7 +8914,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 160.02 78.74 0)
+			(at 137.16 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9009,7 +8925,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 160.02 78.74 0)
+			(at 137.16 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9233,7 +9149,7 @@
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 73.66 78.74 180)
+		(at 111.76 78.74 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9243,7 +9159,7 @@
 		(dnp no)
 		(uuid "c80ae641-2696-4eca-9525-70f2356c5ce7")
 		(property "Reference" "#FLG005"
-			(at 73.66 78.74 0)
+			(at 111.76 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9254,7 +9170,7 @@
 			)
 		)
 		(property "Value" "PWR_FLAG"
-			(at 73.66 82.55 0)
+			(at 111.76 82.55 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9264,7 +9180,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 73.66 78.74 0)
+			(at 111.76 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9275,7 +9191,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 73.66 78.74 0)
+			(at 111.76 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9286,7 +9202,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 73.66 78.74 0)
+			(at 111.76 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10353,7 +10269,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 119.38 78.74 90)
+		(at 139.7 78.74 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10363,7 +10279,7 @@
 		(dnp no)
 		(uuid "dcbd978b-f382-4821-be6d-3b3d1a2e275f")
 		(property "Reference" "#PWR118"
-			(at 119.38 78.74 0)
+			(at 139.7 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10374,7 +10290,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 115.57 78.74 0)
+			(at 139.7 74.93 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10384,7 +10300,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 119.38 78.74 0)
+			(at 139.7 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10395,7 +10311,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 119.38 78.74 0)
+			(at 139.7 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10406,7 +10322,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 119.38 78.74 0)
+			(at 139.7 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10581,7 +10497,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 160.02 86.36 0)
+		(at 116.84 96.52 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10591,7 +10507,7 @@
 		(dnp no)
 		(uuid "e5bfc4be-3d01-47d4-9b8d-b83dfa0908d6")
 		(property "Reference" "#PWR117"
-			(at 160.02 86.36 0)
+			(at 116.84 96.52 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10602,7 +10518,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 160.02 90.17 0)
+			(at 116.84 100.33 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10612,7 +10528,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 160.02 86.36 0)
+			(at 116.84 96.52 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10623,7 +10539,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 160.02 86.36 0)
+			(at 116.84 96.52 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10634,7 +10550,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 160.02 86.36 0)
+			(at 116.84 96.52 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10746,159 +10662,7 @@
 				)
 			)
 		)
-	)
-	(symbol
-		(lib_id "power:VDD")
-		(at 127 83.82 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "ebb57ceb-784c-4c17-b3af-98b17d51eebd")
-		(property "Reference" "#PWR189"
-			(at 127 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VDD_RTC"
-			(at 127 87.63 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 127 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 127 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 127 83.82 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "642f8f20-cf1f-4d6d-b156-0ebf326a0bda")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
-					(reference "#PWR189")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:VDD")
-		(at 182.88 78.74 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "ec4f3848-9d29-4e7c-99a3-60a14f7526ee")
-		(property "Reference" "#PWR192"
-			(at 182.88 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VDD_RTC"
-			(at 182.88 74.93 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 182.88 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 182.88 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 182.88 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "df013cb0-62fb-44ac-b24b-bde7206ebe62")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/eb07638f-cc27-4cc3-b503-1b87189697b4"
-					(reference "#PWR192")
-					(unit 1)
-				)
-			)
-		)
-	)
+	)
 	(symbol
 		(lib_id "power:+3.3VA")
 		(at 332.74 76.2 180)
