@@ -2105,7 +2105,7 @@
 		(color 0 0 0 0)
 		(uuid "eca35228-52c4-4b64-8e04-ec0dd7a40c3b")
 	)
-	(text "J301 のピン番号は Raspberry Pi 5 / CM4 の逆順。付属の FFC（両端で接点の向きが逆）で、基板の n 番がパネルの n 番につながる。\n片面接点（下接点）の Hirose FH12 を使い、逆向きには接点が当たらないようにしている。\n詳細：docs/schematic/display.md"
+	(text "J301 のピン番号は Raspberry Pi 5 / CM4 と同じ順。付属の FFC（両端で接点の向きが逆）で、基板の n 番がパネルの 23 − n 番につながる。\n片面接点（上接点）の Hirose FH12A を使い、逆向きには接点が当たらないようにしている。\n詳細：docs/schematic/display.md"
 		(exclude_from_sim no)
 		(at 40.64 215.9 0)
 		(effects
@@ -2298,8 +2298,7 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x22")
-		(at 177.8 104.14 0)
-		(mirror x)
+		(at 177.8 101.6 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -2361,7 +2360,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C597981"
+		(property "LCSC" "C3168813"
 			(at 177.8 101.6 0)
 			(hide yes)
 			(show_name no)
