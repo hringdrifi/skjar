@@ -65,7 +65,7 @@ GLASS_LEDGE = 0.2               # the case steps in under the overhanging glass,
 COVER_GAP = 0.5                 # around the back cover of the display
 
 # Display studs: bosses up from the floor, screwed from below (M2.5)
-STUD_BOSS_D = 6.0               # fits inside the 6.5 mm board holes
+STUD_BOSS_D = 6.0               # under the board: the studs reach down through the board holes to STUD_TIP
 STUD_SCREW_D = 2.7
 STUD_HEAD_D = 5.0
 STUD_SCREW_LEN = 6.0            # screw length from the boss top; the rest is counterbore
