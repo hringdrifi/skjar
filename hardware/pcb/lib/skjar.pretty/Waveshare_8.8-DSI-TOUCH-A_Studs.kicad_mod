@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "Clearance holes for the back studs of the Waveshare 8.8-DSI-TOUCH-A (the panel is screwed to the case). The four inner holes are slots that also take the Raspberry Pi pattern studs of the 8.8inch DSI LCD. Origin at the glass centre, seen from the front. From the Waveshare 2D drawing (2025-12-15) and STEP")
+	(descr "Clearance holes for the back studs of the Waveshare 8.8-DSI-TOUCH-A (the panel is screwed to the case). The four inner holes are slots that also take the Raspberry Pi pattern studs of the 8.8inch DSI LCD. Origin at the glass centre, seen from the front. From the Waveshare 2D drawing (2025-12-15) and STEP. F.Fab: the glass, the studs, the connector window and its DSI and 5V connectors.")
 	(tags "Waveshare 8.8 DSI TOUCH-A display stud clearance")
 	(property "Reference" "REF**"
 		(at 0 -36 0)
@@ -268,6 +268,52 @@
 				(size 1.5 1.5)
 				(thickness 0.15)
 			)
+		)
+	)
+	(fp_rect
+		(start -44.9988 1.795)
+		(end -49.7987 -13.505)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "57d73fac-0952-5ab2-be36-c6387a93555e")
+	)
+	(fp_text user "TOUCH-A: DSI conn (pin 1 front, cable out to the right)"
+		(at -50.2987 -5.855 180)
+		(layer "F.Fab")
+		(uuid "34473076-8014-56f9-94b8-3725b7fefc03")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+			(justify left bottom)
+		)
+	)
+	(fp_rect
+		(start -45.7987 14.445)
+		(end -49.9988 6.795)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "ea821be3-8bcb-5381-a5cc-b57eb364dae8")
+	)
+	(fp_text user "TOUCH-A: 5V conn"
+		(at -50.4988 10.62 180)
+		(layer "F.Fab")
+		(uuid "b2799113-6540-59f2-bdb5-89cf22796d10")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+			(justify left bottom)
 		)
 	)
 	(pad "" np_thru_hole circle
