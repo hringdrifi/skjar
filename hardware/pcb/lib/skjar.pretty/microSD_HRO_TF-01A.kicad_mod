@@ -1,0 +1,335 @@
+(footprint "microSD_HRO_TF-01A"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "microSD socket, push-push, right-angle SMD, Korean Hroparts Elec TF-01A (LCSC C91145; also fits the same-size TF-115-type sockets: XUNPU TF-115, SHOU HAN TF PUSH, XKB XKTF-015-N, SOFNG TF-015). Land pattern from the HRO drawing (2023-08-20, docs/references/sd/). Origin between the two locating holes; the card comes out towards +y. Body front at y 4.00 (right part; 3.30 on the left). Card end from the body front: pushed in 1.32, locked 2.50, popped out 5.60. Pin 9 (CD) closes to the shell when a card is in")
+	(tags "microSD TF card socket push-push HRO TF-01A")
+	(property "Reference" "REF**"
+		(at 0 -13.2 0)
+		(layer "F.SilkS")
+		(uuid "d6bbde69-0055-4d5e-a94d-352e18e6c09e")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Value" "microSD_HRO_TF-01A"
+		(at 0 10.6 0)
+		(layer "F.Fab")
+		(uuid "af537342-5b9d-4d9f-94c6-02008cae683e")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b7d96833-7283-4109-9fdb-dd46bb637153")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "d2ca1516-37a5-4b5f-8c10-379111e4b7d2")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -6.59 -10.62)
+		(end -6.3 -10.62)
+		(stroke
+			(width 0.12)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "ea61d2eb-45c2-4ae4-ae32-fb7cc9c334e1")
+	)
+	(fp_line
+		(start -6.59 -8.9)
+		(end -6.59 -1.9)
+		(stroke
+			(width 0.12)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "d7200220-a53c-4c0c-9628-81c1e0132d94")
+	)
+	(fp_line
+		(start -6.3 -10.62)
+		(end -6.59 -10.62)
+		(stroke
+			(width 0.12)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "609234bb-0776-4488-a2d0-1d3e6dfed020")
+	)
+	(fp_line
+		(start 8.399999 -8.9)
+		(end 8.399999 -1.9)
+		(stroke
+			(width 0.12)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "99229ab5-62eb-4db9-8d7e-c1497b63db63")
+	)
+	(fp_circle
+		(center 3.2 -12.4)
+		(end 3.4 -12.4)
+		(stroke
+			(width 0.12)
+			(type default)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "1d4f94cd-87bf-4f30-9418-8b9c8da015ce")
+	)
+	(fp_rect
+		(start -7.65 -12.05)
+		(end 9.55 4.25)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "06effe18-ea94-4975-993f-0630a8226541")
+	)
+	(fp_line
+		(start -6.47 -10.5)
+		(end 8.279999 -10.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "933fdac8-6c92-4801-b58e-c1c7de115e9c")
+	)
+	(fp_line
+		(start -6.47 3.3)
+		(end -6.47 -10.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "244f7ddf-29b9-42c6-b50b-024536234f55")
+	)
+	(fp_line
+		(start 3.78 3.3)
+		(end -6.47 3.3)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "3c4aeda9-d4d1-4917-93d7-ca230622fd2e")
+	)
+	(fp_line
+		(start 4.98 4)
+		(end 3.78 3.3)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "7fd2b2b8-dcb0-4bdb-ac2b-b3f5db658950")
+	)
+	(fp_line
+		(start 8.279999 -10.5)
+		(end 8.279999 4)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "b9830096-c1c0-4f3f-a2fa-5fb7d9a38427")
+	)
+	(fp_line
+		(start 8.279999 4)
+		(end 4.98 4)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "46a2ecfb-83a5-4c8d-9c16-2ab83dbe2f6e")
+	)
+	(fp_rect
+		(start -5.5 4)
+		(end 5.5 6.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "0f063d29-ed53-4254-a546-b65ba19121d2")
+	)
+	(fp_rect
+		(start -5.5 6.5)
+		(end 5.5 9.6)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "650bcde9-47d9-4fb4-96df-e5243ab7ae41")
+	)
+	(fp_text user "card locked"
+		(at 0 5.25 0)
+		(layer "F.Fab")
+		(uuid "1b7a5f2e-4a54-4bcd-9481-762eb9626ead")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(fp_text user "card out"
+		(at 0 8.05 0)
+		(layer "F.Fab")
+		(uuid "ea363816-314f-4141-8a90-c7b6d9ff73fd")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "" np_thru_hole circle
+		(at -4 0)
+		(size 1 1)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(uuid "4f2dbb8e-f29f-4b34-ad26-db6ccc8e4e28")
+	)
+	(pad "" np_thru_hole circle
+		(at 4 0)
+		(size 1 1)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(uuid "9faa49ea-0df9-48df-909e-19da0b15b2bf")
+	)
+	(pad "1" smd rect
+		(at 3.2 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "48c8b41e-4c8d-4a91-8b9e-477ef750fbe8")
+	)
+	(pad "2" smd rect
+		(at 2.1 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "8a1076bb-74e6-4fc2-af93-99bdbf4eb88d")
+	)
+	(pad "3" smd rect
+		(at 1 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "c0869525-2897-464b-b16d-c87b60349489")
+	)
+	(pad "4" smd rect
+		(at -0.099999 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "93eeb5a6-cdd3-43a7-ae5a-dfd69c6fd976")
+	)
+	(pad "5" smd rect
+		(at -1.199999 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "2f29c5d5-d94d-4f0e-91fb-df1886793208")
+	)
+	(pad "6" smd rect
+		(at -2.299999 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "3cfd1467-00d2-426b-8ccd-663dd38a4c13")
+	)
+	(pad "7" smd rect
+		(at -3.399999 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "7883e8a5-071a-4751-9725-6ec598441686")
+	)
+	(pad "8" smd rect
+		(at -4.5 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "1d0bf4c4-8129-4123-947f-a384c50c9a40")
+	)
+	(pad "9" smd rect
+		(at -5.6 -11)
+		(size 0.7 1.6)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "f2bfe19b-24e7-4449-a96b-766cf27fa943")
+	)
+	(pad "SH" smd rect
+		(at -6.8 -10)
+		(size 1.2 1.5)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "640d4203-4bcc-42d6-8ed8-585eb96d2172")
+	)
+	(pad "SH" smd rect
+		(at -6.8 -0.4)
+		(size 1.2 2.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "00a69865-e131-46c3-9dcf-0dbce7dc4d78")
+	)
+	(pad "SH" smd rect
+		(at 7.8 -10)
+		(size 1.6 1.5)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "7b842537-84cd-480e-bf4d-0c0efe40f9ee")
+	)
+	(pad "SH" smd rect
+		(at 8.7 -0.4)
+		(size 1.2 2.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "2f2becc8-5ad2-4e0b-866c-1272f90658cc")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/lib/3dmodels/microSD_HRO_TF-01A.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

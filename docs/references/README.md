@@ -12,6 +12,7 @@ SKJÁR の設計検討で参照した一次資料の出典と、読み取った�
 |---|---|
 | `RP-009251-DS-3-cm0-datasheet.pdf` | CM0 データシート（第3版、21ページ） |
 | `RP-009404-MM-1-cm0-product-brief.pdf` | CM0 製品概要 |
+| `852dcec091622f16a3f6f7aef0e3d4e5.pdf` | EDATEC の CM0 と開発キット（CM0 Dev Board）の資料（中国語、26ページ、[unikeyic.com](https://pf.unikeyic.com/datasheet/85/2d/cec0/852dcec091622f16a3f6f7aef0e3d4e5.pdf) から）。10 ページの上面図に、eMMC・SoC・無線モジュールの枠が縮尺どおりに描いてある（寸法の数字は外形だけ） |
 
 ### データシートの要点
 
@@ -53,6 +54,12 @@ IPEX-1 のアンテナ端子は、右の辺の上寄り（下の辺から 17.225
 - **CM0 用のデバイスツリー：** `bcm2710-rpi-cm0.dts` がある。I²C0 は GPIO0/1 と GPIO44/45 の切り替え式（`i2c0mux_0_44`）。
 - **Waveshare パネル用のドライバ：** `vc4-kms-dsi-waveshare-panel` に `8_8_inch` と `11_9_inch` のパラメータがある。
 - **UART：** UART0 は Bluetooth が使っている。GPIO14/15 で RP2040 と UART で通信するには、設定の変更が必要（Zero 2 W と同様）。
+
+## sd/ — microSD のスロット
+
+| ファイル | 内容 |
+|---|---|
+| `TF-01A&01C.pdf` | Korean Hroparts Elec の TF-01A（1 ページ目、2023-08-20）と TF-01C（2 ページ目、2022-11-19）の図面。[HRO の公式サイト](https://en.krhro.com/) の PDF ビューアから保存した。J201（TF-01A）のフットプリントと 3D モデルはこの図面から作った |
 
 ## giteki-020-260249/ — CM0 の技適（工事設計認証）
 

@@ -32,3 +32,14 @@
 (rule "GCPW: pair to GND pour"
 	(constraint clearance (min 0.2mm))
 	(condition "A.Type == 'Zone' && A.NetName == 'GND' && (B.NetClass == 'DSI' || B.NetClass == 'USB')"))
+
+# DSI: 0.75 mm (3 x width) between different pairs, except where the pairs fan into
+# the 0.5 mm pitch pins of CM0 (U201) and J301. P to N stays at the netclass gap (0.2 mm).
+(rule "DSI: pair to pair"
+	(constraint clearance (min 0.75mm))
+	(condition "A.NetClass == 'DSI' && B.NetClass == 'DSI' && !A.isCoupledDiffPair() && !A.intersectsCourtyard('U201') && !B.intersectsCourtyard('U201') && !A.intersectsCourtyard('J301') && !B.intersectsCourtyard('J301')"))
+
+# DSI: P and N of each pair within 0.15 mm of each other.
+(rule "DSI: P/N skew"
+	(constraint skew (max 0.15mm) (within_diff_pairs))
+	(condition "A.NetClass == 'DSI'"))
