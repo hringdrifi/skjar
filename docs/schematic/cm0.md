@@ -55,14 +55,15 @@
 
 | 記号 | 部品 | シンボル | フットプリント | LCSC |
 |---|---|---|---|---|
-| J201 | Hirose DM3AT-SF-PEJM5（押し込み式） | `Connector:Micro_SD_Card_Det_Hirose_DM3AT` | `Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5` | C114218 |
+| J201 | Korean Hroparts Elec TF-01A（プッシュプッシュ。2026-11-05 に Hirose DM3AT-SF-PEJM5 から変えた） | `Connector:Micro_SD_Card_Det1` | `Skjar:microSD_HRO_TF-01A` | C91145 |
 | R203〜R207 | 100 kΩ（**未実装**） | `Device:R` | 0603 | C25803 |
 | C204 / C205 | 100 nF / 10 µF | `Device:C` | 0603 | C14663 / C96446 |
 
 - CMD、DAT0〜3、CLK を CM0 の SD 用のピンにそのままつなぐ。VDD は `+3V3_CM0`。SH（シールド）は GND。
 - CM0Lite はここに挿したカードから起動する。eMMC 版の CM0 では使われない（部品を載せなくてよい）。
 - R203〜R207 は CMD と DAT0〜3 のプルアップ。なしで動く見込みなので、フットプリントだけ用意して未実装にする。CM0 のデータシートには SD のプルアップの記述がなく、CM0 の IO ボードの回路図は公開されていない。CM4Lite 用の公式の IO ボード（CM4IO）は、microSD のスロットに SD の信号を直接つないでいて、外付けのプルアップはない（カード検出のプルアップも未実装）。
-- カード検出（DET_A / DET_B）は、CM0 に受け口がないので未接続。
+- カード検出（9 番の DET。カードを挿すとシェルにつながる）は、CM0 に受け口がないので未接続。
+- **TF-01A にした理由：** ケースの外からカードを押し出してつまめるようにするため。挿したカードが本体の前から出る長さは、ロックで 2.50 mm、飛び出しで 5.60 mm（DM3AT は 1.6 / 5.6 mm）。本体の前を基板の縁にそろえて置ける（DM3AT は前のシェルのパッドが縁にかかり、本体が基板の外へ 1.4 mm 出ていた）。接点は金めっき。XUNPU TF-115、SHOU HAN TF PUSH、XKB XKTF-015-N、SOFNG TF-015 が同じ寸法で、そのまま載せ替えられる。図面は `docs/references/sd/`（Git には入れていない）。
 
 ## 6. テストパッド
 

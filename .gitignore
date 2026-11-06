@@ -15,6 +15,7 @@ hardware/pcb/lib/3dmodels/*
 !hardware/pcb/lib/3dmodels/Low Profile Keycap *.step
 !hardware/pcb/lib/3dmodels/RaspberryPi_CM0.step
 !hardware/pcb/lib/3dmodels/USB_C_Receptacle_HRO_TYPE-C-31-M-12.step
+!hardware/pcb/lib/3dmodels/microSD_HRO_TF-01A.step
 
 # KiCad の一時ファイルと個人の表示設定
 *-backups/
@@ -34,3 +35,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Python bytecode (make_case.py run under FreeCAD)
+__pycache__/

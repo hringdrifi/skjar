@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "Waveshare 8.8inch DSI LCD (driver-board version), 3D model and the stud holes of its driver-board corners (101 x 57 mm, M2.5-H1.5); its Raspberry Pi pattern studs go through the slots of Waveshare_8.8-DSI-TOUCH-A_Studs. Placed to check the fit (both displays are supported); see docs/design-decisions.md. Origin at the glass centre; glass top level with the 8.8-DSI-TOUCH-A. The STEP is Waveshare's and is not in Git (docs/references/lcd/). F.Fab: its standoffs (M2.5; the Raspberry Pi pattern ones go through the slots of Waveshare_8.8-DSI-TOUCH-A_Studs) and the parts on the back of its driver board")
+	(descr "Waveshare 8.8inch DSI LCD (driver-board version), 3D model, no holes: the standoffs at its driver-board corners (101 x 57 mm, M2.5-H1.5) are too short to reach the board; its Raspberry Pi pattern studs go through the slots of Waveshare_8.8-DSI-TOUCH-A_Studs. Placed to check the fit (both displays are supported); see docs/design-decisions.md. Origin at the glass centre; glass top level with the 8.8-DSI-TOUCH-A. The STEP is Waveshare's and is not in Git (docs/references/lcd/). F.Fab: its standoffs (M2.5; the Raspberry Pi pattern ones go through the slots of Waveshare_8.8-DSI-TOUCH-A_Studs) and the parts on the back of its driver board")
 	(tags "Waveshare 8.8 DSI display check")
 	(property "Reference" "REF**"
 		(at 0 -36 0)
@@ -348,34 +348,6 @@
 		(fill no)
 		(layer "F.Fab")
 		(uuid "4bf07163-7ced-5b16-baa8-93abba3a2d5d")
-	)
-	(pad "" np_thru_hole circle
-		(at -47.8 -28.5)
-		(size 6.5 6.5)
-		(drill 6.5)
-		(layers "*.Cu" "*.Mask")
-		(uuid "16d4f49a-acff-477a-bd44-bc85a7982d23")
-	)
-	(pad "" np_thru_hole circle
-		(at -47.8 28.5)
-		(size 6.5 6.5)
-		(drill 6.5)
-		(layers "*.Cu" "*.Mask")
-		(uuid "f81e9c13-ca3c-46ad-89f0-45c28593f244")
-	)
-	(pad "" np_thru_hole circle
-		(at 53.2 -28.5)
-		(size 6.5 6.5)
-		(drill 6.5)
-		(layers "*.Cu" "*.Mask")
-		(uuid "26accd11-e5c3-4208-a8e3-52d1745cc5db")
-	)
-	(pad "" np_thru_hole circle
-		(at 53.2 28.5)
-		(size 6.5 6.5)
-		(drill 6.5)
-		(layers "*.Cu" "*.Mask")
-		(uuid "6488df0a-c0e5-41da-ba1d-bea1feb6e2d7")
 	)
 	(embedded_fonts no)
 	(model "${KIPRJMOD}/../../docs/references/lcd/waveshare-8.8inch-dsi-lcd-3d-20241025.stp"

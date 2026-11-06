@@ -55,6 +55,12 @@ IPEX-1 のアンテナ端子は、右の辺の上寄り（下の辺から 17.225
 - **Waveshare パネル用のドライバ：** `vc4-kms-dsi-waveshare-panel` に `8_8_inch` と `11_9_inch` のパラメータがある。
 - **UART：** UART0 は Bluetooth が使っている。GPIO14/15 で RP2040 と UART で通信するには、設定の変更が必要（Zero 2 W と同様）。
 
+## sd/ — microSD のスロット
+
+| ファイル | 内容 |
+|---|---|
+| `TF-01A&01C.pdf` | Korean Hroparts Elec の TF-01A（1 ページ目、2023-08-20）と TF-01C（2 ページ目、2022-11-19）の図面。[HRO の公式サイト](https://en.krhro.com/) の PDF ビューアから保存した。J201（TF-01A）のフットプリントと 3D モデルはこの図面から作った |
+
 ## giteki-020-260249/ — CM0 の技適（工事設計認証）
 
 出典: [総務省 電波利用ポータル 工事設計認証番号 020-260249](https://www.tele.soumu.go.jp/giteki/SearchServlet?pageID=jg01_01&PC=020&TC=N&PK=1&FN=261019N020&SN=%E8%AA%8D%E8%A8%BC&LN=34&R1=*****&R2=*****)

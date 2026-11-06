@@ -37,11 +37,11 @@ V = App.Vector
 BOARD = (34.131, 15.725, 262.731, 161.925)      # Edge.Cuts, x0 y0 x1 y1 (replaced by the board file's)
 BOARD_TOP = 1.2
 DISPLAY_FRAME = (-120.325, -34.075, 120.325, 34.075)   # glass pocket (the User.Drawings frame), relative to the display
-GLASS_TOP = 11.76               # top of the cover glass (DISP1 model, Z set by hand)
-GLASS_BOTTOM = 11.06
+GLASS_TOP = 12.16               # top of the cover glass (DISP1 model, Z set by hand)
+GLASS_BOTTOM = 11.46
 DISPLAY_CENTRE = (148.43125, 51.725)   # DISP1 (replaced by the board file's)
 COVER = (-114.35, -33.05, 118.15, 33.05)       # back cover of the TOUCH-A, relative to the glass centre (DISP1 at 0 deg)
-STUD_TIP = BOARD_TOP - 2.9      # bottom of the display studs (model offset -2.9 from the board top)
+STUD_TIP = BOARD_TOP - 2.5      # bottom of the display studs (model offset -2.5 from the board top)
 STUDS = [(-106.8, -28.5), (-106.8, 28.5), (111.2, -28.5), (111.2, 28.5),     # relative to the glass centre (0 deg)
          (-36.8, -24.5), (-36.8, 24.5), (21.2, -24.5), (21.2, 24.5)]
 LOWEST_PART = -1.9              # bottom of the key sockets (the parts at the front edge)
@@ -83,8 +83,8 @@ PCB_SCREWS_DEFAULT = [(71.88, 23.98), (119.5, 35.5), (166.5, 38.0),
               (56.38, 151.97), (147.88, 151.97), (241.13, 151.97)]
 
 # Openings in the back wall: (part, x offset from the part, z centre, width, height, corner radius)
-BACK_PORTS = [("J2", 0.0, -1.63, 12.5, 7.0, 3.0),            # USB-C
-              ("J1", 0.0, -1.63, 12.5, 7.0, 3.0),            # USB-C
+BACK_PORTS = [("J2", 0.0, -1.63, 10.0, 4.4, 1.5),            # USB-C (shell 8.94 x 3.26; the plug overmold stays outside)
+              ("J1", 0.0, -1.63, 10.0, 4.4, 1.5),            # USB-C (shell 8.94 x 3.26; the plug overmold stays outside)
               ("J402", 0.0, -2.5, 7.0, 7.0, 3.5),            # audio
               ("J201", 0.0, -1.1, 14.5, 2.6, 0.8)]           # microSD (the body sticks out past the board edge)
 # Holes in the floor, under a part: (part, diameter)
