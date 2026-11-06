@@ -625,6 +625,10 @@
       {
         "netclass": "USB",
         "pattern": "Net-(U101-USB_D?)"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "+3V3"
       }
     ]
   },

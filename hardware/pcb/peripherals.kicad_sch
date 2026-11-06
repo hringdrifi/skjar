@@ -4397,6 +4397,18 @@
 			(embedded_fonts no)
 		)
 	)
+	(text "メモ"
+		(exclude_from_sim no)
+		(at 40.64 154.94 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "02763c8d-d5d1-4ee7-8f19-e92c9e2ca80f")
+	)
 	(text "音声（TLV320DAC3100）"
 		(exclude_from_sim no)
 		(at 233.68 63.5 0)
@@ -4409,6 +4421,17 @@
 		)
 		(uuid "67228e20-7cc7-49c7-a50a-8e2136f08eff")
 	)
+	(text "RTC は +3V3（常時 ON）と CR2032 の高い方から BAT54C で給電する。CM0 が OFF でも時刻を保つ。\nI2C1 のプルアップは CM0 の内部（1.8 kΩ）を使う。\n音声 IC は SPKVDD だけ +5V、ほかは CM0 の 3.3 V / 1.8 V から取り、CM0 と一緒に ON / OFF する（データシートの推奨順序に合う）。\n詳細：docs/schematic/peripherals.md"
+		(exclude_from_sim no)
+		(at 40.64 157.48 0)
+		(effects
+			(font
+				(size 1.524 1.524)
+			)
+			(justify left top)
+		)
+		(uuid "91d89da4-9def-4be2-8579-45313b609399")
+	)
 	(text "RTC（PCF8563T + CR2032）"
 		(exclude_from_sim no)
 		(at 86.36 63.5 0)
@@ -4420,6 +4443,12 @@
 			(justify left bottom)
 		)
 		(uuid "c2664372-9265-4f7b-aa7e-1c0167121c51")
+	)
+	(junction
+		(at 127 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0186eef6-f321-4667-8ef3-8a9a7e7d9ad6")
 	)
 	(junction
 		(at 373.38 99.06)
@@ -4446,6 +4475,12 @@
 		(uuid "0dd5275f-c190-4f16-9e50-fdca8ac59343")
 	)
 	(junction
+		(at 111.76 78.74)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0fc0589b-057b-44f9-8080-ffe84406d89a")
+	)
+	(junction
 		(at 373.38 104.14)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4468,6 +4503,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3849f3bb-40b6-414a-9ac3-4a475275ca37")
+	)
+	(junction
+		(at 137.16 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "38c2fafa-4ea9-4bf4-9132-ecf28177aa48")
 	)
 	(junction
 		(at 248.92 156.21)
@@ -4524,6 +4565,12 @@
 		(uuid "a2e90dec-9f74-451a-8640-4683da264638")
 	)
 	(junction
+		(at 127 88.9)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a72514df-3a61-4ac7-8528-1f067c9c7bad")
+	)
+	(junction
 		(at 289.56 156.21)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4559,6 +4606,12 @@
 		(color 0 0 0 0)
 		(uuid "f201f082-a339-4294-88b7-da8f5b31c1bd")
 	)
+	(junction
+		(at 106.68 78.74)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "fdcc5824-3ee1-497a-80ea-37bff83393fc")
+	)
 	(no_connect
 		(at 274.32 119.38)
 		(uuid "21ea97d1-4d92-4aba-8664-008e85e2aa3f")
@@ -4590,6 +4643,16 @@
 	(no_connect
 		(at 274.32 114.3)
 		(uuid "dcdcd2e1-b6b9-4490-900a-c9c7b047a99a")
+	)
+	(wire
+		(pts
+			(xy 106.68 78.74) (xy 111.76 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "03c1b42c-1e10-477e-bcae-b825d10a0ff6")
 	)
 	(wire
 		(pts
@@ -4833,6 +4896,16 @@
 	)
 	(wire
 		(pts
+			(xy 127 83.82) (xy 127 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "49d7de9e-e137-4420-a3e0-5b1079b387b9")
+	)
+	(wire
+		(pts
 			(xy 312.42 99.06) (xy 299.72 99.06)
 		)
 		(stroke
@@ -4840,6 +4913,16 @@
 			(type default)
 		)
 		(uuid "4a768c27-8725-4eac-8526-0e240b77a308")
+	)
+	(wire
+		(pts
+			(xy 111.76 78.74) (xy 119.38 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4f240022-8876-46e5-90e3-ed697cabaa1a")
 	)
 	(wire
 		(pts
@@ -4860,6 +4943,16 @@
 			(type default)
 		)
 		(uuid "6239b622-ebc3-4e9c-a8a8-5871028467b4")
+	)
+	(wire
+		(pts
+			(xy 127 93.98) (xy 127 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a95e611-10b3-435a-9829-2ec1f8e89e27")
 	)
 	(wire
 		(pts
@@ -4960,6 +5053,36 @@
 			(type default)
 		)
 		(uuid "ae54101e-f73f-4fe2-9672-c0ba35ff0826")
+	)
+	(wire
+		(pts
+			(xy 127 88.9) (xy 127 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "af63ece6-6e99-4ad4-a5d6-1086685c6127")
+	)
+	(wire
+		(pts
+			(xy 127 93.98) (xy 137.16 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b0a1e930-10bc-476f-ba16-19d49f754d6a")
+	)
+	(wire
+		(pts
+			(xy 134.62 78.74) (xy 139.7 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b8b64ce4-4261-4a3f-b8fb-d91bc755ddf6")
 	)
 	(wire
 		(pts
@@ -5090,6 +5213,26 @@
 			(type default)
 		)
 		(uuid "f0d02930-a6fd-4d90-b76d-040d26ac80a7")
+	)
+	(wire
+		(pts
+			(xy 93.98 78.74) (xy 106.68 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f35a612f-0e0a-42b8-b905-73082e7a7d91")
+	)
+	(wire
+		(pts
+			(xy 127 88.9) (xy 116.84 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f43787a5-b178-457f-af55-bb9c0255279d")
 	)
 	(wire
 		(pts
@@ -5424,149 +5567,6 @@
 				(justify left)
 			)
 		)
-	)
-	(junction
-		(at 137.16 93.98)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "38c2fafa-4ea9-4bf4-9132-ecf28177aa48")
-	)
-	(junction
-		(at 127 93.98)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0186eef6-f321-4667-8ef3-8a9a7e7d9ad6")
-	)
-	(junction
-		(at 127 88.9)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "a72514df-3a61-4ac7-8528-1f067c9c7bad")
-	)
-	(wire
-		(pts
-			(xy 127 93.98) (xy 137.16 93.98)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b0a1e930-10bc-476f-ba16-19d49f754d6a")
-	)
-	(wire
-		(pts
-			(xy 127 88.9) (xy 116.84 88.9)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f43787a5-b178-457f-af55-bb9c0255279d")
-	)
-	(wire
-		(pts
-			(xy 127 93.98) (xy 127 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6a95e611-10b3-435a-9829-2ec1f8e89e27")
-	)
-	(wire
-		(pts
-			(xy 127 88.9) (xy 127 93.98)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "af63ece6-6e99-4ad4-a5d6-1086685c6127")
-	)
-	(wire
-		(pts
-			(xy 127 83.82) (xy 127 88.9)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "49d7de9e-e137-4420-a3e0-5b1079b387b9")
-	)
-	(wire
-		(pts
-			(xy 134.62 78.74) (xy 139.7 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b8b64ce4-4261-4a3f-b8fb-d91bc755ddf6")
-	)
-	(junction
-		(at 111.76 78.74)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0fc0589b-057b-44f9-8080-ffe84406d89a")
-	)
-	(junction
-		(at 106.68 78.74)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "fdcc5824-3ee1-497a-80ea-37bff83393fc")
-	)
-	(wire
-		(pts
-			(xy 111.76 78.74) (xy 119.38 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4f240022-8876-46e5-90e3-ed697cabaa1a")
-	)
-	(wire
-		(pts
-			(xy 106.68 78.74) (xy 111.76 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "03c1b42c-1e10-477e-bcae-b825d10a0ff6")
-	)
-	(wire
-		(pts
-			(xy 93.98 78.74) (xy 106.68 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f35a612f-0e0a-42b8-b905-73082e7a7d91")
-	)
-	(text "RTC は +3V3（常時 ON）と CR2032 の高い方から BAT54C で給電する。CM0 が OFF でも時刻を保つ。\nI2C1 のプルアップは CM0 の内部（1.8 kΩ）を使う。\n音声 IC は SPKVDD だけ +5V、ほかは CM0 の 3.3 V / 1.8 V から取り、CM0 と一緒に ON / OFF する（データシートの推奨順序に合う）。\n詳細：docs/schematic/peripherals.md"
-		(exclude_from_sim no)
-		(at 40.64 157.48 0)
-		(effects
-			(font
-				(size 1.524 1.524)
-			)
-			(justify left top)
-		)
-		(uuid "91d89da4-9def-4be2-8579-45313b609399")
-	)
-	(text "メモ"
-		(exclude_from_sim no)
-		(at 40.64 154.94 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(bold yes)
-			)
-			(justify left bottom)
-		)
-		(uuid "02763c8d-d5d1-4ee7-8f19-e92c9e2ca80f")
 	)
 	(symbol
 		(lib_id "power:+1V8")
@@ -8456,7 +8456,7 @@
 				)
 			)
 		)
-	)
+	)
 	(symbol
 		(lib_id "power:+3.3VA")
 		(at 302.26 76.2 0)
@@ -8609,7 +8609,7 @@
 				)
 			)
 		)
-	)
+	)
 	(symbol
 		(lib_id "Device:FerriteBead")
 		(at 332.74 72.39 0)
@@ -8777,7 +8777,7 @@
 				)
 			)
 		)
-	)
+	)
 	(symbol
 		(lib_id "Device:C")
 		(at 219.71 90.17 0)
@@ -10662,7 +10662,7 @@
 				)
 			)
 		)
-	)
+	)
 	(symbol
 		(lib_id "power:+3.3VA")
 		(at 332.74 76.2 180)

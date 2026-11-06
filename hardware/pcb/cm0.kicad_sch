@@ -4430,6 +4430,18 @@
 		)
 		(uuid "2fffb88c-71ea-47a1-8e6f-e6ce2b1ddb90")
 	)
+	(text "メモ"
+		(exclude_from_sim no)
+		(at 40.64 264.16 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "30b8acf1-f657-4bbc-b481-345a2c9b960e")
+	)
 	(text "UART の受信バッファ（+3V3_CM0 で動作）"
 		(exclude_from_sim no)
 		(at 304.8 58.42 0)
@@ -4514,12 +4526,29 @@
 		)
 		(uuid "e56244f6-bba4-4dae-96cb-4f1d1fd9c7ee")
 	)
+	(text "CM0 が OFF（+3V3_CM0 = 0 V）のときに電流を流し込まないよう、RP2040 とつながる線のプルアップは +3V3_CM0 側に置き、\nUART の受信は Ioff 付きのバッファ（U202）を通す。\nGLOBAL_EN は CM0 の内部で 5 V にプルアップされているので、Q201 で Low に引く。初期状態は OFF。\nR203〜R207 は未実装（フットプリントだけ用意）。\n詳細：docs/schematic/cm0.md"
+		(exclude_from_sim no)
+		(at 40.64 266.7 0)
+		(effects
+			(font
+				(size 1.524 1.524)
+			)
+			(justify left top)
+		)
+		(uuid "f5a8b1a2-0bda-4158-ad6e-267c2f54f2bf")
+	)
+	(junction
+		(at 311.15 191.77)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2424de2e-4186-48ae-b0ba-5b85cb594027")
+	)
 	(junction
 		(at 165.1 200.66)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2b3893da-1e7a-471f-b519-7c1bc6f88ac9")
-	)
+	)
 	(junction
 		(at 69.85 62.23)
 		(diameter 0)
@@ -4531,7 +4560,7 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "71e93a0b-37cf-42c3-a4a2-6ea08f6cc6cf")
-	)
+	)
 	(junction
 		(at 279.4 95.25)
 		(diameter 0)
@@ -4555,6 +4584,18 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "cd22016d-a900-4417-8e5c-4f6a7df01e8b")
+	)
+	(junction
+		(at 323.85 191.77)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d8e96cbb-bfb2-4a5c-acbb-36446d2dda01")
+	)
+	(junction
+		(at 336.55 191.77)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "e0f1053f-cfeb-4cd6-8ca1-177f08cf821a")
 	)
 	(junction
 		(at 298.45 165.1)
@@ -4779,7 +4820,17 @@
 			(type default)
 		)
 		(uuid "12ee54d6-42e4-4172-8d3b-ea66295f7b64")
-	)
+	)
+	(wire
+		(pts
+			(xy 336.55 191.77) (xy 349.25 191.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "193df5aa-bb5d-4770-9655-92cbb62bd8c5")
+	)
 	(wire
 		(pts
 			(xy 320.04 160.02) (xy 328.93 160.02)
@@ -4969,7 +5020,7 @@
 			(type default)
 		)
 		(uuid "45493410-c56d-43e5-969e-947739f07eda")
-	)
+	)
 	(wire
 		(pts
 			(xy 269.24 152.4) (xy 260.35 152.4)
@@ -5012,6 +5063,26 @@
 	)
 	(wire
 		(pts
+			(xy 298.45 191.77) (xy 311.15 191.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "681aa8ca-8302-4874-96e9-5dfb8c8fdb39")
+	)
+	(wire
+		(pts
+			(xy 323.85 191.77) (xy 336.55 191.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6d52c0f1-0c24-4ffd-9611-6951ae81a74b")
+	)
+	(wire
+		(pts
 			(xy 279.4 95.25) (xy 261.62 95.25)
 		)
 		(stroke
@@ -5039,7 +5110,7 @@
 			(type default)
 		)
 		(uuid "749b5621-b35d-4b97-82fc-7a7ff0d8ed1a")
-	)
+	)
 	(wire
 		(pts
 			(xy 298.45 165.1) (xy 306.07 165.1)
@@ -5132,6 +5203,26 @@
 	)
 	(wire
 		(pts
+			(xy 330.2 62.23) (xy 325.12 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a2a1e6a5-0eae-4761-8297-150e865b590e")
+	)
+	(wire
+		(pts
+			(xy 330.2 64.77) (xy 330.2 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a4755df2-14ed-48df-8f0c-6436062d0a8c")
+	)
+	(wire
+		(pts
 			(xy 269.24 157.48) (xy 260.35 157.48)
 		)
 		(stroke
@@ -5169,7 +5260,7 @@
 			(type default)
 		)
 		(uuid "c1b005aa-321b-40ed-b3d8-5fad3efed596")
-	)
+	)
 	(wire
 		(pts
 			(xy 292.1 92.71) (xy 292.1 97.79)
@@ -5199,6 +5290,16 @@
 			(type default)
 		)
 		(uuid "e0d10538-c2bb-4fa4-96fe-841ffd179ffd")
+	)
+	(wire
+		(pts
+			(xy 311.15 191.77) (xy 323.85 191.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eb2d8b55-de1b-47f0-af98-3babaa90068f")
 	)
 	(wire
 		(pts
@@ -6310,107 +6411,6 @@
 				)
 			)
 		)
-	)
-	(junction
-		(at 336.55 191.77)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e0f1053f-cfeb-4cd6-8ca1-177f08cf821a")
-	)
-	(junction
-		(at 323.85 191.77)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "d8e96cbb-bfb2-4a5c-acbb-36446d2dda01")
-	)
-	(junction
-		(at 311.15 191.77)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "2424de2e-4186-48ae-b0ba-5b85cb594027")
-	)
-	(wire
-		(pts
-			(xy 336.55 191.77) (xy 349.25 191.77)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "193df5aa-bb5d-4770-9655-92cbb62bd8c5")
-	)
-	(wire
-		(pts
-			(xy 323.85 191.77) (xy 336.55 191.77)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6d52c0f1-0c24-4ffd-9611-6951ae81a74b")
-	)
-	(wire
-		(pts
-			(xy 311.15 191.77) (xy 323.85 191.77)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "eb2d8b55-de1b-47f0-af98-3babaa90068f")
-	)
-	(wire
-		(pts
-			(xy 298.45 191.77) (xy 311.15 191.77)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "681aa8ca-8302-4874-96e9-5dfb8c8fdb39")
-	)
-	(wire
-		(pts
-			(xy 330.2 62.23) (xy 325.12 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a2a1e6a5-0eae-4761-8297-150e865b590e")
-	)
-	(wire
-		(pts
-			(xy 330.2 64.77) (xy 330.2 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a4755df2-14ed-48df-8f0c-6436062d0a8c")
-	)
-	(text "CM0 が OFF（+3V3_CM0 = 0 V）のときに電流を流し込まないよう、RP2040 とつながる線のプルアップは +3V3_CM0 側に置き、\nUART の受信は Ioff 付きのバッファ（U202）を通す。\nGLOBAL_EN は CM0 の内部で 5 V にプルアップされているので、Q201 で Low に引く。初期状態は OFF。\nR203〜R207 は未実装（フットプリントだけ用意）。\n詳細：docs/schematic/cm0.md"
-		(exclude_from_sim no)
-		(at 40.64 266.7 0)
-		(effects
-			(font
-				(size 1.524 1.524)
-			)
-			(justify left top)
-		)
-		(uuid "f5a8b1a2-0bda-4158-ad6e-267c2f54f2bf")
-	)
-	(text "メモ"
-		(exclude_from_sim no)
-		(at 40.64 264.16 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(bold yes)
-			)
-			(justify left bottom)
-		)
-		(uuid "30b8acf1-f657-4bbc-b481-345a2c9b960e")
 	)
 	(symbol
 		(lib_id "power:+5V")
@@ -9079,7 +9079,8 @@
 			(effects
 				(font
 					(size 1.27 1.27)
-				) (justify right)
+				)
+				(justify right)
 			)
 		)
 		(property "Value" "SN74LVC1G125DBV"
@@ -9089,7 +9090,8 @@
 			(effects
 				(font
 					(size 1.27 1.27)
-				) (justify right)
+				)
+				(justify right)
 			)
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
@@ -12387,7 +12389,8 @@
 			(effects
 				(font
 					(size 1.27 1.27)
-				) (justify left)
+				)
+				(justify left)
 			)
 		)
 		(property "Value" "microSD"

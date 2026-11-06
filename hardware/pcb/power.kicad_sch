@@ -3367,6 +3367,17 @@
 		)
 		(uuid "3d4cc0d4-8a57-4cf8-9d0e-f14e982f42da")
 	)
+	(text "USB-C ×2 から +5V を作る。Port B（IN1）を優先し、TPS2121 が自動で切り替える（ST が High なら B、Low なら A から給電）。\nCC の 5.1 kΩ でデバイスとして 5 V を受ける。CC の電圧は RP2040 の ADC で読む（rp2040 シートの R107〜R110）。\n+3V3 は常時 ON（RP2040 と RTC 用）。+5V_LCD は RP2040 の LCD_EN で ON / OFF する。\n詳細：docs/schematic/power.md"
+		(exclude_from_sim no)
+		(at 40.64 236.22 0)
+		(effects
+			(font
+				(size 1.524 1.524)
+			)
+			(justify left top)
+		)
+		(uuid "6c46df0a-f250-429a-b403-d26f4e287944")
+	)
 	(text "LCD 電源 TPS22965"
 		(exclude_from_sim no)
 		(at 317.5 63.5 0)
@@ -3378,6 +3389,18 @@
 			(justify left bottom)
 		)
 		(uuid "701a2b83-436e-46ac-9018-2ab0e971d1ef")
+	)
+	(text "メモ"
+		(exclude_from_sim no)
+		(at 40.64 233.68 0)
+		(effects
+			(font
+				(size 1.905 1.905)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "83165bc5-d2a5-4816-92af-84cbc7d1b55e")
 	)
 	(text "テストパッド"
 		(exclude_from_sim no)
@@ -4596,29 +4619,6 @@
 				(justify left)
 			)
 		)
-	)
-	(text "USB-C ×2 から +5V を作る。Port B（IN1）を優先し、TPS2121 が自動で切り替える（ST が High なら B、Low なら A から給電）。\nCC の 5.1 kΩ でデバイスとして 5 V を受ける。CC の電圧は RP2040 の ADC で読む（rp2040 シートの R107〜R110）。\n+3V3 は常時 ON（RP2040 と RTC 用）。+5V_LCD は RP2040 の LCD_EN で ON / OFF する。\n詳細：docs/schematic/power.md"
-		(exclude_from_sim no)
-		(at 40.64 236.22 0)
-		(effects
-			(font
-				(size 1.524 1.524)
-			)
-			(justify left top)
-		)
-		(uuid "6c46df0a-f250-429a-b403-d26f4e287944")
-	)
-	(text "メモ"
-		(exclude_from_sim no)
-		(at 40.64 233.68 0)
-		(effects
-			(font
-				(size 1.905 1.905)
-				(bold yes)
-			)
-			(justify left bottom)
-		)
-		(uuid "83165bc5-d2a5-4816-92af-84cbc7d1b55e")
 	)
 	(symbol
 		(lib_id "Device:C")
