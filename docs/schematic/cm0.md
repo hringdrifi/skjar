@@ -2,7 +2,7 @@
 
 回路図を描くための仕様。ピンの割り当ては [pin-assignment.md](../pin-assignment.md) の「4. CM0 の GPIO と専用ピン」、決めた理由は [design-decisions.md](../design-decisions.md) を参照。
 
-**手本：** [cm0-reference.pdf](cm0-reference.pdf)（画像は [cm0-reference.png](cm0-reference.png)）。最初の配置を書き出したもので、その後の変更（microSD、キー入力の I²C など）は入っていない。正は `hardware/pcb/cm0.kicad_sch`。
+**手本：** [cm0-reference.pdf](cm0-reference.pdf)（画像は [cm0-reference.png](cm0-reference.png)）。2026-11-06 の回路図から書き出した版。回路図を変えたら書き出し直す。正は `hardware/pcb/cm0.kicad_sch`。
 
 ---
 
