@@ -14,6 +14,7 @@ hardware/pcb/lib/3dmodels/*
 !hardware/pcb/lib/3dmodels/8.8-DSI-TOUCH-A.step
 !hardware/pcb/lib/3dmodels/Low Profile Keycap *.step
 !hardware/pcb/lib/3dmodels/RaspberryPi_CM0.step
+!hardware/pcb/lib/3dmodels/SW_Push_1P1T_XKB_TS-1187A.step
 !hardware/pcb/lib/3dmodels/USB_C_Receptacle_HRO_TYPE-C-31-M-12.step
 !hardware/pcb/lib/3dmodels/microSD_HRO_TF-01A.step
 
