@@ -1863,7 +1863,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Memory_Flash:W25Q128JVS"
+		(symbol "Skjar:W25Q128JVP"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1879,7 +1879,7 @@
 					)
 				)
 			)
-			(property "Value" "W25Q128JVS"
+			(property "Value" "W25Q128JVP"
 				(at 7.62 11.43 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1889,7 +1889,7 @@
 					)
 				)
 			)
-			(property "Footprint" "Package_SO:SOIC-8_5.3x5.3mm_P1.27mm"
+			(property "Footprint" "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm"
 				(at 0 22.86 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1911,7 +1911,7 @@
 					)
 				)
 			)
-			(property "Description" "128Mbit / 16MiB Serial Flash Memory, Standard/Dual/Quad SPI, 2.7-3.6V, SOIC-8"
+			(property "Description" "128Mbit / 16MiB Serial Flash Memory, Standard/Dual/Quad SPI, 2.7-3.6V, WSON-8 6x5mm, exposed pad (pin 9) to GND"
 				(at 0 27.94 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1933,7 +1933,7 @@
 					)
 				)
 			)
-			(property "ki_fp_filters" "*SOIC*5.3x5.3mm*P1.27mm*"
+			(property "ki_fp_filters" "*WSON*6x5mm*P1.27mm*"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1944,7 +1944,7 @@
 					)
 				)
 			)
-			(symbol "W25Q128JVS_0_1"
+			(symbol "W25Q128JVP_0_1"
 				(rectangle
 					(start -7.62 10.16)
 					(end 10.16 -10.16)
@@ -1957,7 +1957,7 @@
 					)
 				)
 			)
-			(symbol "W25Q128JVS_1_1"
+			(symbol "W25Q128JVP_1_1"
 				(pin input line
 					(at -10.16 7.62 0)
 					(length 2.54)
@@ -2023,6 +2023,24 @@
 						)
 					)
 					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 2.54 -12.7 90)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2953,12 +2971,6 @@
 		(uuid "a460b91c-7b60-4a72-a666-95a8b45fc0f8")
 	)
 	(junction
-		(at 190.5 74.93)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "a4a5a030-e09a-44ce-aa88-ab3d9d4b253f")
-	)
-	(junction
 		(at 170.18 74.93)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2989,16 +3001,20 @@
 		(uuid "ecaa9e6a-f33f-461a-a1c5-7a7c73d3641a")
 	)
 	(junction
-		(at 190.5 82.55)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "efcc120b-f13b-449a-aa05-0a983f461ba0")
-	)
-	(junction
 		(at 139.7 74.93)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f95bc689-047f-40a5-a98f-57fb6129b3f3")
+	)
+	(wire
+		(pts
+			(xy 297.18 149.86) (xy 299.72 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cb2a595e-3215-4d29-b96f-2456649b1290")
 	)
 	(wire
 		(pts
@@ -7529,98 +7545,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C")
-		(at 190.5 78.74 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "743cade3-e724-4eea-866f-7752c8c2e4ff")
-		(property "Reference" "C108"
-			(at 191.135 76.2 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "100n"
-			(at 191.135 81.28 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 191.4652 82.55 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 190.5 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Unpolarized capacitor"
-			(at 190.5 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C14663"
-			(at 190.5 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "631a2dfa-4374-4583-93c4-fa663c6abcaf")
-		)
-		(pin "2"
-			(uuid "e74eeffa-a5e7-4609-a1f8-3286dd003ae3")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/8e419fa0-535d-4319-aad7-d9cfd4ea3c8c"
-					(reference "C108")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 170.18 248.92 0)
 		(unit 1)
@@ -8274,7 +8198,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Memory_Flash:W25Q128JVS")
+		(lib_id "Skjar:W25Q128JVP")
 		(at 297.18 137.16 0)
 		(unit 1)
 		(body_style 1)
@@ -8328,7 +8252,7 @@
 				)
 			)
 		)
-		(property "Description" "128Mbit / 16MiB Serial Flash Memory, Standard/Dual/Quad SPI, 2.7-3.6V, SOIC-8"
+		(property "Description" "128Mbit / 16MiB Serial Flash Memory, Standard/Dual/Quad SPI, 2.7-3.6V, WSON-8 6x5mm, exposed pad (pin 9) to GND"
 			(at 297.18 109.22 0)
 			(hide yes)
 			(show_name no)
@@ -8373,6 +8297,9 @@
 		)
 		(pin "8"
 			(uuid "bcc700fa-59c2-4bf9-8e47-258bdc05e1d8")
+		)
+		(pin "9"
+			(uuid "06c55844-df46-4975-a946-644073d2d226")
 		)
 		(instances
 			(project "skjar"
