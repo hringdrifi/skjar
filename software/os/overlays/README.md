@@ -81,3 +81,45 @@ amixer -c skjar sset 'Speaker Driver' on
 
 - スピーカーは左の出力ミキサーにしかつながらない。左右を混ぜるには `DAC Left Input` を `Mono` にする（このときイヤホンの左も L+R になる）
 - イヤホン挿入中のスピーカーのミュートは、`Headphones Jack` を見て `Internal Speaker Switch`（と必要なら `DAC Left Input`）を切り替える。ALSA UCM の設定か、小さなスクリプトでする（未作成）
+
+## skjar-keyboard
+
+[skjar-keyboard-overlay.dts](skjar-keyboard-overlay.dts)：RP2040 を HID over I²C のキーボードとして、標準の `i2c-hid` ドライバにつなぐ（仕様は [docs/protocol.md](../../../docs/protocol.md) の 2 章）。
+
+- バス：`i2c-gpio`（ソフトウェアの I²C）。SDA = GPIO23、SCL = GPIO24、約 100 kHz。I²C のハードウェアを使わないのは、RP2040 が読み出しのたびに SCL を引き延ばし、BCM283x の I²C がそれに正しく対応していないため
+- デバイス：アドレス 0x2C、HID ディスクリプタの番地 0x0001
+- 割り込み：GPIO25（Low で知らせる。レベル）
+- GPIO23 / 24 / 25 の内部のプルは切る。基板の 4.7 kΩ / 4.7 kΩ / 10 kΩ のプルアップを使う
+
+### ビルドと導入
+
+CM0（試作では Pi Zero 2 W）で：
+
+```sh
+sudo apt install device-tree-compiler
+dtc -@ -I dts -O dtb -o skjar-keyboard.dtbo skjar-keyboard-overlay.dts
+sudo cp skjar-keyboard.dtbo /boot/firmware/overlays/
+```
+
+`/boot/firmware/config.txt`：
+
+```
+dtoverlay=skjar-keyboard
+```
+
+### 試作で確かめること
+
+Pi Zero 2 W と Pico のつなぎ方は [firmware/rp2040/README.md](../../../firmware/rp2040/README.md)。
+
+```sh
+dmesg | grep -i -E 'i2c-hid|i2c_hid|hid-generic'   # 認識されたか
+ls /sys/bus/i2c/devices/                           # i2c-N のバスと N-002c のデバイス
+cat /proc/interrupts | grep -i gpio                # キーを押すと割り込みの数が増える
+sudo evtest                                        # キーの入力を見る
+```
+
+- 起動直後に、`i2c-hid` が HID ディスクリプタとレポートディスクリプタを読み、`RESET` を送る。RP2040 のログ（USB の仮想シリアル）に `RESET` と出て、`dmesg` に `input: ... as /devices/...` が出れば成功
+- `failed to reset device` が出るときは、割り込み（GPIO25）がつながっているか、プルアップがあるかを見る
+- Caps Lock を押して、RP2040 のログに `LEDs = 0b00010` が出るか（出力レポート）
+- レイヤー 2 の音量キーで、Consumer Control のレポートが届くか（`evtest` で `KEY_VOLUMEUP`）
+- 速度を上げられるか（`i2c-gpio,delay-us` を 2 にすると約 250 kHz）。100 kHz でもキー入力には足りる

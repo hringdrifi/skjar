@@ -1,0 +1,21 @@
+# SKJÁR touch UI (software/ui). Draws straight to the framebuffer, no X / Wayland.
+#
+#   sudo cp skjar-ui.service /etc/systemd/system/
+#   sudo systemctl disable --now getty@tty1.service serial-getty@ttyS0.service
+#   sudo systemctl enable --now skjar-ui.service
+#
+# It runs as root for now: it opens /dev/fb0, /dev/input/event*, /dev/serial0, writes the
+# backlight in /sys and calls poweroff. A dedicated user is a later step (software/ui/README.md).
+
+[Unit]
+Description=SKJAR touch UI
+After=systemd-user-sessions.service
+Conflicts=getty@tty1.service
+
+[Service]
+ExecStart=/usr/local/bin/skjar-ui
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

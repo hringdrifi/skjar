@@ -1,0 +1,39 @@
+# SKJÁR: /boot/firmware/config.txt (Raspberry Pi OS Lite, Bookworm or later, on the CM0)
+#
+# Only overlays and parameters; the kernel and drivers are stock (docs/design-decisions.md, chapter 3).
+# The skjar-* overlays are built from software/os/overlays/ (see its README).
+
+[all]
+arm_64bit=1
+
+# --- Display: Waveshare 8.8-DSI-TOUCH-A / 8.8inch DSI LCD (480 x 1920, docs/design-decisions.md, chapter 4)
+# The panel and its touch controller hang off the DSI connector J301; the touch I2C is SDA0 / SCL0
+# (GPIO44 / 45), which runs inside the FFC.
+# TODO (hardware): check that the overlay's default port (DSI1, 4 lanes) is the one the CM0 brings out,
+# and that the panel I2C reaches GPIO44 / 45 on the CM0. Add ",dsi0" if the panel stays dark.
+dtoverlay=vc4-kms-v3d
+dtoverlay=vc4-kms-dsi-waveshare-panel-v2,8_8_inch_a
+display_auto_detect=0
+camera_auto_detect=0
+# The panel is portrait (480 x 1920). The UI turns it to 1920 x 480 itself (software/ui), so the
+# framebuffer stays in the panel's own orientation.
+
+# --- Keyboard: the RP2040 as a HID over I2C keyboard on GPIO23 / 24, interrupt on GPIO25
+dtoverlay=skjar-keyboard
+
+# --- I2C1 (GPIO2 / 3): RTC and the audio codec
+dtparam=i2c_arm=on
+dtoverlay=i2c-rtc,pcf8563
+
+# --- Audio: TLV320DAC3100 over I2S (GPIO18 / 19 / 21), reset on GPIO22, headphone detect on GPIO17
+dtparam=i2s=on
+dtparam=audio=off
+dtoverlay=skjar-audio
+
+# --- UART to the RP2040 (GPIO14 TX / GPIO15 RX, docs/protocol.md, chapter 1)
+# The PL011 stays with Bluetooth, so this is the mini UART (/dev/serial0 -> ttyS0).
+# enable_uart=1 also fixes the core clock, which the mini UART's baud rate depends on.
+enable_uart=1
+
+# --- Tell the RP2040 that the shutdown has finished: GPIO26 (CM0_HALT) goes high at power-off
+dtoverlay=gpio-poweroff,gpiopin=26

@@ -1,0 +1,57 @@
+// SKJAR keyboard: the RP2040 as a HID over I2C keyboard (docs/protocol.md, chapter 2)
+//
+// Build and install (on the CM0, or a Pi Zero 2 W for the breadboard test):
+//   dtc -@ -I dts -O dtb -o skjar-keyboard.dtbo skjar-keyboard-overlay.dts
+//   sudo cp skjar-keyboard.dtbo /boot/firmware/overlays/
+//
+// config.txt:
+//   dtoverlay=skjar-keyboard
+//
+// The bus is i2c-gpio (bit-banged), not the I2C hardware: the RP2040 stretches
+// SCL on every read and the BCM283x I2C block does not handle clock stretching.
+// SDA = GPIO23, SCL = GPIO24, interrupt = GPIO25 (low while the RP2040 has
+// something to read). All three are pulled up to 3.3 V on the board
+// (4.7k / 4.7k / 10k), so the internal pulls are turned off.
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target = <&gpio>;
+		__overlay__ {
+			skjar_kb_pins: skjar_kb_pins {
+				brcm,pins = <23 24 25>;
+				brcm,function = <0 0 0>; // input; i2c-gpio drives SDA / SCL itself
+				brcm,pull = <0 0 0>;     // none: external pull-ups
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			skjar_kb_i2c: i2c@0 {
+				compatible = "i2c-gpio";
+				pinctrl-names = "default";
+				pinctrl-0 = <&skjar_kb_pins>;
+				sda-gpios = <&gpio 23 6>; // GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN
+				scl-gpios = <&gpio 24 6>;
+				i2c-gpio,delay-us = <5>;  // about 100 kHz
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "okay";
+
+				keyboard@2c {
+					compatible = "hid-over-i2c";
+					reg = <0x2c>;
+					hid-descr-addr = <0x0001>;
+					interrupt-parent = <&gpio>;
+					interrupts = <25 8>; // IRQ_TYPE_LEVEL_LOW
+				};
+			};
+		};
+	};
+};
