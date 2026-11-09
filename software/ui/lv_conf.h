@@ -35,12 +35,18 @@
 #define LV_FS_STDIO_LETTER 'A'
 #define LV_CACHE_DEF_SIZE (8 * 1024 * 1024)
 
-/* 文字は英数字だけにしている（Montserrat に日本語の字形はない） */
+/* 文字はほぼ英数字だけ（Montserrat に日本語の字形はない） */
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_20 1
 #define LV_FONT_MONTSERRAT_28 1
 #define LV_FONT_MONTSERRAT_40 1
 #define LV_FONT_DEFAULT LV_FONT_DEFAULT_MONTSERRAT_20
+
+/* 日本語：ニュースの電光掲示板だけ、TTF のフォントを起動時に読んで描く（widgets.c）。
+ * ファイルは丸ごとメモリに読む（数 MB〜20 MB）。描いた字は覚えておき、流すたびに描き直さない */
+#define LV_USE_TINY_TTF 1
+#define LV_TINY_TTF_FILE_SUPPORT 0
+#define LV_TINY_TTF_CACHE_GLYPH_CNT 512
 
 #if defined(SKJAR_UI_SDL)
     #define LV_USE_SDL 1

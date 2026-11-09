@@ -22,7 +22,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | 確認したこと | Windows の窓で起動し、画面とボタンが動く。レイヤーの切り替え、USER キーでタブを開く、`ACT` で戻るを、標準入力から確かめた。テスト 3 つは Windows で通る。aarch64 Linux 向け（fbdev）はコンパイルとリンクまで。実機と、Linux の SDL の窓はまだ |
 
 - 記号のラベルは US 配列のもの。PC 側が JIS 配列だと、Shift を使う記号（`@` など）は別の文字になる。
-- 文字は英数字だけ。LVGL の Montserrat には日本語の字形がない。日本語を出すときは、フォントを足す。
+- 文字は、ニュースの電光掲示板のほかは英数字だけ。LVGL の Montserrat には日本語の字形がない。電光掲示板だけ、日本語の TTF フォントを読んで描く（下の「Widget strip」）。
 - いまは root で動かす（`/dev/fb0`、`/dev/input`、`/dev/serial0`、`/sys/class/backlight` と `poweroff` を使うため）。専用のユーザーに分けるのは後で。
 
 ## ファイル
@@ -114,11 +114,12 @@ ctest --test-dir build
 
 Keys タブの、ヘッダーとタッチキーの間の帯（1920 × 80 px）。ウィジェットを 1 つ出し、左右にスワイプして切り替える。
 
-- いちばん左は **None**（何も出さない。初期値）。その右に、System タブの「Widget strip」で有効にしたものが並ぶ（いくつでも選べる。`ui.conf` に `widgets=pomodoro,news` のように保存）。1 つも有効にしていなければ、スワイプしても何も起きない。
+- **None**（何も出さない。初期値）の右に、System タブの「Widget strip」で有効にしたものが並ぶ（いくつでも選べる。`ui.conf` に `widgets=pomodoro,news` のように保存）。並びは輪になっていて、いちばん右から左へはらうと None に戻る（None から右へはらうと、いちばん右へ）。1 つも有効にしていなければ、スワイプしても何も起きない。
 - 帯の中のボタンは、指で押した・離したをこの帯で決める。横に 40 px 動くとスワイプになり、ボタンは押されない。160 px 以上はらうと次のウィジェットへ移る。
 - **Pomodoro：** 集中 25 分、休憩 5 分、4 回ごとに長い休憩 15 分。▶ / ⏸、⏭（次の区切りへ飛ばす）、⟳（最初から）。区切りが終わったら止めて待ち、画面に文字を出して、キーのライトを点滅させる（`LEDF`）。ほかのウィジェットやタブにしていても数え続ける。
 - **News：** 設定のフォルダ（`ui.conf` と同じ所）の `news.txt` の見出し（1 行に 1 つ）を、右から左へ流し続ける。30 秒ごとにファイルが変わったかを見て読み直す。左の札の時刻は、`news.txt` を書いた時刻。
-  - 見出しは [tools/fetch_news.py](tools/fetch_news.py) で取ってくる（初期値は BBC World の RSS。`--feed URL` で変える。何度でも書ける）。フォントが英数字だけなので、ASCII にして書く（アクセントを落とす、曲がった引用符をまっすぐに）。ASCII にできない見出し（日本語など）は捨てる。
+  - 見出しは [tools/fetch_news.py](tools/fetch_news.py) で取ってくる。初期値は NHK の主要ニュースの RSS。`--feed nhk-business` のような名前（NHK の各ジャンル、`bbc`）か、RSS / Atom の URL で変える（何度でも書ける）。NHK の RSS は個人で使う範囲で。
+  - **日本語は、電光掲示板だけ TTF のフォントで描く**（LVGL の Tiny TTF。起動時にフォントのファイルを丸ごと読む）。フォントは `--font` で渡すか、決まった場所を探す：実機（Linux）は IPA ゴシック（`sudo apt install fonts-ipafont-gothic`）か Noto Sans CJK（`fonts-noto-cjk`）、Windows は BIZ UDゴシック・游ゴシック・メイリオ。どれもなければ英数字のフォントで、ASCII の見出しだけを出す（`fetch_news.py --ascii` で、英語の見出しを ASCII にして書ける）。
   - 実機では systemd のタイマーで 15 分ごとに回す（[software/os/systemd/skjar-news.timer](../os/systemd/skjar-news.timer)）。
   - Windows で試すとき：
 
@@ -163,6 +164,7 @@ py tools/make_movie.py 手元の動画.mp4 movie
 | `--background <png>` | 起動時に描くオーロラ風の絵 | 背景の画像（Look が Picture のとき）。1920 × 480 だと描き換えが軽い。ほかの大きさは画面を覆うように拡大・縮小する |
 | `--movie <skm>` | 設定のフォルダの `movie.skm` | 隠し機能の動画 |
 | `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか、見た目、Widget strip に出すもの）。ニュースの `news.txt` と隠し機能の動画も、このファイルと同じフォルダから読む |
+| `--font <ttf>` | 決まった場所を探す（上の「Widget strip」） | ニュースの電光掲示板の日本語のフォント（TTF / OTF / TTC。TTC は 1 つ目の書体） |
 | `--start <boot/manual>` | `manual` | `boot`：電源を入れたときの起動。RP2040 から PC がつながっているかを 3 秒まで待ち、なければ UI を閉じてコンソールへ。`manual`：コンソールで `skjar` と打ったとき。PC がなければ「PC につないで」を出す |
 | `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 

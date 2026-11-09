@@ -2,12 +2,14 @@
 # Run by skjar-news.timer. Writes news.txt next to the UI's ui.conf; the UI reloads it when it changes.
 #
 # Install:
+#   sudo apt install fonts-ipafont-gothic                # Japanese font for the headlines (the UI finds it)
 #   sudo install -D -m 755 ../../ui/tools/fetch_news.py /usr/local/lib/skjar/fetch_news.py
 #   sudo cp skjar-news.service skjar-news.timer /etc/systemd/system/
 #   sudo systemctl enable --now skjar-news.timer
 #
 # It runs as root because the UI runs as root for now (news.txt goes to /root/.config/skjar).
-# Change the feeds with --feed URL (more than one is fine).
+# Default feed: NHK top news. Change it with --feed NAME or --feed URL (more than one is fine;
+# names are listed in fetch_news.py).
 
 [Unit]
 Description=Fetch news headlines for the SKJAR News widget

@@ -562,7 +562,8 @@ static void create_keys_panel(lv_obj_t *parent)
     lv_obj_t *strip = plain_box(keys_panel);
     lv_obj_set_size(strip, SCREEN_W, BODY_H - KEY_ROWS * KEY_PITCH);
     lv_obj_align(strip, LV_ALIGN_TOP_MID, 0, 0);
-    const widgets_hooks_t hooks = { .style_button = widget_button_style, .notify = toast };
+    const widgets_hooks_t hooks = { .style_button = widget_button_style, .notify = toast,
+                                    .font_path = actions.font_path };
     widgets_create(strip, &hooks);
 
     keys_matrix = lv_buttonmatrix_create(keys_panel);

@@ -48,6 +48,7 @@ typedef struct {
     const char *config_path;    /* 設定のファイル。NULL なら settings.h の場所 */
     const char *background;     /* 背景の画像（PNG）。NULL なら描いた絵 */
     const char *movie;          /* 隠し機能の動画（.skm）。NULL なら設定のフォルダの movie.skm */
+    const char *font;           /* 日本語のフォント（TTF / OTF / TTC）。NULL なら決まった場所を探す */
     int boot;                   /* --start boot：電源を入れたときの起動 */
     int no_poweroff;
 } options_t;
@@ -72,7 +73,7 @@ static void usage(const char *argv0)
     fprintf(stderr,
             "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
             "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>]\n"
-            "          [--start boot|manual] [--no-poweroff]\n", argv0);
+            "          [--font <ttf>] [--start boot|manual] [--no-poweroff]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
@@ -100,6 +101,7 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--config") == 0 && v) { opt.config_path = v; i++; }
         else if (strcmp(a, "--background") == 0 && v) { opt.background = v; i++; }
         else if (strcmp(a, "--movie") == 0 && v) { opt.movie = v; i++; }
+        else if (strcmp(a, "--font") == 0 && v) { opt.font = v; i++; }
         else if (strcmp(a, "--start") == 0 && v) { opt.boot = strcmp(v, "boot") == 0; i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
@@ -344,6 +346,7 @@ int main(int argc, char **argv)
         .poweroff = do_poweroff,
         .background_png = opt.background,
         .movie_path = movie_path,
+        .font_path = opt.font,
         .open_console = open_console,
     };
     ui_create(&actions);

@@ -11,6 +11,7 @@ typedef struct {
     void (*open_console)(void); /* サイバーデックモードへ：UI を閉じて、コンソールに戻る */
     const char *background_png;     /* 背景の画像（PNG）。NULL なら描いた絵を使う（background.h） */
     const char *movie_path;         /* 隠し機能の動画（.skm。movie.h） */
+    const char *font_path;          /* 日本語のフォント（ニュースの電光掲示板）。NULL なら探す（widgets.h） */
 } ui_actions_t;
 
 void ui_create(const ui_actions_t *actions);

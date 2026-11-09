@@ -267,7 +267,65 @@ static struct {
     char path[600];
     time_t mtime;
     bool loaded;
+    bool unicode;               /* 日本語のフォントがある：ASCII 以外もそのまま出す */
 } news;
+
+/* ---- 日本語のフォント ---- */
+
+#define NEWS_FONT_PX    40
+#define FONT_MAX_BYTES  (40u * 1024u * 1024u)
+
+static const char *const font_candidates[] = {
+#if defined(_WIN32)
+    "C:\\Windows\\Fonts\\BIZ-UDGothicR.ttc",
+    "C:\\Windows\\Fonts\\YuGothM.ttc",
+    "C:\\Windows\\Fonts\\meiryo.ttc",
+#else
+    "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf",        /* apt install fonts-ipafont-gothic */
+    "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",    /* apt install fonts-noto-cjk */
+#endif
+    NULL
+};
+
+/* ファイルを丸ごと読んで、Tiny TTF のフォントにする。読んだ中身はフォントが使い続けるので解放しない */
+static lv_font_t *font_from_file(const char *path)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f)
+        return NULL;
+    lv_font_t *font = NULL;
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (size > 0 && (unsigned long)size <= FONT_MAX_BYTES) {
+        void *data = malloc((size_t)size);
+        if (data && fread(data, 1, (size_t)size, f) == (size_t)size)
+            font = lv_tiny_ttf_create_data(data, (size_t)size, NEWS_FONT_PX);
+        if (!font)
+            free(data);
+    }
+    fclose(f);
+    return font;
+}
+
+static lv_font_t *load_japanese_font(const char *path)
+{
+    if (path) {
+        lv_font_t *font = font_from_file(path);
+        fprintf(stderr, "news: font %s %s\n", path, font ? "loaded" : "could not be read");
+        return font;
+    }
+    for (int i = 0; font_candidates[i]; i++) {
+        lv_font_t *font = font_from_file(font_candidates[i]);
+        if (font) {
+            fprintf(stderr, "news: font %s\n", font_candidates[i]);
+            return font;
+        }
+    }
+    fprintf(stderr, "news: no Japanese font found, showing ASCII headlines only\n");
+    return NULL;
+}
 
 static void news_set(const char *text, time_t mtime)
 {
@@ -288,7 +346,8 @@ static void news_set(const char *text, time_t mtime)
     }
 }
 
-/* news.txt を読んで 1 本の文字列にする。字形のない文字（ASCII 以外）は飛ばす（フォントが英数字だけのため） */
+/* news.txt（UTF-8）を読んで 1 本の文字列にする。日本語のフォントがなければ、ASCII 以外を含む見出しは
+ * 飛ばす（Montserrat に字形がなく、一部の字が抜けた見出しになるため） */
 static void news_load(void)
 {
     struct stat st;
@@ -308,14 +367,24 @@ static void news_load(void)
     static char text[NEWS_MAX + 64];
     size_t n = 0;
     char line[1024];
+    int skipped = 0;
     while (fgets(line, sizeof line, f) && n < NEWS_MAX) {
         line[strcspn(line, "\r\n")] = '\0';
         char clean[1024];
         size_t c = 0;
-        for (const unsigned char *p = (const unsigned char *)line; *p; p++)
-            if (*p >= 0x20 && *p < 0x7F)
-                clean[c++] = (char)*p;
+        bool non_ascii = false;
+        for (const unsigned char *p = (const unsigned char *)line; *p; p++) {
+            if (*p < 0x20 || *p == 0x7F)
+                continue;   /* 制御文字 */
+            if (*p >= 0x80)
+                non_ascii = true;
+            clean[c++] = (char)*p;
+        }
         clean[c] = '\0';
+        if (non_ascii && !news.unicode) {
+            skipped++;
+            continue;
+        }
         if (c == 0)
             continue;
         int w = snprintf(text + n, sizeof text - n, "%s%s", n ? NEWS_SEP : "", clean);
@@ -329,7 +398,10 @@ static void news_load(void)
     text[n] = '\0';
     news.mtime = st.st_mtime;
     news.loaded = true;
-    news_set(n ? text : "news.txt is empty", st.st_mtime);
+    news_set(n         ? text
+             : skipped ? "No Japanese font: install fonts-ipafont-gothic, or start with --font <ttf>"
+                       : "news.txt is empty",
+             st.st_mtime);
 }
 
 static void news_check(lv_timer_t *t)
@@ -371,7 +443,9 @@ static void create_news(lv_obj_t *page)
     lv_obj_set_style_bg_color(board, lv_color_hex(0x0B0B0B), 0);
     lv_obj_set_style_clip_corner(board, true, 0);
     lv_obj_set_style_pad_hor(board, 12, 0);
-    news.ticker = label(board, &lv_font_montserrat_40, amber);
+    lv_font_t *jp = load_japanese_font(hooks.font_path);
+    news.unicode = jp != NULL;
+    news.ticker = label(board, jp ? jp : &lv_font_montserrat_40, amber);
     lv_obj_set_width(news.ticker, LV_PCT(100));
     lv_label_set_long_mode(news.ticker, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);
     lv_obj_align(news.ticker, LV_ALIGN_LEFT_MID, 0, 0);
@@ -384,16 +458,19 @@ static void create_news(lv_obj_t *page)
 
 static void layout(void)
 {
-    /* いまのウィジェットを offset の位置に、隣をその左右に置く。ほかは隠す */
+    /* いまのウィジェットを offset の位置に置き、ずれた側に隣を出す。並びは輪になっていて、いちばん右の
+     * 右は None、None の左はいちばん右。2 つしかないときは左右の隣が同じなので、ずれた側にだけ出す */
     for (int i = 0; i < WIDGET_COUNT; i++)
         lv_obj_set_hidden(pages[i], true);
-    for (int k = current - 1; k <= current + 1; k++) {
-        if (k < 0 || k >= order_count)
-            continue;
-        lv_obj_t *p = pages[order[k]];
-        lv_obj_set_hidden(p, false);
-        lv_obj_set_x(p, offset + (k - current) * STRIP_W);
-    }
+    lv_obj_t *cur = pages[order[current]];
+    lv_obj_set_hidden(cur, false);
+    lv_obj_set_x(cur, offset);
+    if (order_count < 2 || offset == 0)
+        return;
+    int dir = offset < 0 ? 1 : -1;      /* 左へずれたら右の隣、右へずれたら左の隣 */
+    lv_obj_t *next = pages[order[(current + dir + order_count) % order_count]];
+    lv_obj_set_hidden(next, false);
+    lv_obj_set_x(next, offset + dir * STRIP_W);
 }
 
 static void update_dots(void)
@@ -416,15 +493,14 @@ static void slide_exec(void *var, int32_t v)
     layout();
 }
 
-static void slide_to(int target)
+/* dir：1 で右の隣へ、-1 で左の隣へ（輪になっていて、端から反対の端へつながる）、0 でいまの位置に戻す */
+static void slide_by(int dir)
 {
-    if (target < 0)
-        target = 0;
-    if (target >= order_count)
-        target = order_count - 1;
-    /* 次のウィジェットへ：いまの位置（offset）から、見た目がつながるように滑らせる */
-    offset += (target - current) * STRIP_W;
-    current = target;
+    if (order_count < 2)
+        dir = 0;
+    /* いまの位置（offset）から、見た目がつながるように滑らせる */
+    offset += dir * STRIP_W;
+    current = (current + dir + order_count) % order_count;
     update_dots();
     lv_anim_t a;
     lv_anim_init(&a);
@@ -520,7 +596,7 @@ void widgets_release(void)
 {
     set_pressed(NULL);
     if (touch.swiping)
-        slide_to(current);
+        slide_by(0);
     touch.down = touch.swiping = false;
 }
 
@@ -551,11 +627,8 @@ void widgets_input(const touch_contacts_t *c)
             set_pressed(NULL);
         }
         if (touch.swiping) {
-            /* 端（None の左、いちばん右の右）では、引っぱった分の 1/3 しか動かさない */
-            int32_t o = touch.base + dx;
-            if ((current == 0 && o > 0) || (current == order_count - 1 && o < 0))
-                o /= 3;
-            offset = o;
+            /* 隣は 1 つ分だけ出すので、ずれは 1 画面分の手前まで */
+            offset = LV_CLAMP(-(STRIP_W - 1), touch.base + dx, STRIP_W - 1);
             layout();
         } else if (touch.pressed && !inside(touch.pressed->obj, p)) {
             set_pressed(NULL);  /* ボタンの外へ出たら、押していないことにする */
@@ -570,12 +643,8 @@ void widgets_input(const touch_contacts_t *c)
     if (touch.swiping) {
         touch.swiping = false;
         int32_t dx = touch.last.x - touch.start.x;
-        int target = current;
-        if (dx <= -SWIPE_MIN)
-            target = current + 1;   /* 左へはらう：右のウィジェットへ */
-        else if (dx >= SWIPE_MIN)
-            target = current - 1;
-        slide_to(target);
+        /* 左へはらう：右のウィジェットへ（いちばん右からは None へ戻る） */
+        slide_by(dx <= -SWIPE_MIN ? 1 : dx >= SWIPE_MIN ? -1 : 0);
         return;
     }
     wbutton_t *b = touch.pressed;
