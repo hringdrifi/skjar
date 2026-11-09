@@ -10,6 +10,9 @@
 /* 太陽（明るさ）。size は 1 辺の px（最大 64） */
 const lv_image_dsc_t *icon_sun(int size);
 
+/* パレット（見た目）。size は 1 辺の px（最大 64） */
+const lv_image_dsc_t *icon_palette(int size);
+
 /* アイコンの画像を作る。色は color（文字の色に合わせる） */
 lv_obj_t *icon_create(lv_obj_t *parent, const lv_image_dsc_t *icon, lv_color_t color);
 

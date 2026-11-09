@@ -691,15 +691,26 @@ static void look_selector_cb(lv_event_t *e)
     }
 }
 
-static lv_obj_t *selector(lv_obj_t *parent, const char *title, const char **map, int width)
+/* 選ぶボタンの並びと見出し。icon を渡すと、見出しの前に描いたアイコン（icons.h）を置く
+ * （渡さないときは、見出しの文字に LVGL の記号を入れて使う） */
+static lv_obj_t *selector(lv_obj_t *parent, const lv_image_dsc_t *icon, const char *title, const char **map,
+                          int width)
 {
     lv_obj_t *col = lv_obj_create(parent);
     lv_obj_set_size(col, width, LV_PCT(100));
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollable(col, false);
     glass(col, LV_PART_MAIN, 90);
-    lv_obj_t *l = lv_label_create(col);
+    lv_obj_t *head = plain_box(col);
+    lv_obj_set_size(head, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(head, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(head, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(head, 10, 0);
+    lv_obj_t *img = icon ? icon_create(head, icon, lv_color_white()) : NULL;
+    lv_obj_t *l = lv_label_create(head);
     lv_label_set_text(l, title);
+    if (img)
+        lv_obj_set_style_image_recolor(img, lv_obj_get_style_text_color(l, LV_PART_MAIN), 0);
     lv_obj_t *m = lv_buttonmatrix_create(col);
     lv_buttonmatrix_set_map(m, map);
     lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_CHECKABLE | LV_BUTTONMATRIX_CTRL_NO_REPEAT);
@@ -719,18 +730,18 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_flex_flow(*panel, LV_FLEX_FLOW_ROW);
 
     static const char *out_map[] = { "Auto", "PC", "CM0", "" };
-    out_selector = selector(*panel, LV_SYMBOL_KEYBOARD "  Physical keys to", out_map, 380);
+    out_selector = selector(*panel, NULL, LV_SYMBOL_KEYBOARD "  Physical keys to", out_map, 380);
     lv_buttonmatrix_set_button_ctrl(out_selector, 0, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(out_selector, out_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     static const char *return_map[] = { "Never", "Key-opened", "Always", "" };
-    return_selector = selector(*panel, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 500);
+    return_selector = selector(*panel, NULL, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 500);
     lv_buttonmatrix_set_button_ctrl(return_selector, (uint32_t)settings()->return_mode, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     /* 見た目（試し）：背景の画像と半透明のボタン */
     static const char *look_map[] = { "Plain", "Picture", "" };
-    lv_obj_t *look_selector = selector(*panel, LV_SYMBOL_IMAGE "  Look", look_map, 260);
+    lv_obj_t *look_selector = selector(*panel, icon_palette(22), "Look", look_map, 260);
     lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)settings()->look, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(look_selector, look_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
