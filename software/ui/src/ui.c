@@ -322,6 +322,8 @@ static void tab_bar_cb(lv_event_t *e)
         show_tab((int)id, false);
 }
 
+#define CLOCK_NUDGE 5   /* 時刻と日付を寄せる量（px） */
+
 static void create_top(lv_obj_t *parent)
 {
     lv_obj_t *top = lv_obj_create(parent);
@@ -346,6 +348,9 @@ static void create_top(lv_obj_t *parent)
     lbl_time = text(clock, &lv_font_montserrat_40);
     lbl_date = text(clock, &lv_font_montserrat_14);
     lv_obj_set_style_text_color(lbl_date, lv_palette_main(LV_PALETTE_GREY), 0);
+    /* 大きな字は上下に余白があり、2 行が離れて見えるので、時刻を下へ・日付を上へ寄せる（真ん中は動かさない） */
+    lv_obj_set_style_translate_y(lbl_time, CLOCK_NUDGE, 0);
+    lv_obj_set_style_translate_y(lbl_date, -CLOCK_NUDGE, 0);
 
     /* タブのボタン */
     static const char *tab_map[] = {
