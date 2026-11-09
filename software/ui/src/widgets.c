@@ -400,6 +400,7 @@ static void news_load(void)
     text[n] = '\0';
     news.mtime = st.st_mtime;
     news.loaded = true;
+    fprintf(stderr, "news: read %s (%zu bytes)\n", news.path, n);
     news_set(n         ? text
              : skipped ? "No Japanese font: install fonts-ipafont-gothic, or start with --font <ttf>"
                        : "news.txt is empty",
