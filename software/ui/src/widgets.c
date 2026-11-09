@@ -2,9 +2,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
 #include <sys/stat.h>
 
+#include "icons.h"
 #include "link.h"
 #include "movie.h"
 #include "platform.h"
@@ -27,7 +29,7 @@ static int order_count;
 static int current;                     /* order の何番目を出しているか */
 static int32_t offset;                  /* スワイプの途中のずれ（px。左へ動かすと負） */
 
-static const char *const names[WIDGET_COUNT] = { "None", "Pomodoro", "News" };
+static const char *const names[WIDGET_COUNT] = { "None", "Typing", "Pomodoro", "Weather", "News" };
 
 const char *widgets_name(widget_id_t id)
 {
@@ -477,6 +479,329 @@ void widgets_set_look(bool picture)
     lv_obj_set_style_text_color(news.stamp, picture ? lv_color_white() : lv_color_black(), 0);
 }
 
+/* ---- Typing：打鍵の速さ ---- */
+
+/* RP2040 の ACT（文字や機能のキーが押された）を数える。修飾キー・レイヤーキーなどは数えない。
+ * ACT は、送りきる前に続けて押されたぶんを 1 回にまとめるので、速く打つと少なめに出ることがある */
+#define TYPE_BUCKETS    120     /* 1 秒ずつ、直近 2 分 */
+#define TYPE_WINDOW_S   15      /* WPM は直近 15 秒の打鍵から */
+#define TYPE_BAR_S      5       /* グラフの 1 本は 5 秒 */
+#define TYPE_BARS       (TYPE_BUCKETS / TYPE_BAR_S)
+#define CHARS_PER_WORD  5
+
+static struct {
+    uint16_t buckets[TYPE_BUCKETS];     /* 秒ごとの打鍵数（輪） */
+    uint32_t sec;                       /* buckets の最新の秒 */
+    uint32_t today, best;
+    int yday;
+    lv_obj_t *wpm, *today_lbl, *best_lbl, *chart;
+    lv_chart_series_t *series;
+} typing = { .yday = -1 };
+
+static void typing_advance(void)
+{
+    uint32_t now = lv_tick_get() / 1000;
+    if (now - typing.sec >= TYPE_BUCKETS) {
+        memset(typing.buckets, 0, sizeof typing.buckets);
+    } else {
+        while (typing.sec != now) {
+            typing.sec++;
+            typing.buckets[typing.sec % TYPE_BUCKETS] = 0;
+        }
+    }
+    typing.sec = now;
+    /* 日付が変わったら、今日の数を 0 に戻す */
+    struct tm tm;
+    platform_localtime(time(NULL), &tm);
+    if (tm.tm_yday != typing.yday) {
+        typing.yday = tm.tm_yday;
+        typing.today = 0;
+        typing.best = 0;
+    }
+}
+
+void widgets_key_activity(void)
+{
+    typing_advance();
+    typing.buckets[typing.sec % TYPE_BUCKETS]++;
+    typing.today++;
+}
+
+/* 直近 n 秒の打鍵数 */
+static uint32_t typing_keys(uint32_t from_sec_ago, uint32_t n)
+{
+    uint32_t sum = 0;
+    for (uint32_t i = from_sec_ago; i < from_sec_ago + n && i < TYPE_BUCKETS; i++)
+        sum += typing.buckets[(typing.sec - i) % TYPE_BUCKETS];
+    return sum;
+}
+
+static void typing_tick(lv_timer_t *t)
+{
+    (void)t;
+    typing_advance();
+    uint32_t wpm = typing_keys(0, TYPE_WINDOW_S) * 60 / TYPE_WINDOW_S / CHARS_PER_WORD;
+    if (wpm > typing.best)
+        typing.best = wpm;
+    lv_label_set_text_fmt(typing.wpm, "%u", (unsigned)wpm);
+    lv_obj_set_style_text_opa(typing.wpm, wpm ? LV_OPA_COVER : LV_OPA_50, 0);
+
+    char num[16];
+    uint32_t v = typing.today;
+    if (v >= 1000)
+        snprintf(num, sizeof num, "%u,%03u", (unsigned)(v / 1000), (unsigned)(v % 1000));
+    else
+        snprintf(num, sizeof num, "%u", (unsigned)v);
+    lv_label_set_text_fmt(typing.today_lbl, "Today  %s keys", num);
+    lv_label_set_text_fmt(typing.best_lbl, "Best  %u WPM", (unsigned)typing.best);
+
+    /* 直近 2 分のグラフ（左が古い）。1 本は 5 秒の WPM */
+    int32_t peak = 60;
+    for (int b = 0; b < TYPE_BARS; b++) {
+        uint32_t keys = typing_keys((uint32_t)(TYPE_BARS - 1 - b) * TYPE_BAR_S, TYPE_BAR_S);
+        int32_t w = (int32_t)(keys * 60 / TYPE_BAR_S / CHARS_PER_WORD);
+        if (w > peak)
+            peak = w;
+        lv_chart_set_value_by_id(typing.chart, typing.series, (uint32_t)b, w);
+    }
+    lv_chart_set_axis_range(typing.chart, LV_CHART_AXIS_PRIMARY_Y, 0, peak);
+    lv_chart_refresh(typing.chart);
+}
+
+static void create_typing(lv_obj_t *page)
+{
+    lv_obj_set_flex_flow(page, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(page, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_hor(page, 24, 0);
+    lv_obj_set_style_pad_column(page, 20, 0);
+
+    lv_obj_t *title = label(page, &lv_font_montserrat_28, lv_palette_main(LV_PALETTE_GREY));
+    lv_label_set_text(title, LV_SYMBOL_KEYBOARD "  Typing");
+    lv_obj_set_width(title, 220);
+
+    typing.wpm = label(page, &lv_font_montserrat_40, lv_color_white());
+    lv_obj_set_width(typing.wpm, 90);
+    lv_obj_set_style_text_align(typing.wpm, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_obj_t *unit = label(page, &lv_font_montserrat_20, lv_palette_main(LV_PALETTE_GREY));
+    lv_label_set_text(unit, "WPM");
+
+    typing.chart = lv_chart_create(page);
+    lv_obj_set_clickable(typing.chart, false);
+    lv_obj_set_height(typing.chart, 56);
+    lv_obj_set_flex_grow(typing.chart, 1);
+    lv_chart_set_type(typing.chart, LV_CHART_TYPE_BAR);
+    lv_chart_set_point_count(typing.chart, TYPE_BARS);
+    lv_chart_set_div_line_count(typing.chart, 0, 0);
+    lv_obj_set_style_bg_opa(typing.chart, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(typing.chart, 0, 0);
+    lv_obj_set_style_pad_all(typing.chart, 0, 0);
+    lv_obj_set_style_pad_column(typing.chart, 4, 0);
+    lv_obj_set_style_radius(typing.chart, 2, LV_PART_ITEMS);
+    typing.series = lv_chart_add_series(typing.chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_PRIMARY_Y);
+
+    lv_obj_t *side = box(page);
+    lv_obj_set_size(side, 280, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(side, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(side, 4, 0);
+    typing.today_lbl = label(side, &lv_font_montserrat_20, lv_color_white());
+    typing.best_lbl = label(side, &lv_font_montserrat_20, lv_palette_main(LV_PALETTE_GREY));
+
+    typing.sec = lv_tick_get() / 1000;
+    typing_tick(NULL);
+    lv_timer_create(typing_tick, 500, NULL);
+}
+
+/* ---- Weather：天気 ---- */
+
+/* 設定のフォルダの weather.txt（tools/fetch_weather.py が書く）を読んで出す。1 行に 1 つ、名前=値：
+ *   place=Tokyo
+ *   now=<気温>,<WMO のコード>
+ *   today=<最高>,<最低>,<降水確率 %>
+ *   tomorrow=<最高>,<最低>,<降水確率 %>,<WMO のコード>
+ *   hour=<HH:MM>,<気温>,<WMO のコード>,<降水確率 %>     （数時間おきに 4 つまで）
+ */
+#define WEATHER_CHECK_MS 30000
+#define WEATHER_HOURS    4
+
+typedef struct {
+    lv_obj_t *time, *icon, *temp;
+} weather_slot_t;
+
+static struct {
+    char path[600];
+    time_t mtime;
+    bool loaded;
+    lv_obj_t *icon, *temp, *place, *range, *empty, *row;
+    weather_slot_t hours[WEATHER_HOURS], tomorrow;
+} weather;
+
+static lv_color_t weather_color(icon_weather_t kind)
+{
+    switch (kind) {
+    case ICON_WEATHER_CLEAR:
+    case ICON_WEATHER_PARTLY:
+        return lv_palette_main(LV_PALETTE_AMBER);
+    case ICON_WEATHER_RAIN:
+    case ICON_WEATHER_THUNDER:
+        return lv_palette_lighten(LV_PALETTE_LIGHT_BLUE, 1);
+    default:
+        return lv_palette_lighten(LV_PALETTE_GREY, 2);
+    }
+}
+
+static void weather_icon(lv_obj_t *img, int code, int size)
+{
+    icon_weather_t kind = icon_weather_from_wmo(code);
+    lv_image_set_src(img, icon_weather(kind, size));
+    lv_obj_set_style_image_recolor(img, weather_color(kind), 0);
+}
+
+static weather_slot_t weather_slot(lv_obj_t *parent, int width)
+{
+    weather_slot_t s;
+    lv_obj_t *col = box(parent);
+    lv_obj_set_size(col, width, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(col, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(col, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(col, 10, 0);
+    s.time = label(col, &lv_font_montserrat_20, lv_palette_main(LV_PALETTE_GREY));
+    s.icon = icon_create(col, icon_weather(ICON_WEATHER_CLOUDY, 36), lv_color_white());
+    s.temp = label(col, &lv_font_montserrat_20, lv_color_white());
+    return s;
+}
+
+static void weather_show_empty(const char *msg)
+{
+    lv_obj_set_hidden(weather.row, true);
+    lv_obj_set_hidden(weather.empty, false);
+    lv_label_set_text(weather.empty, msg);
+}
+
+static void weather_load(void)
+{
+    struct stat st;
+    if (stat(weather.path, &st) != 0) {
+        if (weather.loaded || weather.mtime != (time_t)-1) {
+            weather.loaded = false;
+            weather.mtime = (time_t)-1;
+            weather_show_empty("No weather yet.  Run  tools/fetch_weather.py  (weather.txt next to ui.conf)");
+        }
+        return;
+    }
+    if (weather.loaded && st.st_mtime == weather.mtime)
+        return;
+    FILE *f = fopen(weather.path, "r");
+    if (!f)
+        return;
+    weather.mtime = st.st_mtime;
+    weather.loaded = true;
+
+    char line[256], place[64] = "";
+    float now_t = 0, hi = 0, lo = 0, thi = 0, tlo = 0;
+    int now_code = 3, rain = 0, train = 0, tcode = 3, hours = 0;
+    bool have_now = false, have_today = false, have_tomorrow = false;
+    while (fgets(line, sizeof line, f)) {
+        line[strcspn(line, "\r\n")] = '\0';
+        char hhmm[8];
+        float t;
+        int code, pop;
+        if (strncmp(line, "place=", 6) == 0) {
+            /* 英数字だけ（Montserrat で描くため） */
+            size_t n = 0;
+            for (const char *p = line + 6; *p && n + 1 < sizeof place; p++)
+                if (*p >= 0x20 && *p < 0x7F)
+                    place[n++] = *p;
+            place[n] = '\0';
+        } else if (sscanf(line, "now=%f,%d", &now_t, &now_code) == 2) {
+            have_now = true;
+        } else if (sscanf(line, "today=%f,%f,%d", &hi, &lo, &rain) == 3) {
+            have_today = true;
+        } else if (sscanf(line, "tomorrow=%f,%f,%d,%d", &thi, &tlo, &train, &tcode) == 4) {
+            have_tomorrow = true;
+        } else if (hours < WEATHER_HOURS && sscanf(line, "hour=%5[0-9:],%f,%d,%d", hhmm, &t, &code, &pop) == 4) {
+            weather_slot_t *s = &weather.hours[hours++];
+            lv_label_set_text(s->time, hhmm);
+            weather_icon(s->icon, code, 36);
+            lv_label_set_text_fmt(s->temp, "%d\xC2\xB0", (int)lroundf(t));
+        }
+    }
+    fclose(f);
+    if (!have_now) {
+        weather_show_empty("weather.txt has no current weather");
+        return;
+    }
+    lv_obj_set_hidden(weather.empty, true);
+    lv_obj_set_hidden(weather.row, false);
+
+    weather_icon(weather.icon, now_code, 56);
+    lv_label_set_text_fmt(weather.temp, "%d\xC2\xB0", (int)lroundf(now_t));
+    struct tm tm;
+    platform_localtime(st.st_mtime, &tm);
+    lv_label_set_text_fmt(weather.place, "%s  " "\xE2\x80\xA2" "  %02d:%02d", place[0] ? place : "Weather",
+                          tm.tm_hour, tm.tm_min);
+    if (have_today)
+        lv_label_set_text_fmt(weather.range, "H %d\xC2\xB0  L %d\xC2\xB0  Rain %d%%", (int)lroundf(hi),
+                              (int)lroundf(lo), rain);
+    else
+        lv_label_set_text(weather.range, "");
+    for (int i = 0; i < WEATHER_HOURS; i++) {
+        lv_obj_t *slot = lv_obj_get_parent(weather.hours[i].time);
+        lv_obj_set_hidden(slot, i >= hours);
+    }
+    lv_obj_set_hidden(lv_obj_get_parent(weather.tomorrow.time), !have_tomorrow);
+    if (have_tomorrow) {
+        weather_icon(weather.tomorrow.icon, tcode, 36);
+        lv_label_set_text_fmt(weather.tomorrow.temp, "%d\xC2\xB0 / %d\xC2\xB0  %d%%", (int)lroundf(thi),
+                              (int)lroundf(tlo), train);
+    }
+}
+
+static void weather_check(lv_timer_t *t)
+{
+    (void)t;
+    weather_load();
+}
+
+static void create_weather(lv_obj_t *page)
+{
+    snprintf(weather.path, sizeof weather.path, "%s/weather.txt", settings_dir());
+
+    weather.empty = label(page, &lv_font_montserrat_20, lv_palette_main(LV_PALETTE_GREY));
+    lv_obj_align(weather.empty, LV_ALIGN_LEFT_MID, 24, 0);
+
+    weather.row = box(page);
+    lv_obj_set_size(weather.row, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_flex_flow(weather.row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(weather.row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_hor(weather.row, 24, 0);
+    lv_obj_set_style_pad_column(weather.row, 16, 0);
+
+    /* いま：アイコン、気温、場所と今日の最高・最低・降水確率 */
+    weather.icon = icon_create(weather.row, icon_weather(ICON_WEATHER_CLOUDY, 56), lv_color_white());
+    weather.temp = label(weather.row, &lv_font_montserrat_40, lv_color_white());
+    lv_obj_set_width(weather.temp, 100);
+    lv_obj_t *info = box(weather.row);
+    lv_obj_set_size(info, 380, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(info, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(info, 2, 0);
+    weather.place = label(info, &lv_font_montserrat_20, lv_color_white());
+    weather.range = label(info, &lv_font_montserrat_20, lv_palette_main(LV_PALETTE_GREY));
+
+    /* この先の数時間 */
+    for (int i = 0; i < WEATHER_HOURS; i++)
+        weather.hours[i] = weather_slot(weather.row, 190);
+
+    /* あした */
+    lv_obj_t *gap = box(weather.row);
+    lv_obj_set_flex_grow(gap, 1);
+    weather.tomorrow = weather_slot(weather.row, LV_SIZE_CONTENT);
+    lv_label_set_text(weather.tomorrow.time, "Tomorrow");
+
+    weather.mtime = 0;
+    weather_load();
+    lv_timer_create(weather_check, WEATHER_CHECK_MS, NULL);
+}
+
 /* ---- 並びと、スワイプでの切り替え ---- */
 
 static void layout(void)
@@ -525,6 +850,11 @@ static void slide_by(int dir)
     offset += dir * STRIP_W;
     current = (current + dir + order_count) % order_count;
     update_dots();
+    if (dir && settings()->shown_widget != (int)order[current]) {
+        /* 次に起動したときも、同じウィジェットから */
+        settings()->shown_widget = (int)order[current];
+        settings_save();
+    }
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, strip);
@@ -537,7 +867,8 @@ static void slide_by(int dir)
 
 void widgets_refresh(void)
 {
-    widget_id_t shown = order_count ? order[current] : WIDGET_NONE;
+    /* 初めて（起動したとき）は、前に出していたもの（設定に保存してある） */
+    widget_id_t shown = order_count ? order[current] : (widget_id_t)settings()->shown_widget;
     order_count = 0;
     order[order_count++] = WIDGET_NONE;
     for (int i = WIDGET_NONE + 1; i < WIDGET_COUNT; i++)
@@ -567,6 +898,8 @@ void widgets_create(lv_obj_t *parent, const widgets_hooks_t *h)
     }
     create_pomodoro(pages[WIDGET_POMODORO]);
     create_news(pages[WIDGET_NEWS]);
+    create_typing(pages[WIDGET_TYPING]);
+    create_weather(pages[WIDGET_WEATHER]);
 
     dots = box(strip);
     lv_obj_set_size(dots, LV_SIZE_CONTENT, 6);

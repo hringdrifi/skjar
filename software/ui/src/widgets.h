@@ -3,6 +3,8 @@
  * 左右にスワイプして切り替える（輪になっていて、端から反対の端へつながる）。None（何も出さない）の右に、System タブで
  * 有効にしたものが並ぶ。
  *   Pomodoro ：ポモドーロ・タイマー（集中 25 分、休憩 5 分、4 回ごとに長い休憩 15 分）
+ *   Typing   ：打鍵の速さ（WPM）、今日の打鍵数、直近 2 分のグラフ
+ *   Weather  ：天気。設定のフォルダの weather.txt（tools/fetch_weather.py が書く）から読む
  *   News     ：ニュースの電光掲示板。見出しは設定のフォルダの news.txt（1 行に 1 つ）から読む。
  *              取ってくるのは別の道具（tools/fetch_news.py。実機では systemd のタイマーで回す）
  *
@@ -19,7 +21,9 @@
 
 typedef enum {
     WIDGET_NONE = 0,
+    WIDGET_TYPING,
     WIDGET_POMODORO,
+    WIDGET_WEATHER,
     WIDGET_NEWS,
     WIDGET_COUNT
 } widget_id_t;
@@ -47,6 +51,9 @@ void widgets_input(const touch_contacts_t *contacts);
 
 /* 指を読まなくなるとき（タブを替えた、動画が始まった）：押しているボタンとスワイプを片付ける */
 void widgets_release(void);
+
+/* 文字や機能のキーが押された（RP2040 の ACT）：Typing が数える */
+void widgets_key_activity(void);
 
 /* 見た目（System タブの Look）が変わった：Picture ならウィジェットを背景の絵に馴染ませる */
 void widgets_set_look(bool picture);

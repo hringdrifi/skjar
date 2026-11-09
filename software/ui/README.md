@@ -10,7 +10,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | 割り付け：ヘッダー（80 px）に時計・タブのボタン・状態の札、下の面（400 px、物理キーに近い側）にタブの中身 | 実装した（[docs/design-decisions.md](../../docs/design-decisions.md) の 4 章） |
 | タッチキー（Keys）：2 段 × 12 キー、160 px（18.32 mm）ピッチ。割り当ては RMK のキーマップの 7〜10 行目（レイヤーで変わり、Vial で変えられる） | 実装した。押した・離したを番号で送り（`TK`）、表示は RP2040 から届く割り当て（`TKL`）。マルチタッチで同時押しできる |
 | タブ：上のボタンと、Vial の USER0〜3 キーで開く。キー入力で元のタブに戻る（戻らない / キーで開いたときだけ / いつでも。System タブで選ぶ） | 実装した |
-| Widget strip（Keys タブのタッチキーの上、1920 × 80 px）：左右にスワイプして切り替える。None（初期値）と、System タブで有効にしたもの（ポモドーロ・タイマー、ニュースの電光掲示板） | 実装した（[src/widgets.c](src/widgets.c)。下の「Widget strip」）。Windows の窓で、スワイプ、タイマーの開始、ニュースが流れるのを確かめた |
+| Widget strip（Keys タブのタッチキーの上、1920 × 80 px）：左右にスワイプして切り替える。None（初期値）と、System タブで有効にしたもの（ポモドーロ・タイマー、ニュースの電光掲示板、打鍵の速さ、天気） | 実装した（[src/widgets.c](src/widgets.c)。下の「Widget strip」）。Windows の窓で、スワイプ、タイマーの開始、ニュースが流れる、打鍵の速さ（標準入力の `ACT`）、天気の表示を確かめた |
 | メディアキー（Media） | 実装した。割り当ては固定（`KEY`） |
 | 隠し機能：ヘッダーの時計を 5 回叩くと、動画を全画面で流し、キーのライトも合わせて光らせる。叩くと止まる | 実装した（[src/movie.c](src/movie.c)）。動画は自分で用意して [tools/make_movie.py](tools/make_movie.py) で変換する（下の「隠し機能の動画」） |
 | 見た目（試し）：背景の画像と、半透明のボタン・パネル（すりガラス風）。System タブの Look で Plain / Picture を選ぶ | 実装した。画像は `--background` の PNG か、なければ起動時に描くオーロラ風の絵 |
@@ -35,7 +35,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/settings.c](src/settings.c) | 設定（元のタブに戻るか）の保存 |
 | [src/background.c](src/background.c) | 背景の画像（PNG を読むか、オーロラ風の絵を描く） |
 | [src/movie.c](src/movie.c) | 隠し機能の動画（再生、キーのライトの見本、音） |
-| [src/icons.c](src/icons.c) | LVGL の記号にないアイコン（明るさの太陽、見た目のパレット）を、起動時に描く |
+| [src/icons.c](src/icons.c) | LVGL の記号にないアイコン（明るさの太陽、見た目のパレット、天気）を、起動時に描く |
 | [src/link.c](src/link.c) | RP2040 との UART のやり取り |
 | [src/serial_port.c](src/serial_port.c) | UART の線（Linux の tty、Windows の COM ポート） |
 | [src/platform.c](src/platform.c) | 時刻と待ち（Linux と Windows） |
@@ -43,7 +43,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/touch_source.c](src/touch_source.c) | 触れている指をすべて読む（Linux の evdev のマルチタッチ。ほかは LVGL のポインタ） |
 | [src/backlight.c](src/backlight.c) | `/sys/class/backlight` の明るさ |
 | [src/sysinfo.c](src/sysinfo.c) | CPU・メモリ・温度 |
-| [src/widgets.c](src/widgets.c) | Widget strip（スワイプでの切り替え、ポモドーロ・タイマー、ニュースの電光掲示板） |
+| [src/widgets.c](src/widgets.c) | Widget strip（スワイプでの切り替え、ポモドーロ・タイマー、ニュースの電光掲示板、打鍵の速さ、天気） |
 | [lv_conf.h](lv_conf.h) | LVGL の設定 |
 | [tests/link_test.c](tests/link_test.c) | UART の行の組み立てと読み取りのテスト |
 | [tests/trackpad_test.c](tests/trackpad_test.c) | トラックパッドの判定のテスト |
@@ -51,6 +51,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具（Linux 用） |
 | [tools/make_movie.py](tools/make_movie.py) | 隠し機能の動画を作る（手元の動画 → .skm と .wav。ffmpeg を使う） |
 | [tools/fetch_news.py](tools/fetch_news.py) | ニュースの見出しを RSS / Atom から取ってきて `news.txt` にする（Python の標準ライブラリだけ） |
+| [tools/fetch_weather.py](tools/fetch_weather.py) | 天気を Open-Meteo から取ってきて `weather.txt` にする（Python の標準ライブラリだけ） |
 | [tools/build_windows.py](tools/build_windows.py) | Windows 向けのビルド（zig を使う） |
 
 ## ビルド
@@ -117,6 +118,10 @@ Keys タブの、ヘッダーとタッチキーの間の帯（1920 × 80 px）�
 - **None**（何も出さない。初期値）の右に、System タブの「Widget strip」で有効にしたものが並ぶ（いくつでも選べる。`ui.conf` に `widgets=pomodoro,news` のように保存）。並びは輪になっていて、いちばん右から左へはらうと None に戻る（None から右へはらうと、いちばん右へ）。1 つも有効にしていなければ、スワイプしても何も起きない。
 - 帯の中のボタンは、指で押した・離したをこの帯で決める。横に 40 px 動くとスワイプになり、ボタンは押されない。160 px 以上はらうと次のウィジェットへ移る。
 - **Pomodoro：** 集中 25 分、休憩 5 分、4 回ごとに長い休憩 15 分。▶ / ⏸、⏭（次の区切りへ飛ばす）、⟳（最初から）。区切りが終わったら止めて待ち、画面に文字を出して、キーのライトを点滅させる（`LEDF`）。ほかのウィジェットやタブにしていても数え続ける。
+- **Typing：** 打鍵の速さ。RP2040 の `ACT`（文字や機能のキーが押された）を数え、直近 15 秒の WPM（5 打鍵を 1 語）、今日の打鍵数と最高の WPM、直近 2 分のグラフ（1 本 5 秒）を出す。修飾キーやレイヤーキーは数えない。PC で試すときは、標準入力に `ACT` を続けて打つ。
+- **Weather：** 設定のフォルダの `weather.txt` を読んで、いまの天気と気温、今日の最高・最低・降水確率、3 時間おきの 4 つ先まで、あしたを出す。30 秒ごとにファイルが変わったかを見る。
+  - 天気は [tools/fetch_weather.py](tools/fetch_weather.py) で取ってくる（Open-Meteo。API キー不要、個人利用は無料）。場所は `--city Sapporo` か `--lat` / `--lon`（初期値は東京）。実機では systemd のタイマーで 30 分ごと（[software/os/systemd/skjar-weather.timer](../os/systemd/skjar-weather.timer)）。
+- 最後に出していたウィジェットは `ui.conf` に `widget=weather` のように覚えておき、次の起動でもそれから出す。
 - **News：** 設定のフォルダ（`ui.conf` と同じ所）の `news.txt` の見出し（1 行に 1 つ）を、右から左へ流し続ける。30 秒ごとにファイルが変わったかを見て読み直す。左の札の時刻は、`news.txt` を書いた時刻。
   - 見出しは [tools/fetch_news.py](tools/fetch_news.py) で取ってくる。初期値は NHK の主要ニュースの RSS。`--feed nhk-business` のような名前（NHK の各ジャンル、`bbc`）か、RSS / Atom の URL で変える（何度でも書ける）。NHK の RSS は個人で使う範囲で。
   - **日本語は、電光掲示板だけ TTF のフォントで描く**（LVGL の Tiny TTF。起動時にフォントのファイルを丸ごと読む）。フォントは `--font` で渡すか、決まった場所を探す：実機（Linux）は IPA ゴシック（`sudo apt install fonts-ipafont-gothic`）か Noto Sans CJK（`fonts-noto-cjk`）、Windows は BIZ UDゴシック・游ゴシック・メイリオ。どれもなければ英数字のフォントで、ASCII の見出しだけを出す（`fetch_news.py --ascii` で、英語の見出しを ASCII にして書ける）。

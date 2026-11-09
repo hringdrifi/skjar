@@ -21,7 +21,7 @@ static char dir_path[512];
 static const char *const return_names[] = { "never", "key", "always" };
 static const char *const look_names[] = { "plain", "picture" };
 /* widgets=pomodoro,news のように、有効なものをカンマで並べる */
-static const char *const widget_names[SETTINGS_WIDGETS] = { "none", "pomodoro", "news" };
+static const char *const widget_names[SETTINGS_WIDGETS] = { "none", "typing", "pomodoro", "weather", "news" };
 
 static void default_path(void)
 {
@@ -67,6 +67,10 @@ void settings_load(const char *path)
             for (int i = 0; i < 2; i++)
                 if (strcmp(val, look_names[i]) == 0)
                     current.look = (look_t)i;
+        } else if (strcmp(key, "widget") == 0) {
+            for (int i = 0; i < SETTINGS_WIDGETS; i++)
+                if (strcmp(val, widget_names[i]) == 0)
+                    current.shown_widget = i;
         } else if (strcmp(key, "widgets") == 0) {
             char list[128];
             snprintf(list, sizeof list, "%s", val);
@@ -109,6 +113,7 @@ void settings_save(void)
         }
     }
     fprintf(f, "\n");
+    fprintf(f, "widget=%s\n", widget_names[current.shown_widget]);
     fclose(f);
 }
 

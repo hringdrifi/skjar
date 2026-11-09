@@ -1,0 +1,20 @@
+# SKJÁR: fetch the weather for the Weather widget (Widget strip of the touch UI).
+# Run by skjar-weather.timer. Writes weather.txt next to the UI's ui.conf; the UI reloads it when it changes.
+#
+# Install:
+#   sudo install -D -m 755 ../../ui/tools/fetch_weather.py /usr/local/lib/skjar/fetch_weather.py
+#   sudo cp skjar-weather.service skjar-weather.timer /etc/systemd/system/
+#   sudo systemctl enable --now skjar-weather.timer
+#
+# Set the place with --city NAME, or --lat/--lon (and --name), on the ExecStart line
+# (sudo systemctl edit --full skjar-weather.service). Default: Tokyo.
+# It runs as root because the UI runs as root for now (weather.txt goes to /root/.config/skjar).
+
+[Unit]
+Description=Fetch the weather for the SKJAR Weather widget
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/skjar/fetch_weather.py

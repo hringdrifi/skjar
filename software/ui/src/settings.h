@@ -22,12 +22,13 @@ typedef enum {
 } look_t;
 
 /* ウィジェット（widgets.h の widget_id_t の順。0 の None はいつも出す） */
-#define SETTINGS_WIDGETS 3
+#define SETTINGS_WIDGETS 5
 
 typedef struct {
     return_mode_t return_mode;
     look_t look;
     bool widgets[SETTINGS_WIDGETS];     /* System タブで有効にしたウィジェット。初期値はどれも無効 */
+    int shown_widget;                   /* Widget strip に出していたもの（次の起動でも同じものから） */
 } settings_t;
 
 /* path が NULL なら上の場所を使う */

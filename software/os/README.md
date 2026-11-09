@@ -8,5 +8,6 @@ Raspberry Pi OS Lite をベースにした OS の設定。カーネルとドラ�
   - UI（キーボードモード）と tty1 のコンソール（サイバーデックモード）を行き来する。UI の System タブの Open console で UI が終わり、systemd が `getty@tty1` を立ち上げる。コンソールで `skjar` と打つと `skjar-ui@manual` が立ち上がり、tty1 を UI に戻す
   - 電源を入れたときは `skjar-ui@boot`：PC がつながっていなければ、UI を出さずにコンソールへ
   - ニュースの見出しを 15 分ごとに取ってくるタイマー（[systemd/skjar-news.timer](systemd/skjar-news.timer)、[systemd/skjar-news.service](systemd/skjar-news.service)）。UI の Widget strip の News が読む `news.txt` を書く。入れ方は service の先頭
+  - 天気を 30 分ごとに取ってくるタイマー（[systemd/skjar-weather.timer](systemd/skjar-weather.timer)、[systemd/skjar-weather.service](systemd/skjar-weather.service)）。Weather が読む `weather.txt` を書く。場所の決め方と入れ方は service の先頭
 - ルートを読み取り専用にする設定（Overlay File System）と、書き込みが要るデータのパーティション（ケーブルをいきなり抜かれても壊れないようにするため。[design-decisions.md](../../docs/design-decisions.md) の 1.5）
 - イメージを作るスクリプト

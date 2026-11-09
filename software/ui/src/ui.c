@@ -923,28 +923,10 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_style_text_font(deck_hint, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(deck_hint, lv_palette_main(LV_PALETTE_GREY), 0);
 
-    static const char *return_map[] = { "Never", "Key-opened", "Always", "" };
-    return_selector = selector(*panel, NULL, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 500);
-    lv_buttonmatrix_set_button_ctrl(return_selector, (uint32_t)settings()->return_mode, LV_BUTTONMATRIX_CTRL_CHECKED);
-    lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
-
-    /* 見た目（試し）：背景の画像と半透明のボタン */
-    /* Look と Widget strip は、1 つの列に上下に重ねる */
-    lv_obj_t *stack = plain_box(*panel);
-    lv_obj_set_size(stack, 320, LV_PCT(100));
-    lv_obj_set_flex_flow(stack, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(stack, 12, 0);
-
-    static const char *look_map[] = { "Plain", "Picture", "" };
-    lv_obj_t *look_selector = selector(stack, icon_palette(22), "Look", look_map, 320);
-    lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)settings()->look, LV_BUTTONMATRIX_CTRL_CHECKED);
-    lv_obj_add_event_cb(look_selector, look_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_set_height(lv_obj_get_parent(look_selector), 0);
-    lv_obj_set_flex_grow(lv_obj_get_parent(look_selector), 1);
-
-    /* Widget strip に出すもの（いくつでも選べる。None はいつも出す） */
-    static const char *widget_map[] = { "Pomodoro", "News", "" };
-    lv_obj_t *widget_selector = selector(stack, NULL, LV_SYMBOL_LIST "  Widget strip", widget_map, 320);
+    /* Widget strip に出すもの（いくつでも選べる。None はいつも出す）。2 × 2 の大きなボタン */
+    /* 並びは widget_id_t の順（Widget strip でも、None の右にこの順で並ぶ） */
+    static const char *widget_map[] = { "Typing", "Pomodoro", "\n", "Weather", "News", "" };
+    lv_obj_t *widget_selector = selector(*panel, NULL, LV_SYMBOL_LIST "  Widget strip", widget_map, 460);
     lv_buttonmatrix_set_one_checked(widget_selector, false);
     /* 押したとき（入・切が変わる前）ではなく、離したとき（変わったあと）に知らせてもらう */
     lv_buttonmatrix_set_button_ctrl_all(widget_selector, LV_BUTTONMATRIX_CTRL_CLICK_TRIG);
@@ -952,8 +934,27 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
         if (settings()->widgets[i])
             lv_buttonmatrix_set_button_ctrl(widget_selector, (uint32_t)(i - 1), LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(widget_selector, widget_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_set_height(lv_obj_get_parent(widget_selector), 0);
-    lv_obj_set_flex_grow(lv_obj_get_parent(widget_selector), 1);
+
+    /* Look（見た目）と、キー入力で元のタブに戻るかは、1 つの列に上下に重ねる */
+    lv_obj_t *stack = plain_box(*panel);
+    lv_obj_set_size(stack, 340, LV_PCT(100));
+    lv_obj_set_flex_flow(stack, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(stack, 12, 0);
+
+    static const char *look_map[] = { "Plain", "Picture", "" };
+    lv_obj_t *look_selector = selector(stack, icon_palette(22), "Look", look_map, 340);
+    lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)settings()->look, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(look_selector, look_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_set_height(lv_obj_get_parent(look_selector), 0);
+    lv_obj_set_flex_grow(lv_obj_get_parent(look_selector), 1);
+
+    /* 文字を打ったら元のタブに戻るか（戻らない / USER キーで開いたときだけ / いつでも） */
+    static const char *return_map[] = { "Never", "By key", "Always", "" };
+    return_selector = selector(stack, NULL, LV_SYMBOL_LOOP "  Back on typing", return_map, 340);
+    lv_buttonmatrix_set_button_ctrl(return_selector, (uint32_t)settings()->return_mode, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_set_height(lv_obj_get_parent(return_selector), 0);
+    lv_obj_set_flex_grow(lv_obj_get_parent(return_selector), 1);
 
     /* CPU の使用率（直近 60 秒）とメモリ */
     lv_obj_t *stats = plain_box(*panel);
@@ -1035,6 +1036,7 @@ void ui_user_key(int id, bool pressed)
 
 void ui_activity(void)
 {
+    widgets_key_activity();     /* Widget strip の Typing が数える */
     /* Keys では戻らない（打っている最中なので） */
     if (active_tab == TAB_KEYS || active_tab == return_tab)
         return;
