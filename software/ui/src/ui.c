@@ -151,6 +151,14 @@ static void glass(lv_obj_t *obj, lv_style_selector_t sel, lv_opa_t opa)
 
 /* ボタンの並び（buttonmatrix）：枠は透明、ボタンは半透明、選んでいる・押しているボタンは濃いめ */
 #define GLASS_ITEM_OPA 110      /* ボタンの透け具合（押している間も同じ。押したら黒を重ねて暗くするだけ） */
+#define PRESS_DARKEN   60       /* 押している間に重ねる黒（0〜255。テーマの初期値は 35） */
+
+/* 押している間の見た目：どのボタンも同じだけ暗くする */
+static void press_look(lv_obj_t *obj, lv_style_selector_t sel)
+{
+    lv_obj_set_style_recolor(obj, lv_color_black(), sel);
+    lv_obj_set_style_recolor_opa(obj, PRESS_DARKEN, sel);
+}
 
 /* checked_opa は CHECKED の不透明度：選んでいるタブや選択肢（青）は濃いめにして目立たせる。
  * タッチキーは CHECKED を「押している」の印に使うので、普段と同じにする */
@@ -278,6 +286,7 @@ static void create_top(lv_obj_t *parent)
     lv_obj_set_style_text_font(tab_bar, &lv_font_montserrat_20, 0);
     lv_obj_add_event_cb(tab_bar, tab_bar_cb, LV_EVENT_VALUE_CHANGED, NULL);
     glass_matrix(tab_bar);
+    press_look(tab_bar, LV_PART_ITEMS | LV_STATE_PRESSED);
 
     /* 状態の札（右寄せ）：レイヤー、物理キーの出力先、電源、CPU と温度、RP2040 とのつながり */
     lv_obj_t *chips = plain_box(top);
@@ -481,12 +490,11 @@ static void create_keys_panel(lv_obj_t *parent)
     lv_obj_set_clickable(keys_matrix, false);
     glass_matrix_with(keys_matrix, GLASS_ITEM_OPA);
     /* 押しているキー（CHECKED の印で示す）は、テーマの「押した」と同じ見た目にする：
-     * 色は普段のまま、黒を 35/255 重ねて暗くする（テーマの CHECKED は明るい青になるため上書きする） */
+     * 色は普段のまま、黒を重ねて暗くする（press_look。テーマの CHECKED は明るい青になるため上書きする） */
     const lv_style_selector_t down = LV_PART_ITEMS | LV_STATE_CHECKED;
     lv_obj_set_style_bg_color(keys_matrix, lv_obj_get_style_bg_color(keys_matrix, LV_PART_ITEMS), down);
     lv_obj_set_style_text_color(keys_matrix, lv_obj_get_style_text_color(keys_matrix, LV_PART_ITEMS), down);
-    lv_obj_set_style_recolor(keys_matrix, lv_color_black(), down);
-    lv_obj_set_style_recolor_opa(keys_matrix, 35, down);
+    press_look(keys_matrix, down);
 
     /* 空きのキー（何もしない）は、目立たないよう、うっすら形だけ見せる */
     lv_obj_set_style_bg_opa(keys_matrix, LV_OPA_20, LV_PART_ITEMS | LV_STATE_DISABLED);
@@ -567,6 +575,7 @@ static lv_obj_t *pad_button(lv_obj_t *parent, const char *label)
     lv_obj_set_style_text_color(b, lv_obj_get_style_text_color(keys_matrix, LV_PART_ITEMS), 0);
     lv_obj_set_style_shadow_width(b, 0, 0);
     lv_obj_set_clickable(b, false);
+    press_look(b, LV_STATE_PRESSED);
     lv_obj_t *l = lv_label_create(b);
     lv_label_set_text(l, label);
     lv_obj_center(l);
@@ -649,6 +658,7 @@ static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_flex_grow(m, 1);
     lv_obj_add_event_cb(m, media_event_cb, LV_EVENT_ALL, NULL);
     glass_matrix(m);
+    press_look(m, LV_PART_ITEMS | LV_STATE_PRESSED);
 
     lv_obj_t *row = lv_obj_create(*panel);
     lv_obj_set_size(row, LV_PCT(100), 80);
@@ -712,6 +722,7 @@ static lv_obj_t *hold_button(lv_obj_t *parent, const char *label, lv_event_cb_t 
     lv_obj_set_width(b, LV_PCT(100));
     lv_obj_set_flex_grow(b, 1);
     lv_obj_add_event_cb(b, cb, LV_EVENT_LONG_PRESSED, NULL);
+    press_look(b, LV_STATE_PRESSED);
     lv_obj_t *l = lv_label_create(b);
     lv_label_set_text(l, label);
     lv_obj_center(l);
@@ -756,6 +767,7 @@ static lv_obj_t *selector(lv_obj_t *parent, const lv_image_dsc_t *icon, const ch
     lv_obj_set_width(m, LV_PCT(100));
     lv_obj_set_flex_grow(m, 1);
     glass_matrix(m);
+    press_look(m, LV_PART_ITEMS | LV_STATE_PRESSED);
     return m;
 }
 
