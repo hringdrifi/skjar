@@ -64,14 +64,14 @@ pub const fn get_default_keymap() -> [[[KeyAction; COL]; ROW]; NUM_LAYER] {
             [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
             [a!(Transparent), a!(Transparent), a!(Transparent), k!(Quote), k!(Semicolon), a!(Transparent)],
             [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
-            // タッチキーの上の段：移動・編集と、あまり使わないキー。10 番目は ↑（下の ↓ の真上）、
-            // その左（← の真上）は空き（↑ の押しまちがいよけ）、右端に ScrLk と Pause
+            // タッチキーの上の段：移動・編集と、あまり使わないキー（PrtSc ScrLk Pause）。10 番目は ↑
+            // （下の ↓ の真上）。残りは空き（何もしない）
             [k!(Home), k!(End), k!(PageUp), k!(PageDown), k!(Insert), k!(PrintScreen)],
-            [k!(CapsLock), k!(Application), a!(No), k!(Up), k!(ScrollLock), k!(Pause)],
-            // タッチキーの下の段（押しやすい側）：数字の段にない記号（, . / は物理キーにあり、- は使わない
-            // ので置かない）、空き、← ↓ →（上の ↑ と逆 T 字）、右端は Del（レイヤー 0 の Bksp と同じ位置）
-            [k!(Grave), k!(Equal), k!(LeftBracket), k!(RightBracket), k!(Backslash), k!(Semicolon)],
-            [k!(Quote), a!(No), k!(Left), k!(Down), k!(Right), k!(Delete)]
+            [k!(ScrollLock), k!(Pause), a!(No), k!(Up), a!(No), a!(No)],
+            // タッチキーの下の段（押しやすい側）：左端は Caps、数字の段にない記号（, . / は物理キーにあり、
+            // - は使わないので置かない）、← ↓ →（上の ↑ と逆 T 字）、右端は Del（レイヤー 0 の Bksp と同じ位置）
+            [k!(CapsLock), k!(Grave), k!(Equal), k!(LeftBracket), k!(RightBracket), k!(Backslash)],
+            [k!(Semicolon), k!(Quote), k!(Left), k!(Down), k!(Right), k!(Delete)]
         ]),
         // 2：F キー・メディア・タブ（右のスペースの長押し）
         layer!([
