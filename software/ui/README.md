@@ -11,6 +11,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | タッチキー（Keys）：2 段 × 12 キー、160 px（18.32 mm）ピッチ。割り当ては RMK のキーマップの 7〜10 行目（レイヤーで変わり、Vial で変えられる） | 実装した。押した・離したを番号で送り（`TK`）、表示は RP2040 から届く割り当て（`TKL`）。マルチタッチで同時押しできる |
 | タブ：上のボタンと、Vial の USER0〜3 キーで開く。キー入力で元のタブに戻る（戻らない / キーで開いたときだけ / いつでも。System タブで選ぶ） | 実装した |
 | メディアキー（Media） | 実装した。割り当ては固定（`KEY`） |
+| 隠し機能：ヘッダーの時計を 5 回叩くと、動画を全画面で流し、キーのライトも合わせて光らせる。叩くと止まる | 実装した（[src/movie.c](src/movie.c)）。動画は自分で用意して [tools/make_movie.py](tools/make_movie.py) で変換する（下の「隠し機能の動画」） |
 | 見た目（試し）：背景の画像と、半透明のボタン・パネル（すりガラス風）。System タブの Look で Plain / Picture を選ぶ | 実装した。画像は `--background` の PNG か、なければ起動時に描くオーロラ風の絵 |
 | トラックパッド（Pad）：1 本指で移動・叩いてクリック・叩いてすぐ動かしてドラッグ、2 本指でスクロール・叩いて右クリック、3 本指で叩いて中クリック、スクロールの帯、L / M / R ボタン | 実装した。UART の `PTR` / `WHEEL` で RP2040 に送る。実機（Linux）ではタッチパネルの evdev からマルチタッチを読む。実機のパネルでは未確認 |
 | バックライトの明るさ（スライダー）と、RP2040 から届く上限 | 実装した |
@@ -31,6 +32,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/keylabel.c](src/keylabel.c) | キーの動作の符号（`TKL`）をキーの表示にする |
 | [src/settings.c](src/settings.c) | 設定（元のタブに戻るか）の保存 |
 | [src/background.c](src/background.c) | 背景の画像（PNG を読むか、オーロラ風の絵を描く） |
+| [src/movie.c](src/movie.c) | 隠し機能の動画（再生、キーのライトの見本、音） |
 | [src/icons.c](src/icons.c) | LVGL の記号にないアイコン（明るさの太陽、見た目のパレット）を、起動時に描く |
 | [src/link.c](src/link.c) | RP2040 との UART のやり取り |
 | [src/serial_port.c](src/serial_port.c) | UART の線（Linux の tty、Windows の COM ポート） |
@@ -44,6 +46,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [tests/trackpad_test.c](tests/trackpad_test.c) | トラックパッドの判定のテスト |
 | [tests/keylabel_test.c](tests/keylabel_test.c) | キーの表示のテスト |
 | [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具（Linux 用） |
+| [tools/make_movie.py](tools/make_movie.py) | 隠し機能の動画を作る（手元の動画 → .skm と .wav。ffmpeg を使う） |
 | [tools/build_windows.py](tools/build_windows.py) | Windows 向けのビルド（zig を使う） |
 
 ## ビルド
@@ -102,6 +105,22 @@ build-windows\skjar-ui.exe
 ctest --test-dir build
 ```
 
+## 隠し機能の動画
+
+ヘッダーの時計を続けて 5 回叩くと、動画が全画面で流れ、キーのライトも映像に合わせて光る。画面のどこかを叩くと止まる（始まって 1 秒は止まらない）。
+
+- **動画は自分で用意する。** リポジトリには入れない（作品の著作権のため。`.skm` と `.wav` は `.gitignore` で外してある）。
+- 手元の動画を [tools/make_movie.py](tools/make_movie.py) で変換する（ffmpeg が要る）。白黒の影絵のような動画が向いている。
+
+```bat
+py tools/make_movie.py 手元の動画.mp4 movie
+```
+
+- できた `movie.skm` と `movie.wav` を、設定と同じフォルダ（Windows：`%APPDATA%\skjar`、Linux：`~/.config/skjar`）に置くか、`--movie <path>.skm` で渡す。音は同じ名前の `.wav`（なければ映像だけ）。
+- 画面：320 × 240、4 段階の濃淡、30 fps を、縦横 2 倍にして真ん中に出す。左には、キーのライトの見本（42 キーの並び）を描く。
+- キーのライト：キーボード全体（12u × 4u）を動画全体に引き伸ばして重ね、各キーの位置の明るさ（16 段階）を、コマごとに UART の `LEDF` で RP2040 に送る。
+- 音：Linux は `aplay`、Windows は PlaySound で鳴らす。音を鳴らし始めた時刻からの経過時間で、コマを決める。
+
 ## 実機での設定
 
 1. OS の設定：[software/os/config.txt](../os/config.txt) を `/boot/firmware/config.txt` に入れる（使うオーバーレイは [software/os/overlays/](../os/overlays/) でビルドする）。
@@ -119,6 +138,7 @@ ctest --test-dir build
 | `--vt <path>` | `/dev/tty1` | グラフィックモードにする仮想端末。`-` で触らない |
 | `--zoom <%>` | 100 | 窓の大きさ（SDL と Windows のみ） |
 | `--background <png>` | 起動時に描くオーロラ風の絵 | 背景の画像（Look が Picture のとき）。1920 × 480 だと描き換えが軽い。ほかの大きさは画面を覆うように拡大・縮小する |
+| `--movie <skm>` | 設定のフォルダの `movie.skm` | 隠し機能の動画 |
 | `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか） |
 | `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 

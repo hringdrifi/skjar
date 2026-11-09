@@ -64,6 +64,8 @@ void link_send_key(uint8_t page, uint16_t usage, bool down);
 void link_send_pointer(int dx, int dy, uint8_t buttons);
 void link_send_wheel(int v, int h);
 void link_send_out(link_out_t target_or_unknown_for_auto);
+/* キーのライトの 1 コマ（隠し機能の動画）。levels は 42 キー × 明るさ 0〜15、RMK のマトリクスの順 */
+void link_send_leds(const uint8_t levels[42]);
 void link_send_lcd(bool on);
 void link_send_uf2(void);
 

@@ -52,6 +52,7 @@ add_executable(skjar-ui
     src/keylabel.c
     src/icons.c
     src/background.c
+    src/movie.c
     src/settings.c
     src/sysinfo.c
     src/backlight.c)
@@ -74,6 +75,9 @@ enable_testing()
 add_executable(link-test tests/link_test.c src/link.c src/serial_port.c src/platform.c)
 if(NOT MSVC)
     target_compile_options(link-test PRIVATE -Wall -Wextra)
+endif()
+if(WIN32)
+    target_link_libraries(link-test PRIVATE winmm)   # platform.c の PlaySound
 endif()
 add_test(NAME link COMMAND link-test)
 

@@ -5,7 +5,8 @@
 //!
 //! いまできること：
 //! - CM0 → RP2040：`HELLO`、`ALIVE`、`TK`（画面のタッチキー。キーマップの 7〜10 行目として RMK に渡す）、
-//!   `KEY`（Media タブなどの固定のキー）、`PTR` / `WHEEL`（トラックパッド）、`OUT`、`LCD`（記録だけ）、`UF2`
+//!   `KEY`（Media タブなどの固定のキー）、`PTR` / `WHEEL`（トラックパッド）、`LEDF`（キーのライトの 1 コマ）、
+//!   `OUT`、`LCD`（記録だけ）、`UF2`
 //! - RP2040 → CM0：`ALIVE`、`BLMAX`（いまは 255 固定）、`OUT`、`LAYER`、`TKL`（タッチキーの割り当て）、
 //!   `USER`（Vial の USER キー。UI がタブを開く）、`ACT`（文字や機能のキーが押された）
 //! - `PWR` は CC の判定を作るまで送らない。`SHUTDOWN` を出すきっかけもまだない（[`request_shutdown`]）
@@ -29,7 +30,7 @@ use rmk::types::action::{Action, KeyAction};
 use rmk::types::keycode::KeyCode;
 
 use crate::keymap::{NUM_LAYER, TOUCH_KEYS, touch_key_pos};
-use crate::reports;
+use crate::{reports, rgb};
 
 const LINE_MAX: usize = 64;
 const ALIVE_PERIOD: Duration = Duration::from_secs(1);
@@ -251,6 +252,22 @@ fn handle_line(line: &[u8]) {
                 return;
             };
             reports::touch_key(page as u8, usage, down);
+        }
+        "LEDF" => {
+            // キーのライトの 1 コマ（16 進 42 文字。1 文字が 1 キーの明るさ 0〜15、マトリクスの順）
+            let hex = args[0].as_bytes();
+            if hex.len() != rgb::LEDS {
+                warn!("cm0_link: bad LEDF length {}", hex.len());
+                return;
+            }
+            let mut levels = [0u8; rgb::LEDS];
+            for (l, &c) in levels.iter_mut().zip(hex) {
+                let Some(v) = hex_digit(c) else {
+                    return;
+                };
+                *l = v;
+            }
+            rgb::show_frame(levels);
         }
         "PTR" => {
             let (Some(dx), Some(dy), Ok(buttons)) = (parse_rel(args[0]), parse_rel(args[1]), args[2].parse::<u8>()) else {

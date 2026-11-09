@@ -20,6 +20,7 @@ cortex-m-rt = "0.7.5"
 panic-halt = "1"
 portable-atomic = { version = "1", features = ["critical-section"] }
 static_cell = "2"
+smart-leds = "0.4"
 
 [features]
 default = ["pico"]

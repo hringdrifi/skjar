@@ -98,3 +98,22 @@ settings_t *settings(void)
 {
     return &current;
 }
+
+const char *settings_dir(void)
+{
+    if (!dir_path[0]) {
+        /* --config で渡したファイルのあるフォルダ */
+        snprintf(dir_path, sizeof dir_path, "%s", file_path);
+        char *sep = strrchr(dir_path, SEP[0]);
+#if defined(_WIN32)
+        char *slash = strrchr(dir_path, '/');
+        if (slash && (!sep || slash > sep))
+            sep = slash;
+#endif
+        if (sep)
+            *sep = '\0';
+        else
+            snprintf(dir_path, sizeof dir_path, ".");
+    }
+    return dir_path;
+}

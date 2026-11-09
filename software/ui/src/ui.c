@@ -30,6 +30,7 @@
 #include "icons.h"
 #include "keylabel.h"
 #include "link.h"
+#include "movie.h"
 #include "platform.h"
 #include "settings.h"
 #include "sysinfo.h"
@@ -264,6 +265,52 @@ static chip_t cpu_chip(lv_obj_t *parent)
 }
 
 static void show_tab(int tab, bool by_key);
+static void release_all_keys(void);
+
+/* ---- 隠し機能：時計を 5 回叩くと動画（movie.h） ---- */
+
+#define TAPS_TO_START   5
+#define TAP_GAP_MS      700     /* これより間が空いたら数え直す */
+
+static void toast_done(lv_timer_t *t)
+{
+    lv_obj_delete((lv_obj_t *)lv_timer_get_user_data(t));
+    lv_timer_delete(t);
+}
+
+/* 画面の真ん中に、しばらく文字を出す */
+static void toast(const char *msg)
+{
+    lv_obj_t *l = lv_label_create(lv_layer_top());
+    lv_label_set_text(l, msg);
+    lv_obj_set_style_bg_opa(l, LV_OPA_80, 0);
+    lv_obj_set_style_bg_color(l, lv_color_black(), 0);
+    lv_obj_set_style_pad_all(l, 16, 0);
+    lv_obj_set_style_radius(l, 12, 0);
+    lv_obj_center(l);
+    lv_timer_create(toast_done, 4000, l);
+}
+
+static void clock_tapped(lv_event_t *e)
+{
+    (void)e;
+    static uint32_t last_ms;
+    static int taps;
+    uint32_t now = lv_tick_get();
+    taps = (now - last_ms <= TAP_GAP_MS) ? taps + 1 : 1;
+    last_ms = now;
+    if (taps < TAPS_TO_START)
+        return;
+    taps = 0;
+    release_all_keys();
+    trackpad_reset();
+    if (!actions.movie_path || !movie_start(actions.movie_path)) {
+        char msg[700];
+        snprintf(msg, sizeof msg, "No movie. Make one with tools/make_movie.py and put it at\n%s",
+                 actions.movie_path ? actions.movie_path : "(no path)");
+        toast(msg);
+    }
+}
 
 static void tab_bar_cb(lv_event_t *e)
 {
@@ -290,6 +337,9 @@ static void create_top(lv_obj_t *parent)
     lv_obj_t *clock = plain_box(top);
     lv_obj_set_size(clock, 200, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(clock, LV_FLEX_FLOW_COLUMN);
+    /* 隠し機能：時計を続けて 5 回叩くと動画が流れる */
+    lv_obj_set_clickable(clock, true);
+    lv_obj_add_event_cb(clock, clock_tapped, LV_EVENT_CLICKED, NULL);
     lbl_time = text(clock, &lv_font_montserrat_40);
     lbl_date = text(clock, &lv_font_montserrat_14);
     lv_obj_set_style_text_color(lbl_date, lv_palette_main(LV_PALETTE_GREY), 0);
@@ -914,6 +964,16 @@ static void input_timer_cb(lv_timer_t *t)
     (void)t;
     if (labels_dirty)
         refresh_labels();
+    /* 動画を流している間は、指を読まない。止めたあとは、止めるのに叩いた指が離れるまで待つ */
+    static bool was_playing;
+    if (movie_playing()) {
+        was_playing = true;
+        return;
+    }
+    if (was_playing) {
+        was_playing = false;
+        wait_release = true;
+    }
     if (active_tab != TAB_KEYS && active_tab != TAB_PAD)
         return;
     touch_contacts_t c;

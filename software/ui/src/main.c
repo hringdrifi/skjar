@@ -7,7 +7,7 @@
  * PC（windows）：Windows で同じ窓を開く（Win32）。
  *
  * 使い方：skjar-ui [--link <tty か COMn か ->] [--rotate 0|90|180|270] [--fb <path>]
- *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--no-poweroff]
+ *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>] [--no-poweroff]
  */
 #include <signal.h>
 #include <stdio.h>
@@ -39,6 +39,7 @@ typedef struct {
     int zoom;                   /* 窓の大きさ（%）。PC の窓だけ */
     const char *config_path;    /* 設定のファイル。NULL なら settings.h の場所 */
     const char *background;     /* 背景の画像（PNG）。NULL なら描いた絵 */
+    const char *movie;          /* 隠し機能の動画（.skm）。NULL なら設定のフォルダの movie.skm */
     int no_poweroff;
 } options_t;
 
@@ -60,7 +61,7 @@ static void usage(const char *argv0)
 {
     fprintf(stderr,
             "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
-            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--no-poweroff]\n", argv0);
+            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>] [--no-poweroff]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
@@ -87,6 +88,7 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--zoom") == 0 && v) { opt.zoom = atoi(v); i++; }
         else if (strcmp(a, "--config") == 0 && v) { opt.config_path = v; i++; }
         else if (strcmp(a, "--background") == 0 && v) { opt.background = v; i++; }
+        else if (strcmp(a, "--movie") == 0 && v) { opt.movie = v; i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
     }
@@ -285,7 +287,22 @@ int main(int argc, char **argv)
         fprintf(stderr, "running without the RP2040 link\n");
     lv_timer_create(link_timer_cb, 10, NULL);
 
-    const ui_actions_t actions = { .poweroff = do_poweroff, .background_png = opt.background };
+    /* 隠し機能の動画：渡されなければ、設定のフォルダの movie.skm（音は movie.wav） */
+    static char movie_path[600];
+    if (opt.movie)
+        snprintf(movie_path, sizeof movie_path, "%s", opt.movie);
+    else
+#if defined(_WIN32)
+        snprintf(movie_path, sizeof movie_path, "%s\\movie.skm", settings_dir());
+#else
+        snprintf(movie_path, sizeof movie_path, "%s/movie.skm", settings_dir());
+#endif
+
+    const ui_actions_t actions = {
+        .poweroff = do_poweroff,
+        .background_png = opt.background,
+        .movie_path = movie_path,
+    };
     ui_create(&actions);
 
     /* 窓を閉じると表示がなくなる（Windows のドライバ） */

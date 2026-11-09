@@ -6,6 +6,22 @@
 #if defined(_WIN32)
 
 #include <windows.h>
+#include <mmsystem.h>
+
+void platform_audio_play(const char *wav_path)
+{
+    if (GetFileAttributesA(wav_path) == INVALID_FILE_ATTRIBUTES) {
+        fprintf(stderr, "audio: no %s\n", wav_path);
+        return;
+    }
+    if (!PlaySoundA(wav_path, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT))
+        fprintf(stderr, "audio: cannot play %s\n", wav_path);
+}
+
+void platform_audio_stop(void)
+{
+    PlaySoundA(NULL, NULL, 0);
+}
 
 uint32_t platform_now_ms(void)
 {
@@ -68,7 +84,36 @@ bool platform_read_stdin_line(char *buf, size_t size)
 #else
 
 #include <poll.h>
+#include <signal.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+static pid_t audio_pid = -1;
+
+/* aplay（Raspberry Pi OS に入っている）を子のプロセスで動かす */
+void platform_audio_play(const char *wav_path)
+{
+    if (access(wav_path, R_OK) != 0) {
+        fprintf(stderr, "audio: no %s\n", wav_path);
+        return;
+    }
+    platform_audio_stop();
+    pid_t pid = fork();
+    if (pid == 0) {
+        execlp("aplay", "aplay", "-q", wav_path, (char *)NULL);
+        _exit(127);
+    }
+    audio_pid = pid;
+}
+
+void platform_audio_stop(void)
+{
+    if (audio_pid > 0) {
+        kill(audio_pid, SIGTERM);
+        waitpid(audio_pid, NULL, 0);
+        audio_pid = -1;
+    }
+}
 
 uint32_t platform_now_ms(void)
 {

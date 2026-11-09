@@ -17,12 +17,15 @@ mod cm0_link;
 mod hid_i2c;
 mod keymap;
 mod reports;
+mod rgb;
 
 use embassy_executor::Spawner;
 use embassy_futures::join::join;
 use embassy_rp::gpio::{Flex, Input, Level, Output, Pull};
 use embassy_rp::i2c_slave::{self, I2cSlave};
-use embassy_rp::peripherals::{UART0, USB};
+use embassy_rp::peripherals::{DMA_CH0, PIO0, UART0, USB};
+use embassy_rp::pio::Pio;
+use embassy_rp::pio_programs::ws2812::{Grb, PioWs2812, PioWs2812Program};
 use embassy_rp::uart::{self, BufferedUart};
 use embassy_rp::usb::{self, Driver};
 use embassy_rp::bind_interrupts;
@@ -55,17 +58,26 @@ bind_interrupts!(struct Irqs {
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
     I2C0_IRQ => embassy_rp::i2c::InterruptHandler<KbI2c>;
     UART0_IRQ => uart::BufferedInterruptHandler<UART0>;
+    PIO0_IRQ_0 => embassy_rp::pio::InterruptHandler<PIO0>;
+    DMA_IRQ_0 => embassy_rp::dma::InterruptHandler<DMA_CH0>;
 });
 #[cfg(not(feature = "skjar"))]
 bind_interrupts!(struct Irqs {
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
     I2C1_IRQ => embassy_rp::i2c::InterruptHandler<KbI2c>;
     UART0_IRQ => uart::BufferedInterruptHandler<UART0>;
+    PIO0_IRQ_0 => embassy_rp::pio::InterruptHandler<PIO0>;
+    DMA_IRQ_0 => embassy_rp::dma::InterruptHandler<DMA_CH0>;
 });
 
 #[embassy_executor::task]
 async fn logger_task(driver: Driver<'static, USB>) {
     embassy_usb_logger::run!(1024, log::LevelFilter::Debug, driver);
+}
+
+#[embassy_executor::task]
+async fn rgb_task(leds: PioWs2812<'static, PIO0, 0, { rgb::LEDS }, Grb>, power: Output<'static>) {
+    rgb::run(leds, power).await
 }
 
 #[embassy_executor::task]
@@ -130,6 +142,14 @@ async fn main(spawner: Spawner) {
     // いまは USB の HID を使わないので、つながったことにしてチャンネルを横取りする。
     rmk::state::set_usb_state(UsbState::Configured);
     spawner.spawn(report_bridge_task().unwrap());
+
+    // キーの RGB（GPIO14 RGB_DATA を PIO0 で、GPIO20 RGB_EN は High で電源 ON。初めは OFF）。
+    // Pico で試すときは、同じ GP14 / GP20 に WS2812 のテープ LED などをつなぐ
+    let mut pio = Pio::new(p.PIO0, Irqs);
+    let ws2812 = PioWs2812Program::new(&mut pio.common);
+    let leds = PioWs2812::new(&mut pio.common, pio.sm0, p.DMA_CH0, Irqs, p.PIN_14, &ws2812);
+    let rgb_power = Output::new(p.PIN_20, Level::Low);
+    spawner.spawn(rgb_task(leds, rgb_power).unwrap());
 
     // キーマトリクス（7 行 × 6 列、ダイオードは列 → 行）。キーマップは、これにタッチキーの 4 行を足した 11 行（keymap.rs）。
     // RMK の COL2ROW は、列を High に駆動して行を読む（行はプルダウン）。

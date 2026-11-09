@@ -354,6 +354,19 @@ void link_send_wheel(int v, int h)
     send_body(body);
 }
 
+void link_send_leds(const uint8_t levels[42])
+{
+    /* "LEDF," ＋ 16 進 42 文字。CRC と合わせて 1 行 64 バイトに収まる */
+    static const char hex[] = "0123456789ABCDEF";
+    char body[5 + 42 + 1] = "LEDF,";
+    for (int i = 0; i < 42; i++)
+        body[5 + i] = hex[levels[i] & 0x0F];
+    body[47] = '\0';
+    /* 毎コマ（30 回 / 秒）送るので、線を開いていないときは標準エラーに出さない */
+    if (!dry_run)
+        send_body(body);
+}
+
 void link_send_out(link_out_t target)
 {
     const char *s = target == LINK_OUT_PC ? "PC" : target == LINK_OUT_CM0 ? "CM0" : "AUTO";

@@ -23,6 +23,7 @@ HID over I²C を確かめるための試作。基板ができる前に、Raspbe
 | HID over I²C のターゲット（[src/hid_i2c.rs](src/hid_i2c.rs)） | 実装した。実機では未確認 |
 | CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。実機では未確認。`PWR` と `SHUTDOWN` はまだ送らない（CC と電源の判定がないため）。`BLMAX` は 255 固定、`LCD` は記録だけ |
 | タッチキー（[src/reports.rs](src/reports.rs)） | 実装した。UART で届いたキーを、RMK の物理キーのレポートと合わせて送る（修飾キーは OR、キーは合わせて 6 個まで） |
+| キーの RGB（[src/rgb.rs](src/rgb.rs)） | 隠し機能の動画に合わせて光らせるところだけ実装した。UART の `LEDF` を受けて、GPIO14 から PIO で SK6812 を駆動し、GPIO20 で LED の電源を入れ切りする。明るさは 1 色あたり 48/255 まで（全部白でも約 0.5 A）。普段の光らせ方と、電流宣言ごとの上限はまだ。Pico で試すときは GP14 / GP20 に WS2812 のテープ LED などをつなぐ。実機では未確認 |
 | トラックパッド（UART の `PTR` / `WHEEL`） | 実装した。HID over I²C にマウスのレポート（ID 3）を足し、RMK のマウスキーと合わせて送る（ボタンは OR、動きはそのまま） |
 | 画面のタッチキー（Keys タブの 2 段 × 12 キー） | 実装した。キーマップを 11 行にして、7〜10 行目をタッチキーにした（[src/keymap.rs](src/keymap.rs)）。UART の `TK` を RMK にキーの出来事として渡すので、レイヤーと Vial が効く。割り当てを `TKL` で CM0 に送る |
 | タブを開くキーと、元のタブに戻すきっかけ | 実装した。RMK の `ActionEvent` を受け、USER キー（Vial の USER0〜3）で `USER`、文字や機能のキーで `ACT` を送る。受け取り口の数は [keyboard.toml](keyboard.toml) で増やしてある |

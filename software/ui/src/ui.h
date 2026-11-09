@@ -9,6 +9,7 @@
 typedef struct {
     void (*poweroff)(void);     /* 電源を切るボタンと、RP2040 からの SHUTDOWN */
     const char *background_png;     /* 背景の画像（PNG）。NULL なら描いた絵を使う（background.h） */
+    const char *movie_path;         /* 隠し機能の動画（.skm。movie.h） */
 } ui_actions_t;
 
 void ui_create(const ui_actions_t *actions);

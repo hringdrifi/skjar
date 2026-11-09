@@ -29,4 +29,7 @@ void settings_load(const char *path);
 void settings_save(void);
 settings_t *settings(void);
 
+/* 設定のファイルを置くフォルダ（settings_load のあと。隠し機能の動画もここに置く） */
+const char *settings_dir(void);
+
 #endif /* SKJAR_SETTINGS_H */

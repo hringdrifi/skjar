@@ -46,3 +46,7 @@ firmware/**/target/
 # タッチ UI のビルド結果と、CMake が取ってくる依存（LVGL）
 software/ui/build*/
 software/ui/.deps/
+
+# 隠し機能の動画（作品の著作権のため、リポジトリに入れない）
+*.skm
+movie.wav

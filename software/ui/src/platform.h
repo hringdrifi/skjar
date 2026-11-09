@@ -14,4 +14,8 @@ void platform_localtime(time_t t, struct tm *out);
 #include <stddef.h>
 bool platform_read_stdin_line(char *buf, size_t size);
 
+/* .wav を鳴らす（待たない）・止める。Linux は aplay、Windows は PlaySound。鳴らせなければ何もしない */
+void platform_audio_play(const char *wav_path);
+void platform_audio_stop(void);
+
 #endif /* SKJAR_PLATFORM_H */
