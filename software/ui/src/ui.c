@@ -105,6 +105,7 @@ typedef struct {
 } chip_t;
 
 static chip_t chip_layer, chip_out, chip_pwr, chip_sys, chip_link;
+static lv_obj_t *lbl_cpu, *lbl_temp;    /* CPU の札の、数字の欄 */
 
 #define COLOR_MUTED  lv_color_hex(0x3A3F47)
 #define COLOR_ACCENT lv_palette_main(LV_PALETTE_ORANGE)
@@ -151,6 +152,38 @@ static void chip_set(chip_t *c, lv_color_t color, const char *s)
 {
     lv_obj_set_style_bg_color(c->box, color, 0);
     lv_label_set_text(c->label, s);
+}
+
+/* 文字の幅（px） */
+static int32_t text_width(const char *s, const lv_font_t *font)
+{
+    lv_point_t size;
+    lv_text_get_size(&size, s, font, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+    return size.x;
+}
+
+/* 固定幅で右寄せの欄。数字が変わっても札の幅と文字の位置が動かないように、
+ * いちばん幅の広い値（widest）が入る幅にする */
+static lv_obj_t *fixed_field(lv_obj_t *parent, const char *widest)
+{
+    lv_obj_t *l = text(parent, &lv_font_montserrat_20);
+    lv_obj_set_width(l, text_width(widest, &lv_font_montserrat_20));
+    lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_obj_set_style_text_color(l, lv_color_white(), 0);
+    return l;
+}
+
+/* CPU の札：「CPU」「使用率」「温度」の 3 つの欄に分ける */
+static chip_t cpu_chip(lv_obj_t *parent)
+{
+    chip_t c = chip(parent);
+    lv_obj_set_flex_flow(c.box, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(c.box, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(c.box, 8, 0);
+    lv_label_set_text(c.label, "CPU");
+    lbl_cpu = fixed_field(c.box, "100%");
+    lbl_temp = fixed_field(c.box, "100C");
+    return c;
 }
 
 static void show_tab(int tab, bool by_key);
@@ -208,7 +241,7 @@ static void create_top(lv_obj_t *parent)
     chip_layer = chip(chips);
     chip_out = chip(chips);
     chip_pwr = chip(chips);
-    chip_sys = chip(chips);
+    chip_sys = cpu_chip(chips);
 }
 
 static void update_clock(void)
@@ -226,12 +259,17 @@ static void update_sysinfo(void)
 {
     sysinfo_t s;
     sysinfo_read(&s);
-    char buf[48];
-    int n = snprintf(buf, sizeof buf, s.cpu_percent >= 0 ? "CPU %d%%" : "CPU --", s.cpu_percent);
+    if (s.cpu_percent >= 0)
+        lv_label_set_text_fmt(lbl_cpu, "%d%%", s.cpu_percent);
+    else
+        lv_label_set_text(lbl_cpu, "--");
+    /* 温度がわからない（PC で試すときなど）ときも、欄は残して幅を変えない */
     if (s.temp_decic >= 0)
-        snprintf(buf + n, sizeof buf - (size_t)n, "  %dC", (s.temp_decic + 5) / 10);
+        lv_label_set_text_fmt(lbl_temp, "%dC", (s.temp_decic + 5) / 10);
+    else
+        lv_label_set_text(lbl_temp, "--");
     /* 熱いとき（70 °C 以上）は色で知らせる */
-    chip_set(&chip_sys, s.temp_decic >= 700 ? COLOR_WARN : COLOR_MUTED, buf);
+    lv_obj_set_style_bg_color(chip_sys.box, s.temp_decic >= 700 ? COLOR_WARN : COLOR_MUTED, 0);
     if (s.cpu_percent >= 0)
         lv_chart_set_next_value(cpu_chart, cpu_series, s.cpu_percent);
     if (lbl_ram && s.mem_total_mb > 0)
