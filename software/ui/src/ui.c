@@ -472,6 +472,14 @@ static void create_keys_panel(lv_obj_t *parent)
     /* 押した・離したは keys_input で指から決める（LVGL のポインタは 1 本分しか持たないため） */
     lv_obj_set_clickable(keys_matrix, false);
     glass_matrix(keys_matrix);
+    /* 押しているキー（CHECKED の印で示す）は、テーマの「押した」と同じ見た目にする：
+     * 色は普段のまま、黒を 35/255 重ねて暗くする（テーマの CHECKED は明るい青になるため上書きする） */
+    const lv_style_selector_t down = LV_PART_ITEMS | LV_STATE_CHECKED;
+    lv_obj_set_style_bg_color(keys_matrix, lv_obj_get_style_bg_color(keys_matrix, LV_PART_ITEMS), down);
+    lv_obj_set_style_text_color(keys_matrix, lv_obj_get_style_text_color(keys_matrix, LV_PART_ITEMS), down);
+    lv_obj_set_style_recolor(keys_matrix, lv_color_black(), down);
+    lv_obj_set_style_recolor_opa(keys_matrix, 35, down);
+
     /* 空きのキー（何もしない）は、目立たないよう、うっすら形だけ見せる */
     lv_obj_set_style_bg_opa(keys_matrix, LV_OPA_20, LV_PART_ITEMS | LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(keys_matrix, 0, LV_PART_ITEMS | LV_STATE_DISABLED);
@@ -533,6 +541,9 @@ static void pad_input(const touch_contacts_t *c)
         f.y /= (float)f.count;
     }
     trackpad_set_side_buttons(side);
+    lv_obj_set_state(pad_btn_left, LV_STATE_PRESSED, (side & TRACKPAD_BTN_LEFT) != 0);
+    lv_obj_set_state(pad_btn_middle, LV_STATE_PRESSED, (side & TRACKPAD_BTN_MIDDLE) != 0);
+    lv_obj_set_state(pad_btn_right, LV_STATE_PRESSED, (side & TRACKPAD_BTN_RIGHT) != 0);
     trackpad_strip_update(strip, strip_y);
     trackpad_update(&f, lv_tick_get());
 }
@@ -542,10 +553,16 @@ static lv_obj_t *pad_button(lv_obj_t *parent, const char *label)
     lv_obj_t *b = lv_button_create(parent);
     lv_obj_set_width(b, LV_PCT(100));
     lv_obj_set_flex_grow(b, 1);
+    /* キーと同じ灰色にする（ボタンの初期の色は明るい青）。押した見た目（テーマの PRESSED：黒を重ねて暗く）は、
+     * pad_input で指から付ける（パッドを触りながら 2 本目の指で押しても暗くなるように）ので、LVGL には押させない */
+    lv_obj_set_style_bg_color(b, lv_obj_get_style_bg_color(keys_matrix, LV_PART_ITEMS), 0);
+    lv_obj_set_style_text_color(b, lv_obj_get_style_text_color(keys_matrix, LV_PART_ITEMS), 0);
+    lv_obj_set_style_shadow_width(b, 0, 0);
+    lv_obj_set_clickable(b, false);
     lv_obj_t *l = lv_label_create(b);
     lv_label_set_text(l, label);
     lv_obj_center(l);
-    glass(b, LV_PART_MAIN, 150);
+    glass(b, LV_PART_MAIN, 110);
     return b;
 }
 
@@ -812,8 +829,12 @@ static void show_tab(int tab, bool by_key)
     /* 離れるタブの、押しっぱなしを片付ける */
     if (active_tab == TAB_KEYS)
         release_all_keys();
-    if (active_tab == TAB_PAD)
+    if (active_tab == TAB_PAD) {
         trackpad_reset();
+        lv_obj_set_state(pad_btn_left, LV_STATE_PRESSED, false);
+        lv_obj_set_state(pad_btn_middle, LV_STATE_PRESSED, false);
+        lv_obj_set_state(pad_btn_right, LV_STATE_PRESSED, false);
+    }
 
     return_tab = active_tab;
     opened_by_key = by_key;
