@@ -150,12 +150,20 @@ static void glass(lv_obj_t *obj, lv_style_selector_t sel, lv_opa_t opa)
 }
 
 /* ボタンの並び（buttonmatrix）：枠は透明、ボタンは半透明、選んでいる・押しているボタンは濃いめ */
-static void glass_matrix(lv_obj_t *m)
+#define GLASS_ITEM_OPA 110      /* ボタンの透け具合（押している間も同じ。押したら黒を重ねて暗くするだけ） */
+
+/* checked_opa は CHECKED の不透明度：選んでいるタブや選択肢（青）は濃いめにして目立たせる。
+ * タッチキーは CHECKED を「押している」の印に使うので、普段と同じにする */
+static void glass_matrix_with(lv_obj_t *m, lv_opa_t checked_opa)
 {
     glass(m, LV_PART_MAIN, LV_OPA_TRANSP);
-    glass(m, LV_PART_ITEMS, 110);
-    glass(m, LV_PART_ITEMS | LV_STATE_CHECKED, 230);
-    glass(m, LV_PART_ITEMS | LV_STATE_PRESSED, 200);
+    glass(m, LV_PART_ITEMS, GLASS_ITEM_OPA);
+    glass(m, LV_PART_ITEMS | LV_STATE_CHECKED, checked_opa);
+}
+
+static void glass_matrix(lv_obj_t *m)
+{
+    glass_matrix_with(m, 230);
 }
 
 static void apply_look(look_t look)
@@ -471,7 +479,7 @@ static void create_keys_panel(lv_obj_t *parent)
     lv_obj_set_style_text_font(keys_matrix, &lv_font_montserrat_28, 0);
     /* 押した・離したは keys_input で指から決める（LVGL のポインタは 1 本分しか持たないため） */
     lv_obj_set_clickable(keys_matrix, false);
-    glass_matrix(keys_matrix);
+    glass_matrix_with(keys_matrix, GLASS_ITEM_OPA);
     /* 押しているキー（CHECKED の印で示す）は、テーマの「押した」と同じ見た目にする：
      * 色は普段のまま、黒を 35/255 重ねて暗くする（テーマの CHECKED は明るい青になるため上書きする） */
     const lv_style_selector_t down = LV_PART_ITEMS | LV_STATE_CHECKED;
@@ -562,7 +570,7 @@ static lv_obj_t *pad_button(lv_obj_t *parent, const char *label)
     lv_obj_t *l = lv_label_create(b);
     lv_label_set_text(l, label);
     lv_obj_center(l);
-    glass(b, LV_PART_MAIN, 110);
+    glass(b, LV_PART_MAIN, GLASS_ITEM_OPA);
     return b;
 }
 
