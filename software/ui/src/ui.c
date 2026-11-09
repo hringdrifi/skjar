@@ -26,6 +26,7 @@
 #include "lvgl.h"
 
 #include "backlight.h"
+#include "icons.h"
 #include "keylabel.h"
 #include "link.h"
 #include "platform.h"
@@ -532,8 +533,16 @@ static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(row, 32, 0);
-    lv_obj_t *l = lv_label_create(row);
-    lv_label_set_text(l, LV_SYMBOL_IMAGE "  Backlight");
+    /* 太陽のアイコン（LVGL の記号にないので icons.c で描く）と「Backlight」 */
+    lv_obj_t *title = plain_box(row);
+    lv_obj_set_size(title, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(title, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(title, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(title, 10, 0);
+    lv_obj_t *sun = icon_create(title, icon_sun(26), lv_color_white());
+    lv_obj_t *l = lv_label_create(title);
+    lv_label_set_text(l, "Backlight");
+    lv_obj_set_style_image_recolor(sun, lv_obj_get_style_text_color(l, LV_PART_MAIN), 0);
     bl_slider = lv_slider_create(row);
     lv_slider_set_range(bl_slider, 0, 255);
     lv_slider_set_value(bl_slider, backlight_level(), LV_ANIM_OFF);

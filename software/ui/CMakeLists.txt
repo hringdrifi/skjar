@@ -50,6 +50,7 @@ add_executable(skjar-ui
     src/trackpad.c
     src/touch_source.c
     src/keylabel.c
+    src/icons.c
     src/settings.c
     src/sysinfo.c
     src/backlight.c)

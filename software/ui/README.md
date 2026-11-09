@@ -29,6 +29,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/ui.c](src/ui.c) | 画面の中身。タッチキーの既定の割り当て（RP2040 から届くまでの表示）もここ |
 | [src/keylabel.c](src/keylabel.c) | キーの動作の符号（`TKL`）をキーの表示にする |
 | [src/settings.c](src/settings.c) | 設定（元のタブに戻るか）の保存 |
+| [src/icons.c](src/icons.c) | LVGL の記号にないアイコン（明るさの太陽）を、起動時に描く |
 | [src/link.c](src/link.c) | RP2040 との UART のやり取り |
 | [src/serial_port.c](src/serial_port.c) | UART の線（Linux の tty、Windows の COM ポート） |
 | [src/platform.c](src/platform.c) | 時刻と待ち（Linux と Windows） |
