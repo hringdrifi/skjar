@@ -43,6 +43,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/touch_source.c](src/touch_source.c) | 触れている指をすべて読む（Linux の evdev のマルチタッチ。ほかは LVGL のポインタ） |
 | [src/backlight.c](src/backlight.c) | `/sys/class/backlight` の明るさ |
 | [src/sysinfo.c](src/sysinfo.c) | CPU・メモリ・温度 |
+| [src/recorder.c](src/recorder.c) | 録画：台本どおりに UI を動かし、画面を 1 コマずつ ffmpeg に渡して動画にする（デモ動画用） |
 | [src/widgets.c](src/widgets.c) | Widget strip（スワイプでの切り替え、ポモドーロ・タイマー、ニュースの電光掲示板、打鍵の速さ、天気） |
 | [lv_conf.h](lv_conf.h) | LVGL の設定 |
 | [tests/link_test.c](tests/link_test.c) | UART の行の組み立てと読み取りのテスト |
@@ -51,6 +52,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具（Linux 用） |
 | [tools/make_movie.py](tools/make_movie.py) | 隠し機能の動画を作る（手元の動画 → .skm と .wav。ffmpeg を使う） |
 | [tools/fetch_news.py](tools/fetch_news.py) | ニュースの見出しを RSS / Atom から取ってきて `news.txt` にする（Python の標準ライブラリだけ） |
+| [tools/make_demo.py](tools/make_demo.py) と [tools/demo/](tools/demo/) | デモ動画を撮る（台本、見本の設定・ニュース・天気） |
 | [tools/fetch_weather.py](tools/fetch_weather.py) | 天気を Open-Meteo から取ってきて `weather.txt` にする（Python の標準ライブラリだけ） |
 | [tools/build_windows.py](tools/build_windows.py) | Windows 向けのビルド（zig を使う） |
 
@@ -132,6 +134,20 @@ Keys タブの、ヘッダーとタッチキーの間の帯（1920 × 80 px）�
 py tools/fetch_news.py
 ```
 
+## デモ動画
+
+紹介用のデモ動画を、UI 自身に撮らせる。窓を撮るのではなく、UI が台本（[tools/demo/script.txt](tools/demo/script.txt)）どおりに動き、画面を 1 コマずつ ffmpeg に渡す。動画の中の時間は UI が自分で進めるので、マウスを使わず、何度撮っても同じ動画になる。
+
+```bat
+py tools/build_windows.py
+py tools/make_demo.py
+```
+
+- `build-demo/` に 2 本できる（git の対象外）：`demo_16x9.mp4`（1920 × 1080。画面を真ん中に置き、上にタイトル、下に 1 行。`--title` / `--subtitle` で変える）と、`demo_screen.mp4`（画面だけ、1920 × 480。編集の素材）。ffmpeg が要る。
+- 台本は 1 行に 1 つ、`<秒> <命令> [引数]`。命令は、RP2040 から届いたことにする行（`link LAYER,1` など）、打鍵（`type 80 5.0`）、タッチキー、タブ、見た目、Widget strip のスワイプ、ポモドーロのボタン（一覧は [src/recorder.h](src/recorder.h)）。
+- 設定・ニュース・天気は [tools/demo/](tools/demo/) の見本を使う（自分の設定は使わず、録画中は設定を保存しない）。ニュースは SKJÁR の紹介文、天気は作った値（公開する動画に、NHK の見出しや Open-Meteo のデータを映さないため）。隠し機能の動画も映さない。
+- UI だけで撮るときは `skjar-ui --record out.mp4 --demo script.txt --config tools/demo/ui.conf`。
+
 ## 隠し機能の動画
 
 ヘッダーの時計を続けて 5 回叩くと、動画が全画面で流れ、キーのライトも映像に合わせて光る。画面のどこかを叩くと止まる（始まって 1 秒は止まらない）。
@@ -171,6 +187,7 @@ py tools/make_movie.py 手元の動画.mp4 movie
 | `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか、見た目、Widget strip に出すもの）。ニュースの `news.txt` と隠し機能の動画も、このファイルと同じフォルダから読む |
 | `--font <ttf>` | 決まった場所を探す（上の「Widget strip」） | ニュースの電光掲示板の日本語のフォント（TTF / OTF / TTC。TTC は 1 つ目の書体） |
 | `--start <boot/manual>` | `manual` | `boot`：電源を入れたときの起動。RP2040 から PC がつながっているかを 3 秒まで待ち、なければ UI を閉じてコンソールへ。`manual`：コンソールで `skjar` と打ったとき。PC がなければ「PC につないで」を出す |
+| `--record <mp4>` と `--demo <script>` | なし | デモ動画を撮る（上の「デモ動画」）。撮り終えると終わる |
 | `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 
 ## 実機で確かめること

@@ -28,4 +28,10 @@ void ui_user_key(int id, bool pressed);
 /* 文字や機能のキーが押された（link の activity から）：設定によって元のタブに戻る */
 void ui_activity(void);
 
+/* 録画（recorder.c）から：台本どおりに見せる操作。ui_demo_start のあとは、指を読まない */
+void ui_demo_start(void);
+void ui_demo_tab(int tab);                      /* 0 Keys、1 Pad、2 Media、3 System */
+void ui_demo_touch_key(int index, bool down);   /* タッチキーを押した・離した（見た目と TK） */
+void ui_demo_look(int look);                    /* 0 Plain、1 Picture（保存しない） */
+
 #endif /* SKJAR_UI_H */

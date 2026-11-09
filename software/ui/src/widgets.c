@@ -532,7 +532,9 @@ static uint32_t typing_keys(uint32_t from_sec_ago, uint32_t n)
 {
     uint32_t sum = 0;
     for (uint32_t i = from_sec_ago; i < from_sec_ago + n && i < TYPE_BUCKETS; i++)
-        sum += typing.buckets[(typing.sec - i) % TYPE_BUCKETS];
+        /* sec - i は、起動から 2 分たたないうちは 0 より小さくなる（符号なしで桁あふれして、別の箱を指す）
+         * ので、箱の番号の上で引く */
+        sum += typing.buckets[(typing.sec % TYPE_BUCKETS + TYPE_BUCKETS - i) % TYPE_BUCKETS];
     return sum;
 }
 
@@ -1007,4 +1009,21 @@ void widgets_input(const touch_contacts_t *c)
     set_pressed(NULL);
     if (b && b->cb)
         b->cb();
+}
+
+/* ---- 録画（recorder.c）から ---- */
+
+void widgets_demo_swipe(int dir)
+{
+    slide_by(dir < 0 ? -1 : dir > 0 ? 1 : 0);
+}
+
+void widgets_demo_pomodoro(bool down)
+{
+    if (down) {
+        lv_obj_add_state(pomo.start->obj, LV_STATE_PRESSED);
+    } else {
+        lv_obj_remove_state(pomo.start->obj, LV_STATE_PRESSED);
+        pomo_start_pause();
+    }
 }

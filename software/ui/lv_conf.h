@@ -48,6 +48,9 @@
 #define LV_TINY_TTF_FILE_SUPPORT 0
 #define LV_TINY_TTF_CACHE_GLYPH_CNT 512
 
+/* 録画（recorder.c）：画面を 1 コマずつ写す */
+#define LV_USE_SNAPSHOT 1
+
 #if defined(SKJAR_UI_SDL)
     #define LV_USE_SDL 1
 #elif defined(SKJAR_UI_WINDOWS)

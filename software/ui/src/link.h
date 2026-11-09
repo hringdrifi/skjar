@@ -79,4 +79,8 @@ size_t link_format(char *out, size_t out_size, const char *body);
 /* 受けた 1 行（改行を除く）を処理する。正しい行なら true（テスト用にも公開） */
 bool link_handle_line(const char *line, uint32_t now_ms);
 
+/* RP2040 から届いたことにする（PC で試すときの標準入力と、録画の台本）。`LAYER,1` のように中身だけ
+ * なら CRC を付け足す。`$SK,...*CC` の形もそのまま受ける */
+bool link_inject(const char *body, uint32_t now_ms);
+
 #endif /* SKJAR_LINK_H */

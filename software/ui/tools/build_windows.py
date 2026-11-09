@@ -30,7 +30,7 @@ INCS = ["-I", UI, "-I", LVGL, "-I", os.path.join(LVGL, "include"), "-I", os.path
 CFLAGS = ["-std=gnu11", "-O2"] + DEFS + INCS
 LIBS = ["-luser32", "-lgdi32", "-lwinmm", "-limm32", "-lshcore", "-ldwmapi"]
 
-UI_SOURCES = ["main.c", "ui.c", "link.c", "serial_port.c", "platform.c", "trackpad.c", "touch_source.c", "keylabel.c", "settings.c", "icons.c", "background.c", "movie.c", "widgets.c",
+UI_SOURCES = ["main.c", "ui.c", "link.c", "serial_port.c", "platform.c", "trackpad.c", "touch_source.c", "keylabel.c", "settings.c", "icons.c", "background.c", "movie.c", "widgets.c", "recorder.c",
               "sysinfo.c", "backlight.c"]
 
 

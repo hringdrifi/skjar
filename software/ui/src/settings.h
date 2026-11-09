@@ -34,6 +34,8 @@ typedef struct {
 /* path が NULL なら上の場所を使う */
 void settings_load(const char *path);
 void settings_save(void);
+/* true なら、settings_save で書かない（録画のとき。台本で変えた設定を残さない） */
+void settings_set_readonly(bool readonly);
 settings_t *settings(void);
 
 /* 設定のファイルを置くフォルダ（settings_load のあと。隠し機能の動画もここに置く） */

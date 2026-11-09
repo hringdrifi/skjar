@@ -98,6 +98,7 @@ static void media_event_cb(lv_event_t *e)
 static lv_obj_t *lbl_time, *lbl_date, *lbl_ram;
 static lv_obj_t *body;
 static lv_obj_t *tab_bar;
+static lv_obj_t *look_selector;
 static lv_obj_t *return_selector, *bl_slider, *bl_note, *cpu_chart;
 static lv_chart_series_t *cpu_series;
 
@@ -942,7 +943,7 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_style_pad_row(stack, 12, 0);
 
     static const char *look_map[] = { "Plain", "Picture", "" };
-    lv_obj_t *look_selector = selector(stack, icon_palette(22), "Look", look_map, 340);
+    look_selector = selector(stack, icon_palette(22), "Look", look_map, 340);
     lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)settings()->look, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(look_selector, look_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_set_height(lv_obj_get_parent(look_selector), 0);
@@ -1049,6 +1050,36 @@ void ui_activity(void)
 }
 
 /* 10 ms ごと：開いているタブが指を使うものなら、指を読んで渡す */
+/* ---- 録画（recorder.c）：台本どおりに見せる ---- */
+
+static bool demo_mode;
+
+void ui_demo_start(void)
+{
+    demo_mode = true;
+}
+
+void ui_demo_tab(int tab)
+{
+    show_tab(tab, false);
+}
+
+void ui_demo_touch_key(int index, bool down)
+{
+    if (index >= 0 && index < TOUCH_KEYS)
+        set_key_down(index, down);
+}
+
+void ui_demo_look(int look)
+{
+    if (look < LOOK_PLAIN || look > LOOK_PICTURE)
+        return;
+    settings()->look = (look_t)look;
+    lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)look, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_buttonmatrix_clear_button_ctrl(look_selector, (uint32_t)!look, LV_BUTTONMATRIX_CTRL_CHECKED);
+    apply_look(settings()->look);
+}
+
 static void input_timer_cb(lv_timer_t *t)
 {
     (void)t;
@@ -1070,6 +1101,8 @@ static void input_timer_cb(lv_timer_t *t)
     }
     if (active_tab != TAB_KEYS && active_tab != TAB_PAD)
         return;
+    if (demo_mode)
+        return;     /* 録画中は、台本が押したキーを指の状態で上書きしない */
     touch_contacts_t c;
     touch_source_read(&c);
     if (wait_release) {

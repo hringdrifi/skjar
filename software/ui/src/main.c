@@ -35,6 +35,7 @@
 #include "backlight.h"
 #include "link.h"
 #include "platform.h"
+#include "recorder.h"
 #include "settings.h"
 #include "ui.h"
 
@@ -49,6 +50,8 @@ typedef struct {
     const char *background;     /* 背景の画像（PNG）。NULL なら描いた絵 */
     const char *movie;          /* 隠し機能の動画（.skm）。NULL なら設定のフォルダの movie.skm */
     const char *font;           /* 日本語のフォント（TTF / OTF / TTC）。NULL なら決まった場所を探す */
+    const char *record;         /* 録画の出力（.mp4）。--demo の台本どおりに動かして撮る（recorder.h） */
+    const char *demo;           /* 録画の台本 */
     int boot;                   /* --start boot：電源を入れたときの起動 */
     int no_poweroff;
 } options_t;
@@ -73,7 +76,8 @@ static void usage(const char *argv0)
     fprintf(stderr,
             "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
             "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>]\n"
-            "          [--font <ttf>] [--start boot|manual] [--no-poweroff]\n", argv0);
+            "          [--font <ttf>] [--start boot|manual] [--no-poweroff]\n"
+            "          [--record <mp4> --demo <script>]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
@@ -102,6 +106,8 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--background") == 0 && v) { opt.background = v; i++; }
         else if (strcmp(a, "--movie") == 0 && v) { opt.movie = v; i++; }
         else if (strcmp(a, "--font") == 0 && v) { opt.font = v; i++; }
+        else if (strcmp(a, "--record") == 0 && v) { opt.record = v; i++; }
+        else if (strcmp(a, "--demo") == 0 && v) { opt.demo = v; i++; }
         else if (strcmp(a, "--start") == 0 && v) { opt.boot = strcmp(v, "boot") == 0; i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
@@ -349,7 +355,17 @@ int main(int argc, char **argv)
         .font_path = opt.font,
         .open_console = open_console,
     };
+    /* 録画：時計を録画の時計にしてから画面を作る（タイマーや動きが、録画の時計で進むように） */
+    if (opt.record && (!opt.demo || !recorder_open(opt.demo, opt.record, 30))) {
+        fprintf(stderr, "--record needs a readable --demo script\n");
+        return 2;
+    }
     ui_create(&actions);
+    if (opt.record) {
+        int r = recorder_run();
+        link_close();
+        return r;
+    }
 
     /* キーボードモードで始まる（物理キーは PC へ、キーボードモードのキーマップへ） */
     link_send_out(LINK_OUT_PC);

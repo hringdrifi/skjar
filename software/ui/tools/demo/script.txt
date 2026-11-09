@@ -1,0 +1,67 @@
+# SKJÁR のデモ動画の台本（src/recorder.h の形）。tools/make_demo.py が skjar-ui --record で撮る。
+# <秒> <命令> [引数]
+
+# RP2040 とつながっていることにする（ヘッダーの札）
+0.0   link USB,1
+0.0   link PWR,A,3A
+0.0   link OUT,PC,AUTO
+0.0   link BLMAX,255
+0.0   link LAYER,0
+
+# Keys（Plain）：打鍵の速さが上がっていく。タッチキーも押す
+0.6   type 80 5.0
+1.2   touch 13 1
+1.4   touch 13 0
+1.8   touch 14 1
+2.0   touch 14 0
+2.4   touch 15 1
+2.6   touch 15 0
+3.2   touch 23 1
+3.4   touch 23 0
+4.2   touch 4 1
+4.4   touch 4 0
+
+# レイヤー 1：移動・記号と矢印
+6.0   link LAYER,1
+6.6   touch 9 1
+6.8   touch 9 0
+7.0   touch 20 1
+7.2   touch 20 0
+7.4   touch 21 1
+7.6   touch 21 0
+7.8   touch 22 1
+8.0   touch 22 0
+
+# レイヤー 2：メディアとタブのキー
+8.8   link LAYER,2
+9.4   touch 1 1
+9.6   touch 1 0
+10.0  touch 13 1
+10.2  touch 13 0
+10.8  link LAYER,0
+
+# Widget strip：ポモドーロ → 天気 → ニュース
+11.4  swipe 1
+12.2  pomodoro 1
+12.4  pomodoro 0
+14.0  swipe 1
+16.4  swipe 1
+
+# ほかのタブ
+20.4  tab pad
+22.2  tab media
+24.0  tab system
+
+# 見た目を Picture に
+25.6  look picture
+
+# Keys（Picture）：天気へ戻り、輪になった並びを回って打鍵の速さへ
+27.4  tab keys
+28.6  swipe -1
+30.4  swipe 1
+31.4  swipe 1
+32.0  swipe 1
+32.4  type 50 3.6
+33.2  link LAYER,1
+34.4  link LAYER,0
+36.5  end

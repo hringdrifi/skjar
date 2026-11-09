@@ -265,7 +265,7 @@ void link_close(void)
  * `LAYER,1` のように中身だけを打てば、CRC は付け足す。`$SK,...*CC` の形もそのまま受ける */
 static void poll_stdin(uint32_t now_ms)
 {
-    char raw[96], line[LINE_MAX_LEN + 2];
+    char raw[96];
     while (platform_read_stdin_line(raw, sizeof raw)) {
         /* 先頭の見えない文字（パイプで流し込んだときの BOM など）と空白を読み飛ばす */
         const char *in = raw;
@@ -273,20 +273,29 @@ static void poll_stdin(uint32_t now_ms)
             in++;
         if (in[0] == '\0')
             continue;
-        stdin_used = true;
-        if (strncmp(in, "$SK,", 4) == 0) {
-            snprintf(line, sizeof line, "%s", in);
-        } else {
-            size_t len = link_format(line, sizeof line, in);
-            if (len == 0) {
-                fprintf(stderr, "link: too long: %s\n", in);
-                continue;
-            }
-            line[len - 1] = '\0';   /* 改行を除く */
-        }
-        if (!link_handle_line(line, now_ms))
-            fprintf(stderr, "link: ignored: %s\n", in);
+        link_inject(in, now_ms);
     }
+}
+
+bool link_inject(const char *in, uint32_t now_ms)
+{
+    char line[LINE_MAX_LEN + 2];
+    stdin_used = true;
+    if (strncmp(in, "$SK,", 4) == 0) {
+        snprintf(line, sizeof line, "%s", in);
+    } else {
+        size_t len = link_format(line, sizeof line, in);
+        if (len == 0) {
+            fprintf(stderr, "link: too long: %s\n", in);
+            return false;
+        }
+        line[len - 1] = '\0';   /* 改行を除く */
+    }
+    if (!link_handle_line(line, now_ms)) {
+        fprintf(stderr, "link: ignored: %s\n", in);
+        return false;
+    }
+    return true;
 }
 
 void link_poll(uint32_t now_ms)

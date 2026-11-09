@@ -84,8 +84,17 @@ void settings_load(const char *path)
     fprintf(stderr, "settings: loaded %s\n", file_path);
 }
 
+static bool readonly;
+
+void settings_set_readonly(bool ro)
+{
+    readonly = ro;
+}
+
 void settings_save(void)
 {
+    if (readonly)
+        return;
     if (dir_path[0]) {
         /* 1 段上（~/.config）がないときもあるので、2 段まで作る */
         char parent[512];

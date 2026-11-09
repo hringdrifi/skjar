@@ -1,0 +1,5 @@
+SKJÁR — 40% キーボードに 8.8 インチのタッチスクリーン
+Keyboard mode: physical keys and 24 touch keys go to your PC
+Cyberdeck mode: open the console and use the built-in Linux (CM0)
+タッチキーも物理キーも、Vial で割り当てを変えられる
+Widget strip: typing speed, Pomodoro, weather and news

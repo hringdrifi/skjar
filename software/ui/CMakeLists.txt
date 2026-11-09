@@ -56,7 +56,8 @@ add_executable(skjar-ui
     src/settings.c
     src/sysinfo.c
     src/backlight.c
-    src/widgets.c)
+    src/widgets.c
+    src/recorder.c)
 if(NOT MSVC)
     target_compile_options(skjar-ui PRIVATE -Wall -Wextra)
 endif()

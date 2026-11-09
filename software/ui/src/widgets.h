@@ -58,6 +58,11 @@ void widgets_key_activity(void);
 /* 見た目（System タブの Look）が変わった：Picture ならウィジェットを背景の絵に馴染ませる */
 void widgets_set_look(bool picture);
 
+/* 録画（recorder.c）から：スワイプしたことにする（1 で右の隣へ、-1 で左の隣へ）。
+ * ポモドーロの ▶ / ⏸ を押した（down）・離した（離したときに動く） */
+void widgets_demo_swipe(int dir);
+void widgets_demo_pomodoro(bool down);
+
 /* System タブに出す名前 */
 const char *widgets_name(widget_id_t id);
 
