@@ -7,7 +7,8 @@
 //! - CM0 → RP2040：`HELLO`、`ALIVE`、`TK`（画面のタッチキー。キーマップの 7〜10 行目として RMK に渡す）、
 //!   `KEY`（Media タブなどの固定のキー）、`PTR` / `WHEEL`（トラックパッド）、`LEDF`（キーのライトの 1 コマ）、
 //!   `OUT`、`LCD`（記録だけ）、`UF2`
-//! - RP2040 → CM0：`ALIVE`、`BLMAX`（いまは 255 固定）、`OUT`、`LAYER`、`TKL`（タッチキーの割り当て）、
+//! - RP2040 → CM0：`ALIVE`、`BLMAX`（いまは 255 固定）、`USB`（PC につながっているか）、`OUT`、`LAYER`、
+//!   `TKL`（タッチキーの割り当て）、
 //!   `USER`（Vial の USER キー。UI がタブを開く）、`ACT`（文字や機能のキーが押された）
 //! - `PWR` は CC の判定を作るまで送らない。`SHUTDOWN` を出すきっかけもまだない（[`request_shutdown`]）
 
@@ -29,7 +30,7 @@ use rmk::keymap::KeyMap;
 use rmk::types::action::{Action, KeyAction};
 use rmk::types::keycode::KeyCode;
 
-use crate::keymap::{NUM_LAYER, TOUCH_KEYS, touch_key_pos};
+use crate::keymap::{MODE_CYBERDECK_COL, MODE_KEYBOARD_COL, MODE_ROW, NUM_LAYER, TOUCH_KEYS, touch_key_pos};
 use crate::{reports, rgb};
 
 const LINE_MAX: usize = 64;
@@ -55,12 +56,19 @@ enum Msg {
     User(u8, bool),
     /// 文字や機能のキーが押された
     Act,
+    /// PC につながっているか（USB）
+    Usb,
 }
 
 static TX_QUEUE: Channel<CriticalSectionRawMutex, Msg, 16> = Channel::new();
 
 struct Shared {
     out_mode: Cell<OutMode>,
+    /// PC の USB に認識されている（configured）、スリープしている（suspended）
+    usb_configured: Cell<bool>,
+    /// いまのモード（true：キーボードモード、false：サイバーデックモード）
+    keyboard_mode: Cell<bool>,
+    usb_suspended: Cell<bool>,
     layer: Cell<u8>,
     /// CM0 から最後に正しい行を受けた時刻。まだなら None
     last_rx: Cell<Option<Instant>>,
@@ -72,6 +80,9 @@ struct Shared {
 
 static SHARED: Mutex<CriticalSectionRawMutex, Shared> = Mutex::new(Shared {
     out_mode: Cell::new(OutMode::Auto),
+    usb_configured: Cell::new(false),
+    keyboard_mode: Cell::new(true),
+    usb_suspended: Cell::new(false),
     layer: Cell::new(0),
     last_rx: Cell::new(None),
     touch_pressed: Cell::new(0),
@@ -82,6 +93,42 @@ fn send(msg: Msg) {
     if TX_QUEUE.try_send(msg).is_err() {
         warn!("cm0_link: tx queue full");
     }
+}
+
+/// PC につながっているか：USB に認識されていて、スリープしていない
+fn pc_connected() -> bool {
+    SHARED.lock(|s| s.usb_configured.get() && !s.usb_suspended.get())
+}
+
+fn update_usb(f: impl FnOnce(&Shared)) {
+    let before = pc_connected();
+    SHARED.lock(f);
+    if pc_connected() != before {
+        info!("cm0_link: PC {}", if pc_connected() { "connected" } else { "gone" });
+        send(Msg::Usb);
+    }
+}
+
+/// USB の状態の変化（main.rs の UsbStateHandler から）
+pub fn set_usb_configured(configured: bool) {
+    update_usb(|s| s.usb_configured.set(configured));
+}
+
+pub fn set_usb_suspended(suspended: bool) {
+    update_usb(|s| s.usb_suspended.set(suspended));
+}
+
+/// モードを切り替える：キーマップの「既定のレイヤー」を、キーボードモードは 0、サイバーデックモードは 3 に
+/// する。キーマップの 11 行目にある df!(0) / df!(3) のキーを押したことにする（keymap.rs）
+fn set_mode(keyboard: bool) {
+    let changed = SHARED.lock(|s| s.keyboard_mode.replace(keyboard) != keyboard);
+    if !changed {
+        return;
+    }
+    info!("cm0_link: {} mode", if keyboard { "keyboard" } else { "cyberdeck" });
+    let col = if keyboard { MODE_KEYBOARD_COL } else { MODE_CYBERDECK_COL };
+    publish_event(KeyboardEvent::key(MODE_ROW, col, true));
+    publish_event(KeyboardEvent::key(MODE_ROW, col, false));
 }
 
 /// CM0 にシャットダウンを求める（電源の判定から呼ぶ予定）。
@@ -290,11 +337,15 @@ fn handle_line(line: &[u8]) {
                 "CM0" => OutMode::Cm0,
                 _ => return,
             };
-            if mode == OutMode::Pc {
-                // PC への USB HID はまだないので、出力先は CM0 のまま
-                warn!("cm0_link: output to PC is not implemented yet");
-            }
+            // PC：キーボードモード（UI を出している）、CM0：サイバーデックモード（コンソール）、
+            // AUTO：PC につながっていればキーボードモード
+            let keyboard = match mode {
+                OutMode::Pc => true,
+                OutMode::Cm0 => false,
+                OutMode::Auto => pc_connected(),
+            };
             SHARED.lock(|s| s.out_mode.set(mode));
+            set_mode(keyboard);
             send(Msg::Out);
         }
         "LCD" => info!("cm0_link: LCD {} requested (not wired yet)", args[0]),
@@ -329,6 +380,7 @@ async fn write_msg(tx: &mut BufferedUartTx, keymap: &KeyMap<'_>, msg: Msg) {
         Msg::State => {
             // PWR は CC の判定ができてから送る
             write_body(tx, "BLMAX,255").await;
+            write_body(tx, if pc_connected() { "USB,1" } else { "USB,0" }).await;
             write_msg_out(tx).await;
             write_touch_map(tx, keymap).await;
             write_msg_layer(tx).await;
@@ -348,6 +400,9 @@ async fn write_msg(tx: &mut BufferedUartTx, keymap: &KeyMap<'_>, msg: Msg) {
         Msg::User(id, pressed) => {
             let _ = write!(body, "USER,{},{}", id, pressed as u8);
         }
+        Msg::Usb => {
+            let _ = write!(body, "USB,{}", pc_connected() as u8);
+        }
         Msg::Act => {
             SHARED.lock(|s| s.act_pending.set(false));
             let _ = body.push_str("ACT");
@@ -357,9 +412,15 @@ async fn write_msg(tx: &mut BufferedUartTx, keymap: &KeyMap<'_>, msg: Msg) {
 }
 
 async fn write_msg_out(tx: &mut BufferedUartTx) {
-    let mode = SHARED.lock(|s| s.out_mode.get());
-    // 出力先はいまは CM0 だけ。手動で選ばれているかどうかだけを返す
-    let body = if mode == OutMode::Auto { "OUT,CM0,AUTO" } else { "OUT,CM0,MAN" };
+    let (mode, keyboard) = SHARED.lock(|s| (s.out_mode.get(), s.keyboard_mode.get()));
+    // 出力先はモードで決まる（キーボードモードは PC、サイバーデックモードは CM0）。
+    // ただし PC への USB HID はまだないので、いまは実際にはどちらも CM0 に出す
+    let body = match (keyboard, mode == OutMode::Auto) {
+        (true, true) => "OUT,PC,AUTO",
+        (true, false) => "OUT,PC,MAN",
+        (false, true) => "OUT,CM0,AUTO",
+        (false, false) => "OUT,CM0,MAN",
+    };
     write_body(tx, body).await;
 }
 
@@ -455,6 +516,8 @@ fn check_timeout() {
         info!("cm0_link: CM0 went quiet");
         reports::release_touch();
         release_touch_keys();
+        // CM0 が止まったら、キーボードとしてだけ使えるよう、キーボードモードに戻す
+        set_mode(true);
     }
 }
 

@@ -97,7 +97,7 @@ static void media_event_cb(lv_event_t *e)
 static lv_obj_t *lbl_time, *lbl_date, *lbl_ram;
 static lv_obj_t *body;
 static lv_obj_t *tab_bar;
-static lv_obj_t *out_selector, *return_selector, *bl_slider, *bl_note, *cpu_chart;
+static lv_obj_t *return_selector, *bl_slider, *bl_note, *cpu_chart;
 static lv_chart_series_t *cpu_series;
 
 /* 状態の札：角の丸い小さな箱に、色と文字。色で状態が分かるようにする */
@@ -266,6 +266,7 @@ static chip_t cpu_chip(lv_obj_t *parent)
 
 static void show_tab(int tab, bool by_key);
 static void release_all_keys(void);
+static lv_obj_t *pc_notice;   /* 「PC につないでください」 */
 
 /* ---- 隠し機能：時計を 5 回叩くと動画（movie.h） ---- */
 
@@ -761,10 +762,29 @@ static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
 
 /* ---- System ---- */
 
-static void out_selector_cb(lv_event_t *e)
+/* サイバーデックモードへ：UI を閉じて、コンソールに戻る（戻るときはコンソールで skjar と打つ） */
+static void console_cb(lv_event_t *e)
 {
-    uint32_t id = lv_buttonmatrix_get_selected_button(lv_event_get_target_obj(e));
-    link_send_out(id == 1 ? LINK_OUT_PC : id == 2 ? LINK_OUT_CM0 : LINK_OUT_UNKNOWN);
+    (void)e;
+    if (actions.open_console)
+        actions.open_console();
+}
+
+/* 押すと動くボタン（大きめ） */
+static lv_obj_t *action_button(lv_obj_t *parent, const char *label, lv_event_cb_t cb)
+{
+    lv_obj_t *b = lv_button_create(parent);
+    lv_obj_set_width(b, LV_PCT(100));
+    lv_obj_set_flex_grow(b, 1);
+    lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, NULL);
+    press_look(b, LV_STATE_PRESSED);
+    lv_obj_t *l = lv_label_create(b);
+    lv_label_set_text(l, label);
+    lv_obj_set_style_text_font(l, &lv_font_montserrat_28, 0);
+    lv_obj_center(l);
+    glass(b, LV_PART_MAIN, 150);
+    glass(b, LV_PART_MAIN | LV_STATE_PRESSED, GLASS_SELECTED_OPA);
+    return b;
 }
 
 static void return_selector_cb(lv_event_t *e)
@@ -853,10 +873,19 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_style_pad_column(*panel, 24, 0);
     lv_obj_set_flex_flow(*panel, LV_FLEX_FLOW_ROW);
 
-    static const char *out_map[] = { "Auto", "PC", "CM0", "" };
-    out_selector = selector(*panel, NULL, LV_SYMBOL_KEYBOARD "  Physical keys to", out_map, 380);
-    lv_buttonmatrix_set_button_ctrl(out_selector, 0, LV_BUTTONMATRIX_CTRL_CHECKED);
-    lv_obj_add_event_cb(out_selector, out_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    /* サイバーデックモードへ（このタッチ UI はキーボードモード。物理キーは PC に行く） */
+    lv_obj_t *deck = lv_obj_create(*panel);
+    lv_obj_set_size(deck, 380, LV_PCT(100));
+    lv_obj_set_flex_flow(deck, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_scrollable(deck, false);
+    glass(deck, LV_PART_MAIN, 90);
+    lv_obj_t *deck_title = lv_label_create(deck);
+    lv_label_set_text(deck_title, LV_SYMBOL_KEYBOARD "  Cyberdeck mode");
+    action_button(deck, "> _  Open console", console_cb);
+    lv_obj_t *deck_hint = lv_label_create(deck);
+    lv_label_set_text(deck_hint, "Type  skjar  in the console to come back");
+    lv_obj_set_style_text_font(deck_hint, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(deck_hint, lv_palette_main(LV_PALETTE_GREY), 0);
 
     static const char *return_map[] = { "Never", "Key-opened", "Always", "" };
     return_selector = selector(*panel, NULL, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 500);
@@ -1013,6 +1042,26 @@ void ui_create(const ui_actions_t *a)
     for (int i = 0; i < TAB_COUNT; i++)
         lv_obj_set_hidden(panels[i], i != TAB_KEYS);
 
+    /* 「PC につないでください」：このタッチ UI はキーボードモードなので、PC がないと使えない。
+     * コンソール（サイバーデックモード）へも移れるようにする。RP2040 が USB,0 と知らせてきたら出す */
+    pc_notice = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(pc_notice);
+    lv_obj_set_size(pc_notice, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_bg_opa(pc_notice, LV_OPA_90, 0);
+    lv_obj_set_style_bg_color(pc_notice, lv_color_black(), 0);
+    lv_obj_set_flex_flow(pc_notice, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(pc_notice, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(pc_notice, 28, 0);
+    lv_obj_t *msg = lv_label_create(pc_notice);
+    lv_label_set_text(msg, LV_SYMBOL_USB "  Connect SKJAR to a PC (USB-C port A) to use it as a keyboard");
+    lv_obj_set_style_text_font(msg, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(msg, lv_color_white(), 0);
+    lv_obj_t *btn_row = plain_box(pc_notice);
+    lv_obj_set_size(btn_row, 520, 110);
+    lv_obj_set_flex_flow(btn_row, LV_FLEX_FLOW_COLUMN);
+    action_button(btn_row, "> _  Open console", console_cb);
+    lv_obj_set_hidden(pc_notice, true);
+
     /* 背景の画像（画面の一番奥）。見た目の設定に合わせて出す */
     background_create(scr, actions.background_png);
     apply_look(settings()->look);
@@ -1062,11 +1111,9 @@ void ui_show_link_state(const link_state_t *s)
         snprintf(buf, sizeof buf, LV_SYMBOL_CHARGE "  ?");
     chip_set(&chip_pwr, pc, buf);
 
-    /* 出力先の選択：手動なら PC か CM0、自動なら Auto に印を付ける */
-    if (s->out != LINK_OUT_UNKNOWN) {
-        uint32_t id = !s->out_manual ? 0 : s->out == LINK_OUT_PC ? 1 : 2;
-        lv_buttonmatrix_set_button_ctrl(out_selector, id, LV_BUTTONMATRIX_CTRL_CHECKED);
-    }
+    /* PC につながっていなければ（RP2040 が USB,0 と知らせてきたら）、案内を出す */
+    if (pc_notice)
+        lv_obj_set_hidden(pc_notice, !(s->connected && s->pc_connected == 0));
 
     /* バックライトの上限 */
     backlight_set_limit(s->bl_max);

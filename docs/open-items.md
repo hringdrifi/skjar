@@ -64,7 +64,9 @@
 
 ## ソフトウェア
 - [ ] TLV320DAC3100 のデバイスツリーのオーバーレイ。下書きは [software/os/overlays/](../software/os/overlays/)。MCLK（12 MHz の発振器）を使い、コーデックをクロックを出す側にしたので、標準の `simple-audio-card` だけで動く見込み。実機で確かめる
-- [ ] 物理キーの出力先の切り替えの細部（方針は USB のマウントの状態を見て自動、キーの組み合わせかタッチ UI で手動、で決めた。[protocol.md](protocol.md) の 2.6）：手動のキーの組み合わせ、PC がスリープのときの扱い
+- [ ] キーボードモードとサイバーデックモード（[protocol.md](protocol.md) の 2.6）の残り：PC への USB HID で実際に出力先を分ける、サイバーデックモードのキーマップ（レイヤー 3〜5。いまはレイヤー 0〜2 の写し）を決める、今のモードをキーの RGB でも示すか
+- [ ] USB のリモートウェイクアップ：PC がスリープしているとき（`USB,0`）にキーを押したら PC を起こす。いまはスリープで「PC につないで」の表示になる。RMK と embassy-usb の対応を調べる
+- [ ] コンソールの自動ログイン（`raspi-config` の Boot / Auto Login）にするか。UI を閉じるたびにログインするのは手間。ルートを読み取り専用にするときの扱いと合わせて決める
 - [ ] HID over I²C を Pico と Pi Zero 2 W で確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
 - [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）

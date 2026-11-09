@@ -35,6 +35,7 @@ typedef struct {
     link_out_t out;
     bool out_manual;
     int layer;              /* わからないときは -1 */
+    int pc_connected;       /* PC の USB につながっているか（1 / 0）。わからないときは -1 */
 } link_state_t;
 
 typedef struct {

@@ -4,6 +4,8 @@ Raspberry Pi OS Lite をベースにした OS の設定。カーネルとドラ�
 
 - [config.txt](config.txt)（ディスプレイ、キー入力、RTC、音声、UART、シャットダウンの通知。書いた。実機では未確認）
 - 専用のオーバーレイ（[overlays/](overlays/)。音声とキー入力の下書きあり）
-- systemd のユニット（[systemd/skjar-ui.service](systemd/skjar-ui.service)：UI の起動。RP2040 との UART も UI が持つ）
+- systemd のユニット（[systemd/skjar-ui@.service](systemd/skjar-ui@.service)：UI の起動。RP2040 との UART も UI が持つ。入れ方はファイルの先頭）と、コンソールから UI に戻るコマンド（[bin/skjar](bin/skjar)）
+  - UI（キーボードモード）と tty1 のコンソール（サイバーデックモード）を行き来する。UI の System タブの Open console で UI が終わり、systemd が `getty@tty1` を立ち上げる。コンソールで `skjar` と打つと `skjar-ui@manual` が立ち上がり、tty1 を UI に戻す
+  - 電源を入れたときは `skjar-ui@boot`：PC がつながっていなければ、UI を出さずにコンソールへ
 - ルートを読み取り専用にする設定（Overlay File System）と、書き込みが要るデータのパーティション（ケーブルをいきなり抜かれても壊れないようにするため。[design-decisions.md](../../docs/design-decisions.md) の 1.5）
 - イメージを作るスクリプト

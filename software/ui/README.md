@@ -15,7 +15,8 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | 見た目（試し）：背景の画像と、半透明のボタン・パネル（すりガラス風）。System タブの Look で Plain / Picture を選ぶ | 実装した。画像は `--background` の PNG か、なければ起動時に描くオーロラ風の絵 |
 | トラックパッド（Pad）：1 本指で移動・叩いてクリック・叩いてすぐ動かしてドラッグ、2 本指でスクロール・叩いて右クリック、3 本指で叩いて中クリック、スクロールの帯、L / M / R ボタン | 実装した。UART の `PTR` / `WHEEL` で RP2040 に送る。実機（Linux）ではタッチパネルの evdev からマルチタッチを読む。実機のパネルでは未確認 |
 | バックライトの明るさ（スライダー）と、RP2040 から届く上限 | 実装した |
-| 物理キーの出力先の手動切り替え、CPU のグラフ、RP2040 の UF2、電源を切る（System） | 実装した。UF2 と電源は長押し |
+| サイバーデックモードへ（System の Open console で UI を閉じる。コンソールで `skjar` と打つと戻る）、CPU のグラフ、RP2040 の UF2、電源を切る（System） | 実装した。UF2 と電源は長押し |
+| PC につないでいないとき（RP2040 から `USB,0`）に「Connect SKJAR to a PC」と Open console のボタンを重ねて出す。`--start boot` では、PC がなければ UI を出さずにコンソールへ | 実装した。標準入力の `USB,0` / `USB,1` で確かめた |
 | RP2040 との UART（[docs/protocol.md](../../docs/protocol.md) の 1 章。形式は案） | 実装した。RP2040 側も [firmware/rp2040/](../../firmware/rp2040/) にある |
 | 確認したこと | Windows の窓で起動し、画面とボタンが動く。レイヤーの切り替え、USER キーでタブを開く、`ACT` で戻るを、標準入力から確かめた。テスト 3 つは Windows で通る。aarch64 Linux 向け（fbdev）はコンパイルとリンクまで。実機と、Linux の SDL の窓はまだ |
 
@@ -93,6 +94,7 @@ build-windows\skjar-ui.exe
   - `LAYER,1` / `LAYER,2` / `LAYER,0`：レイヤーを切り替えたことにする（タッチキーの表示が変わる）
   - `USER,1,1`：USER1 キー（Pad を開く）を押したことにする。`USER,0,1` は Keys、`USER,2,1` は Media、`USER,3,1` は System
   - `ACT`：文字のキーを押したことにする（設定によって元のタブに戻る）
+  - `USB,0`：PC が外れたことにする（「PC につないで」が出る）。`USB,1` で消える
   - `PWR,B,1.5A`、`BLMAX,100`、`OUT,PC,MAN` なども同じように打てる
 - Pad タブはマウスで試せる。マウスは 1 本指で、**Shift を押しながら操作すると 2 本指、Ctrl を押しながらだと 3 本指**として扱う（2 本指のスクロールや右クリックを試すため）。Windows では LVGL のポインタ（1 本）しか読まないので、タッチ画面の PC でも 2 本指は Shift で代わりにする。
 - USB シリアルの変換器で本物の RP2040 とつなぐときは `--link COM5` のように COM ポートを渡す。
@@ -127,7 +129,7 @@ py tools/make_movie.py 手元の動画.mp4 movie
 
 1. OS の設定：[software/os/config.txt](../os/config.txt) を `/boot/firmware/config.txt` に入れる（使うオーバーレイは [software/os/overlays/](../os/overlays/) でビルドする）。
 2. UART：`raspi-config` の Interface Options → Serial Port で、ログインシェルを「いいえ」、ハードウェアを「はい」にする。カーネルのログ（`console=serial0,115200`）は残してよい。UI は、ログが混ざった行を読み飛ばす。
-3. 起動：[software/os/systemd/skjar-ui.service](../os/systemd/skjar-ui.service) を入れる。`getty@tty1` を止め、UI が tty1 をグラフィックモードにして、コンソールの文字が画面に出ないようにする。
+3. 起動：[software/os/systemd/skjar-ui@.service](../os/systemd/skjar-ui@.service) と [software/os/bin/skjar](../os/bin/skjar) を入れ、`skjar-ui@boot` を有効にする（入れ方はユニットの先頭）。UI が動いている間は `getty@tty1` を止め、UI が tty1 をグラフィックモードにして、コンソールの文字が画面に出ないようにする。UI が終わると（Open console）、tty1 にログインのコンソールが戻る。
 
 起動のオプション：
 
@@ -142,6 +144,7 @@ py tools/make_movie.py 手元の動画.mp4 movie
 | `--background <png>` | 起動時に描くオーロラ風の絵 | 背景の画像（Look が Picture のとき）。1920 × 480 だと描き換えが軽い。ほかの大きさは画面を覆うように拡大・縮小する |
 | `--movie <skm>` | 設定のフォルダの `movie.skm` | 隠し機能の動画 |
 | `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか） |
+| `--start <boot/manual>` | `manual` | `boot`：電源を入れたときの起動。RP2040 から PC がつながっているかを 3 秒まで待ち、なければ UI を閉じてコンソールへ。`manual`：コンソールで `skjar` と打ったとき。PC がなければ「PC につないで」を出す |
 | `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 
 ## 実機で確かめること

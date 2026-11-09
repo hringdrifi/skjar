@@ -79,6 +79,7 @@ static void reset_state(void)
     memset(&state, 0, sizeof state);
     state.bl_max = 255;
     state.layer = -1;
+    state.pc_connected = -1;
 }
 
 static bool parse_int(const char *s, int min, int max, int *out)
@@ -120,6 +121,12 @@ static void handle_message(char **f, int n)
                                                : LINK_OUT_UNKNOWN;
         state.out_manual = strcmp(f[2], "MAN") == 0;
         changed = true;
+    } else if (strcmp(cmd, "USB") == 0 && n == 2) {
+        int v;
+        if (parse_int(f[1], 0, 1, &v)) {
+            state.pc_connected = v;
+            changed = true;
+        }
     } else if (strcmp(cmd, "LAYER") == 0 && n == 2) {
         int v;
         if (parse_int(f[1], 0, 31, &v)) {

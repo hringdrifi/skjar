@@ -7,7 +7,15 @@
  * PC（windows）：Windows で同じ窓を開く（Win32）。
  *
  * 使い方：skjar-ui [--link <tty か COMn か ->] [--rotate 0|90|180|270] [--fb <path>]
- *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>] [--no-poweroff]
+ *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>]
+ *                  [--start boot|manual] [--no-poweroff]
+ *
+ * キーボードモードとサイバーデックモード：このタッチ UI を出している間がキーボードモード（物理キーは PC へ）。
+ * System タブの Console で UI を閉じるとサイバーデックモード（コンソール。物理キーは CM0 へ）。コンソールで
+ * skjar と打つと UI が立ち上がり、キーボードモードに戻る。どちらのモードかは RP2040 に OUT で知らせ、
+ * RP2040 はモードごとのキーマップに切り替える。
+ *   --start boot   ：電源を入れたとき。PC につながっていなければ、UI を出さずにコンソールへ
+ *   --start manual ：コンソールで skjar と打ったとき（初期値）。PC がなければ「PC につないで」を出す
  */
 #include <signal.h>
 #include <stdio.h>
@@ -40,10 +48,12 @@ typedef struct {
     const char *config_path;    /* 設定のファイル。NULL なら settings.h の場所 */
     const char *background;     /* 背景の画像（PNG）。NULL なら描いた絵 */
     const char *movie;          /* 隠し機能の動画（.skm）。NULL なら設定のフォルダの movie.skm */
+    int boot;                   /* --start boot：電源を入れたときの起動 */
     int no_poweroff;
 } options_t;
 
 static volatile sig_atomic_t quit;
+static bool to_console;          /* コンソールへ移るために終わる */
 static options_t opt;
 
 static void on_signal(int sig)
@@ -61,7 +71,8 @@ static void usage(const char *argv0)
 {
     fprintf(stderr,
             "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
-            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>] [--no-poweroff]\n", argv0);
+            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>]\n"
+            "          [--start boot|manual] [--no-poweroff]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
@@ -89,6 +100,7 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--config") == 0 && v) { opt.config_path = v; i++; }
         else if (strcmp(a, "--background") == 0 && v) { opt.background = v; i++; }
         else if (strcmp(a, "--movie") == 0 && v) { opt.movie = v; i++; }
+        else if (strcmp(a, "--start") == 0 && v) { opt.boot = strcmp(v, "boot") == 0; i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
     }
@@ -104,6 +116,36 @@ static int parse_args(int argc, char **argv)
 }
 
 /* ---- 電源を切る ---- */
+
+/* サイバーデックモードへ：RP2040 に知らせて（物理キーを CM0 へ、サイバーデックのキーマップへ）、UI を閉じる。
+ * UI が終わると、systemd が tty1 のログイン（コンソール）を立ち上げる（skjar-ui@.service） */
+static void open_console(void)
+{
+    fprintf(stderr, "switching to the console (cyberdeck mode)\n");
+    link_send_out(LINK_OUT_CM0);
+    to_console = true;
+    quit = 1;
+}
+
+/* --start boot：電源を入れたとき。RP2040 から PC につながっているかが届くのを 3 秒まで待ち、
+ * つながっていれば UI のまま（キーボードモード）、そうでなければコンソールへ */
+#define BOOT_WAIT_MS 3000
+
+static void boot_check_cb(lv_timer_t *t)
+{
+    static uint32_t started;
+    if (!started)
+        started = lv_tick_get();
+    const link_state_t *s = link_state();
+    if (s->connected && s->pc_connected == 1) {
+        lv_timer_delete(t);             /* PC がある：キーボードモードのまま */
+        return;
+    }
+    if ((s->connected && s->pc_connected == 0) || lv_tick_elaps(started) >= BOOT_WAIT_MS) {
+        lv_timer_delete(t);
+        open_console();
+    }
+}
 
 static void do_poweroff(void)
 {
@@ -302,8 +344,14 @@ int main(int argc, char **argv)
         .poweroff = do_poweroff,
         .background_png = opt.background,
         .movie_path = movie_path,
+        .open_console = open_console,
     };
     ui_create(&actions);
+
+    /* キーボードモードで始まる（物理キーは PC へ、キーボードモードのキーマップへ） */
+    link_send_out(LINK_OUT_PC);
+    if (opt.boot)
+        lv_timer_create(boot_check_cb, 100, NULL);
 
     /* 窓を閉じると表示がなくなる（Windows のドライバ） */
     while (!quit && lv_display_get_default() != NULL) {
@@ -313,6 +361,8 @@ int main(int argc, char **argv)
         platform_sleep_ms(idle);
     }
 
+    if (to_console)
+        fprintf(stderr, "closed for the console\n");
     link_close();
     restore_console();
     return 0;

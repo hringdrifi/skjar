@@ -1,0 +1,6 @@
+#!/bin/sh
+# SKJÁR: leave the console (cyberdeck mode) and bring the touch UI back (keyboard mode).
+# Install as /usr/local/bin/skjar (see software/os/systemd/skjar-ui@.service).
+#
+# The UI takes over tty1, so this login session on tty1 ends when it starts.
+exec sudo systemctl start skjar-ui@manual.service

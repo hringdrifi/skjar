@@ -1,0 +1,38 @@
+# SKJÁR touch UI (software/ui) on tty1. Draws straight to the framebuffer, no X / Wayland.
+#
+# The UI is keyboard mode (physical keys go to the PC). Leaving it (System tab > Open console) is
+# cyberdeck mode: the UI exits and tty1 gets its login console back. Typing `skjar` there starts
+# the UI again (software/os/bin/skjar).
+#
+#   skjar-ui@boot.service    started at power-on: shows the UI only if a PC is connected,
+#                            otherwise goes straight to the console
+#   skjar-ui@manual.service  started by `skjar`: if no PC is connected, asks to connect one
+#
+# Install:
+#   sudo cp skjar-ui@.service /etc/systemd/system/
+#   sudo cp ../bin/skjar /usr/local/bin/ && sudo chmod +x /usr/local/bin/skjar
+#   sudo systemctl disable serial-getty@ttyS0.service    # the UART belongs to the UI
+#   sudo systemctl enable skjar-ui@boot.service
+#
+# getty@tty1 stays enabled: it runs whenever the UI is not on tty1. Console autologin
+# (raspi-config > System Options > Boot / Auto Login) saves logging in after each switch.
+#
+# It runs as root for now: it opens /dev/fb0, /dev/input/event*, /dev/serial0, writes the
+# backlight in /sys and calls poweroff. A dedicated user is a later step (software/ui/README.md).
+
+[Unit]
+Description=SKJAR touch UI (%i)
+After=systemd-user-sessions.service
+# The UI takes tty1 from the login console while it runs
+Conflicts=getty@tty1.service
+Before=getty@tty1.service
+
+[Service]
+ExecStart=/usr/local/bin/skjar-ui --start %i
+# A normal exit is a switch to the console: give tty1 back to the login console
+ExecStopPost=/bin/systemctl --no-block start getty@tty1.service
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

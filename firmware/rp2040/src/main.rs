@@ -20,6 +20,7 @@ mod reports;
 mod rgb;
 
 use embassy_executor::Spawner;
+use embassy_usb::class::cdc_acm::{CdcAcmClass, State as CdcAcmState};
 use embassy_futures::join::join;
 use embassy_rp::gpio::{Flex, Input, Level, Output, Pull};
 use embassy_rp::i2c_slave::{self, I2cSlave};
@@ -71,8 +72,54 @@ bind_interrupts!(struct Irqs {
 });
 
 #[embassy_executor::task]
-async fn logger_task(driver: Driver<'static, USB>) {
-    embassy_usb_logger::run!(1024, log::LevelFilter::Debug, driver);
+async fn usb_task(driver: Driver<'static, USB>) {
+    // いまの USB はログ用の仮想シリアルだけ。PC に認識されたか（キーボードモードにするか）を
+    // CM0 に知らせるため、USB の状態の変化を UsbStateHandler で受け取る
+    static CONFIG_DESC: StaticCell<[u8; 256]> = StaticCell::new();
+    static BOS_DESC: StaticCell<[u8; 256]> = StaticCell::new();
+    static MSOS_DESC: StaticCell<[u8; 256]> = StaticCell::new();
+    static CONTROL_BUF: StaticCell<[u8; 64]> = StaticCell::new();
+    static HANDLER: StaticCell<UsbStateHandler> = StaticCell::new();
+    static CDC_STATE: StaticCell<CdcAcmState> = StaticCell::new();
+
+    let mut config = embassy_usb::Config::new(0xc0de, 0xcafe);
+    config.manufacturer = Some("SKJAR");
+    config.product = Some("SKJAR RP2040 (log)");
+    config.max_power = 100;
+    config.max_packet_size_0 = 64;
+    let mut builder = embassy_usb::Builder::new(
+        driver,
+        config,
+        CONFIG_DESC.init([0; 256]),
+        BOS_DESC.init([0; 256]),
+        MSOS_DESC.init([0; 256]),
+        CONTROL_BUF.init([0; 64]),
+    );
+    builder.handler(HANDLER.init(UsbStateHandler));
+    let class = CdcAcmClass::new(&mut builder, CDC_STATE.init(CdcAcmState::new()), 64);
+    let mut usb = builder.build();
+    let log = embassy_usb_logger::with_class!(1024, log::LevelFilter::Debug, class);
+    join(usb.run(), log).await;
+}
+
+/// USB の状態の変化を cm0_link に伝える（PC に認識されたか、スリープしたか、抜かれたか）
+struct UsbStateHandler;
+
+impl embassy_usb::Handler for UsbStateHandler {
+    fn enabled(&mut self, enabled: bool) {
+        if !enabled {
+            cm0_link::set_usb_configured(false);
+        }
+    }
+    fn reset(&mut self) {
+        cm0_link::set_usb_configured(false);
+    }
+    fn configured(&mut self, configured: bool) {
+        cm0_link::set_usb_configured(configured);
+    }
+    fn suspended(&mut self, suspended: bool) {
+        cm0_link::set_usb_suspended(suspended);
+    }
 }
 
 #[embassy_executor::task]
@@ -103,7 +150,7 @@ async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
 
     // ログ（USB の仮想シリアル）
-    spawner.spawn(logger_task(Driver::new(p.USB, Irqs)).unwrap());
+    spawner.spawn(usb_task(Driver::new(p.USB, Irqs)).unwrap());
 
     // KB_INT（GPIO13）：Low で CM0 に知らせる。オープンドレインを真似る（hid_i2c 参照）。
     hid_i2c::init_int_pin(Flex::new(p.PIN_13));

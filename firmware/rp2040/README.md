@@ -5,7 +5,7 @@ RP2040 のファームウェア。[RMK](https://github.com/rmk-rs/rmk)（Rust、
 - キーマトリクス（7 行 × 6 列、42 キー）の読み取り
 - PC への USB HID（物理キー、タッチキー、Consumer Control、マウス）
 - CM0 への HID over I²C（物理キーを CM0 の Linux に普通のキーボードとして渡す。仕様は [docs/protocol.md](../../docs/protocol.md) の 2 章）
-- 物理キーの出力先（PC か CM0 か）の切り替え
+- キーボードモード（物理キーは PC へ）とサイバーデックモード（CM0 へ）の切り替えと、モードごとのキーマップ
 - キーの RGB（SK6812MINI-E ×42。GPIO14 から PIO で出す。GPIO20 で LED の電源を入れ切りする）
 - CC の電圧による電流宣言の判定と、電源の動作の決定（CM0 の GLOBAL_EN、LCD の負荷スイッチ、キーの RGB の明るさの上限）
 - CM0 の USB ブート（rpiboot）の要求。キーの組み合わせで受ける（専用のスイッチはない）
@@ -27,8 +27,9 @@ HID over I²C を確かめるための試作。基板ができる前に、Raspbe
 | トラックパッド（UART の `PTR` / `WHEEL`） | 実装した。HID over I²C にマウスのレポート（ID 3）を足し、RMK のマウスキーと合わせて送る（ボタンは OR、動きはそのまま） |
 | 画面のタッチキー（Keys タブの 2 段 × 12 キー） | 実装した。キーマップを 11 行にして、7〜10 行目をタッチキーにした（[src/keymap.rs](src/keymap.rs)）。UART の `TK` を RMK にキーの出来事として渡すので、レイヤーと Vial が効く。割り当てを `TKL` で CM0 に送る |
 | タブを開くキーと、元のタブに戻すきっかけ | 実装した。RMK の `ActionEvent` を受け、USER キー（Vial の USER0〜3）で `USER`、文字や機能のキーで `ACT` を送る。受け取り口の数は [keyboard.toml](keyboard.toml) で増やしてある |
-| USB | HID にせず、ログ用の仮想シリアルにしている |
-| 出力先の切り替え、USB HID、電源、RGB、CC | まだ。出力先は CM0 だけで、UI から `PC` を選んでも CM0 のまま（`OUT,CM0,MAN` を返す） |
+| モードの切り替え（[docs/protocol.md](../../docs/protocol.md) の 2.6） | 実装した。UART の `OUT,PC` / `OUT,CM0` で、RMK の既定のレイヤーを 0 / 3 にする（キーマップの 11 行目の `DF(0)` / `DF(3)` を押したことにする）。キーマップは 6 レイヤー：0〜2 がキーボードモード、3〜5 がサイバーデックモード（いまは 0〜2 の物理キーの写しで、タッチキーはなし）。CM0 が 3 秒黙ったらキーボードモードに戻す |
+| USB | HID にせず、ログ用の仮想シリアルにしている。USB の状態（認識された・スリープした・リセット）を見て、PC がつながっているかを `USB` で CM0 に送る |
+| PC への USB HID、電源、普段の RGB、CC | まだ。出力先は CM0 だけで、キーボードモード（`OUT,PC`）でも実際には CM0 に出す |
 
 RMK は、USB がつながっているときだけ USB 用のチャンネル（`USB_REPORT_CHANNEL`）にレポートを出す。試作では USB の HID を使わないので、つながったことにして（`set_usb_state(Configured)`）、そのチャンネルを横取りして I²C に流している。USB の HID と並べるときは、レポートの行き先を切り替える仕組みが別に要る（RMK の改造か、上流への提案）。
 
