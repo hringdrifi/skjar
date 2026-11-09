@@ -858,6 +858,7 @@ static void widget_selector_cb(lv_event_t *e)
     if (w >= SETTINGS_WIDGETS)
         return;
     settings()->widgets[w] = lv_buttonmatrix_has_button_ctrl(m, id, LV_BUTTONMATRIX_CTRL_CHECKED);
+    fprintf(stderr, "widgets: %s %s\n", widgets_name((widget_id_t)w), settings()->widgets[w] ? "on" : "off");
     settings_save();
     widgets_refresh();
 }
@@ -938,6 +939,8 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     static const char *widget_map[] = { "Pomodoro", "News", "" };
     lv_obj_t *widget_selector = selector(stack, NULL, LV_SYMBOL_LIST "  Widget strip", widget_map, 320);
     lv_buttonmatrix_set_one_checked(widget_selector, false);
+    /* 押したとき（入・切が変わる前）ではなく、離したとき（変わったあと）に知らせてもらう */
+    lv_buttonmatrix_set_button_ctrl_all(widget_selector, LV_BUTTONMATRIX_CTRL_CLICK_TRIG);
     for (int i = 1; i < SETTINGS_WIDGETS; i++)
         if (settings()->widgets[i])
             lv_buttonmatrix_set_button_ctrl(widget_selector, (uint32_t)(i - 1), LV_BUTTONMATRIX_CTRL_CHECKED);
