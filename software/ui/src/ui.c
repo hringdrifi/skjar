@@ -546,8 +546,8 @@ static void create_keys_panel(lv_obj_t *parent)
     keys_map[KEY_COLS] = "\n";
     keys_map[TOUCH_KEYS + 1] = "";
 
-    /* キーは 2 段 × 160 px を面の一番下（物理キーに近い側）に寄せる。上の 80 px は、
-     * ヘッダーのボタンとタッチキーの間の空き（押しまちがいよけ） */
+    /* キーは 2 段 × 160 px を面の一番下（物理キーに近い側）に寄せる。上の 1920 × 80 px は、
+     * 将来ウィジェット（タイマー、音楽の再生、ニュースの電光掲示板など）を置く場所。いまは空き */
     keys_matrix = lv_buttonmatrix_create(keys_panel);
     lv_obj_set_size(keys_matrix, SCREEN_W, KEY_ROWS * KEY_PITCH);
     lv_obj_align(keys_matrix, LV_ALIGN_BOTTOM_MID, 0, 0);
