@@ -698,6 +698,7 @@ static void weather_load(void)
         return;
     weather.mtime = st.st_mtime;
     weather.loaded = true;
+    fprintf(stderr, "weather: read %s\n", weather.path);
 
     char line[256], place[64] = "";
     float now_t = 0, hi = 0, lo = 0, thi = 0, tlo = 0;
