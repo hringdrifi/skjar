@@ -208,6 +208,7 @@ static void apply_look(look_t look)
     for (int i = 0; i < press_count; i++)
         lv_obj_set_style_recolor_opa(press_list[i].obj, picture ? PRESS_DARKEN_PICTURE : PRESS_DARKEN_PLAIN,
                                      press_list[i].sel);
+    widgets_set_look(picture);
 }
 
 static chip_t chip(lv_obj_t *parent)

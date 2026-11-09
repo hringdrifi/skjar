@@ -263,7 +263,7 @@ static void create_pomodoro(lv_obj_t *page)
 #define NEWS_SEP        "      |      "
 
 static struct {
-    lv_obj_t *ticker, *stamp;
+    lv_obj_t *ticker, *stamp, *title, *badge, *board;
     char path[600];
     time_t mtime;
     bool loaded;
@@ -423,19 +423,19 @@ static void create_news(lv_obj_t *page)
     const lv_color_t amber = lv_palette_main(LV_PALETTE_AMBER);
 
     /* 左の札：NEWS と、見出しを取ってきた時刻 */
-    lv_obj_t *badge = box(page);
+    lv_obj_t *badge = news.badge = box(page);
     lv_obj_set_size(badge, 120, 64);
     lv_obj_set_style_radius(badge, 8, 0);
     lv_obj_set_style_bg_opa(badge, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(badge, amber, 0);
     lv_obj_set_flex_flow(badge, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(badge, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_t *title = label(badge, &lv_font_montserrat_28, lv_color_black());
+    lv_obj_t *title = news.title = label(badge, &lv_font_montserrat_28, lv_color_black());
     lv_label_set_text(title, "NEWS");
     news.stamp = label(badge, &lv_font_montserrat_14, lv_color_black());
 
     /* 掲示板：黒地に琥珀色の文字を、右から左へ流し続ける */
-    lv_obj_t *board = box(page);
+    lv_obj_t *board = news.board = box(page);
     lv_obj_set_height(board, 64);
     lv_obj_set_flex_grow(board, 1);
     lv_obj_set_style_radius(board, 8, 0);
@@ -452,6 +452,29 @@ static void create_news(lv_obj_t *page)
 
     news_load();
     lv_timer_create(news_check, NEWS_CHECK_MS, NULL);
+}
+
+/* Plain：黒地に琥珀色の電光掲示板。Picture：背景の絵の上では強すぎるので、ヘッダーと同じ透けた地に白い字にする
+ * （札も同じ。ほかのボタンの半透明と揃える） */
+#define NEWS_GLASS_OPA  110     /* ヘッダーと同じ（ui.c の create_top） */
+
+void widgets_set_look(bool picture)
+{
+    if (!news.board)
+        return;
+    const lv_color_t amber = lv_palette_main(LV_PALETTE_AMBER);
+    const lv_color_t text = picture ? lv_color_white() : amber;
+    /* Picture の地は、ヘッダーと同じ色（テーマの箱の色）と透け具合にする */
+    lv_obj_t *probe = lv_obj_create(news.board);
+    const lv_color_t panel = lv_obj_get_style_bg_color(probe, LV_PART_MAIN);
+    lv_obj_delete(probe);
+    lv_obj_set_style_bg_color(news.board, picture ? panel : lv_color_hex(0x0B0B0B), 0);
+    lv_obj_set_style_bg_opa(news.board, picture ? NEWS_GLASS_OPA : LV_OPA_COVER, 0);
+    lv_obj_set_style_text_color(news.ticker, text, 0);
+    lv_obj_set_style_bg_color(news.badge, picture ? panel : amber, 0);
+    lv_obj_set_style_bg_opa(news.badge, picture ? NEWS_GLASS_OPA : LV_OPA_COVER, 0);
+    lv_obj_set_style_text_color(news.title, picture ? lv_color_white() : lv_color_black(), 0);
+    lv_obj_set_style_text_color(news.stamp, picture ? lv_color_white() : lv_color_black(), 0);
 }
 
 /* ---- 並びと、スワイプでの切り替え ---- */

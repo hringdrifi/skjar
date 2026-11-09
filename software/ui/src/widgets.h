@@ -48,6 +48,9 @@ void widgets_input(const touch_contacts_t *contacts);
 /* 指を読まなくなるとき（タブを替えた、動画が始まった）：押しているボタンとスワイプを片付ける */
 void widgets_release(void);
 
+/* 見た目（System タブの Look）が変わった：Picture ならウィジェットを背景の絵に馴染ませる */
+void widgets_set_look(bool picture);
+
 /* System タブに出す名前 */
 const char *widgets_name(widget_id_t id);
 
