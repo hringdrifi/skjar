@@ -13,7 +13,7 @@
 /* LVGL の画像の覚え（キャッシュ）から、中身を書き換えた画像を外す（公開の見出しにない関数） */
 void lv_image_cache_drop(const void *src);
 
-#define SCALE    2              /* 320 × 240 を 2 倍にして出す */
+#define SCALE    2              /* 画面のコマを縦横 2 倍にして出す（960 × 240 → 1920 × 480） */
 #define KEYS     42
 #define HDR_SIZE 32
 
@@ -130,6 +130,8 @@ static void decode(uint32_t n, uint8_t leds[KEYS])
 static void show_leds(const uint8_t leds[KEYS])
 {
     for (int i = 0; i < KEYS; i++) {
+        if (!led_box[i])
+            break;      /* 見本を出していない（RP2040 とつながっている） */
         uint8_t v = (uint8_t)(leds[i] * 17);
         lv_obj_set_style_bg_color(led_box[i], lv_color_make(v, v, v), 0);
     }
@@ -166,20 +168,35 @@ static void overlay_clicked(lv_event_t *e)
 }
 
 /* 左側に、キーボードの並びを小さく描く（キーのライトの見本） */
-static void create_led_preview(lv_obj_t *parent, int left, int width_px)
+/* キーボードの並びを小さく描く（キーのライトの見本）。RP2040 とつながっていないとき（PC で試すとき）だけ、
+ * 画面の左下に重ねる。実機ではキーそのものが光るので出さない */
+static void create_led_preview(lv_obj_t *parent, int width_px)
 {
     const float x0 = 34.131f, y0 = 85.725f, board_w = 228.6f, board_h = 76.2f;
+    const int margin = 16, pad = 8;
     float s = (float)width_px / board_w;         /* mm → px */
-    int top = (480 - (int)(board_h * s)) / 2;
+    int height_px = (int)(board_h * s);
+
+    lv_obj_t *box = lv_obj_create(parent);
+    lv_obj_remove_style_all(box);
+    lv_obj_set_size(box, width_px + 2 * pad, height_px + 2 * pad);
+    lv_obj_align(box, LV_ALIGN_BOTTOM_LEFT, margin, -margin);
+    lv_obj_set_style_bg_opa(box, LV_OPA_70, 0);
+    lv_obj_set_style_bg_color(box, lv_color_black(), 0);
+    lv_obj_set_style_radius(box, 8, 0);
+    lv_obj_set_clickable(box, false);
+
+    int left = pad, top = pad;
     int unit = (int)(19.05f * s);
     for (int i = 0; i < KEYS; i++) {
-        int w = (int)(key_w[i] * unit) - 6, h = unit - 6;
+        lv_obj_t *parent_box = box;
+        int w = (int)(key_w[i] * unit) - 3, h = unit - 3;
         int cx = left + (int)((key_pos[i][0] - x0) * s), cy = top + (int)((key_pos[i][1] - y0) * s);
-        lv_obj_t *b = lv_obj_create(parent);
+        lv_obj_t *b = lv_obj_create(parent_box);
         lv_obj_remove_style_all(b);
         lv_obj_set_size(b, w, h);
         lv_obj_set_pos(b, cx - w / 2, cy - h / 2);
-        lv_obj_set_style_radius(b, 6, 0);
+        lv_obj_set_style_radius(b, 3, 0);
         lv_obj_set_style_bg_opa(b, LV_OPA_COVER, 0);
         lv_obj_set_style_bg_color(b, lv_color_black(), 0);
         lv_obj_set_style_border_width(b, 1, 0);
@@ -226,7 +243,10 @@ bool movie_start(const char *path)
     lv_obj_center(video);
     lv_obj_set_clickable(video, false);
 
-    create_led_preview(overlay, 20, 600);
+    for (int i = 0; i < KEYS; i++)
+        led_box[i] = NULL;
+    if (!link_state()->connected)
+        create_led_preview(overlay, 360);
 
     lv_obj_t *hint = lv_label_create(overlay);
     lv_label_set_text(hint, "tap to stop");
