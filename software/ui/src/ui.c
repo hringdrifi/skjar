@@ -150,28 +150,47 @@ static void glass(lv_obj_t *obj, lv_style_selector_t sel, lv_opa_t opa)
 }
 
 /* ボタンの並び（buttonmatrix）：枠は透明、ボタンは半透明、選んでいる・押しているボタンは濃いめ */
-#define GLASS_ITEM_OPA 110      /* ボタンの透け具合（押している間も同じ。押したら黒を重ねて暗くするだけ） */
-#define PRESS_DARKEN   60       /* 押している間に重ねる黒（0〜255。テーマの初期値は 35） */
+#define GLASS_ITEM_OPA 110      /* Picture のときのボタンの透け具合 */
+/* 押している間の見た目。どのボタンも同じだけ、黒を重ねて暗くする（テーマの初期値は 35/255）。
+ * Plain は 45。Picture は、半透明の地だけを暗くしても透けた背景の明るさが残って効きが弱いので、
+ * 重ねる黒を 60 にし、押している間は透け具合も下げる（GLASS_PRESSED_OPA） */
+#define PRESS_DARKEN_PLAIN    45
+#define PRESS_DARKEN_PICTURE  60
+#define GLASS_PRESSED_OPA     180
+#define GLASS_SELECTED_OPA    230   /* 選んでいるタブや選択肢（青）は濃いめにして目立たせる */
 
-/* 押している間の見た目：どのボタンも同じだけ暗くする */
+typedef struct {
+    lv_obj_t *obj;
+    lv_style_selector_t sel;
+} press_t;
+
+static press_t press_list[32];
+static int press_count;
+
 static void press_look(lv_obj_t *obj, lv_style_selector_t sel)
 {
     lv_obj_set_style_recolor(obj, lv_color_black(), sel);
-    lv_obj_set_style_recolor_opa(obj, PRESS_DARKEN, sel);
+    lv_obj_set_style_recolor_opa(obj, PRESS_DARKEN_PLAIN, sel);
+    if (press_count < (int)COUNT(press_list))
+        press_list[press_count++] = (press_t){ obj, sel };
 }
 
-/* checked_opa は CHECKED の不透明度：選んでいるタブや選択肢（青）は濃いめにして目立たせる。
- * タッチキーは CHECKED を「押している」の印に使うので、普段と同じにする */
-static void glass_matrix_with(lv_obj_t *m, lv_opa_t checked_opa)
+/* ボタンの並び（buttonmatrix）の透け具合。pressed は押している間の印の状態（普通は PRESSED。
+ * タッチキーは CHECKED を「押している」の印に使う） */
+static void glass_matrix_with(lv_obj_t *m, lv_state_t pressed)
 {
     glass(m, LV_PART_MAIN, LV_OPA_TRANSP);
     glass(m, LV_PART_ITEMS, GLASS_ITEM_OPA);
-    glass(m, LV_PART_ITEMS | LV_STATE_CHECKED, checked_opa);
+    glass(m, LV_PART_ITEMS | pressed, GLASS_PRESSED_OPA);
+    if (pressed != LV_STATE_CHECKED) {
+        glass(m, LV_PART_ITEMS | LV_STATE_CHECKED, GLASS_SELECTED_OPA);
+        glass(m, LV_PART_ITEMS | LV_STATE_CHECKED | LV_STATE_PRESSED, GLASS_SELECTED_OPA);
+    }
 }
 
 static void glass_matrix(lv_obj_t *m)
 {
-    glass_matrix_with(m, 230);
+    glass_matrix_with(m, LV_STATE_PRESSED);
 }
 
 static void apply_look(look_t look)
@@ -184,6 +203,9 @@ static void apply_look(look_t look)
         else
             lv_obj_remove_local_style_prop(glass_list[i].obj, LV_STYLE_BG_OPA, glass_list[i].sel);
     }
+    for (int i = 0; i < press_count; i++)
+        lv_obj_set_style_recolor_opa(press_list[i].obj, picture ? PRESS_DARKEN_PICTURE : PRESS_DARKEN_PLAIN,
+                                     press_list[i].sel);
 }
 
 static chip_t chip(lv_obj_t *parent)
@@ -488,7 +510,7 @@ static void create_keys_panel(lv_obj_t *parent)
     lv_obj_set_style_text_font(keys_matrix, &lv_font_montserrat_28, 0);
     /* 押した・離したは keys_input で指から決める（LVGL のポインタは 1 本分しか持たないため） */
     lv_obj_set_clickable(keys_matrix, false);
-    glass_matrix_with(keys_matrix, GLASS_ITEM_OPA);
+    glass_matrix_with(keys_matrix, LV_STATE_CHECKED);
     /* 押しているキー（CHECKED の印で示す）は、テーマの「押した」と同じ見た目にする：
      * 色は普段のまま、黒を重ねて暗くする（press_look。テーマの CHECKED は明るい青になるため上書きする） */
     const lv_style_selector_t down = LV_PART_ITEMS | LV_STATE_CHECKED;
@@ -580,6 +602,7 @@ static lv_obj_t *pad_button(lv_obj_t *parent, const char *label)
     lv_label_set_text(l, label);
     lv_obj_center(l);
     glass(b, LV_PART_MAIN, GLASS_ITEM_OPA);
+    glass(b, LV_PART_MAIN | LV_STATE_PRESSED, GLASS_PRESSED_OPA);
     return b;
 }
 
@@ -727,6 +750,7 @@ static lv_obj_t *hold_button(lv_obj_t *parent, const char *label, lv_event_cb_t 
     lv_label_set_text(l, label);
     lv_obj_center(l);
     glass(b, LV_PART_MAIN, 150);
+    glass(b, LV_PART_MAIN | LV_STATE_PRESSED, GLASS_SELECTED_OPA);
     return b;
 }
 
