@@ -64,12 +64,12 @@ pub const fn get_default_keymap() -> [[[KeyAction; COL]; ROW]; NUM_LAYER] {
             [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
             [a!(Transparent), a!(Transparent), a!(Transparent), k!(Quote), k!(Semicolon), a!(Transparent)],
             [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
-            // タッチキーの上の段：数字の段にない記号
+            // タッチキーの上の段：移動・編集と、あまり使わないキー（右端 2 つは透過で F11 / F12）
+            [k!(Home), k!(End), k!(PageUp), k!(PageDown), k!(Insert), k!(PrintScreen)],
+            [k!(CapsLock), k!(Application), k!(ScrollLock), k!(Pause), a!(Transparent), a!(Transparent)],
+            // タッチキーの下の段（押しやすい側）：数字の段にない記号。右端は Del（レイヤー 0 の Bksp と同じ位置）
             [k!(Grave), k!(Minus), k!(Equal), k!(LeftBracket), k!(RightBracket), k!(Backslash)],
-            [k!(Semicolon), k!(Quote), k!(Comma), k!(Dot), k!(Slash), k!(Delete)],
-            // タッチキーの下の段：移動
-            [k!(Insert), k!(Home), k!(End), k!(PageUp), k!(PageDown), k!(PrintScreen)],
-            [k!(Left), k!(Down), k!(Up), k!(Right), k!(ScrollLock), k!(Pause)]
+            [k!(Semicolon), k!(Quote), k!(Comma), k!(Dot), k!(Slash), k!(Delete)]
         ]),
         // 2：F キー・メディア・タブ（右のスペースの長押し）
         layer!([
