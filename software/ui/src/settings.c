@@ -14,11 +14,12 @@
 #define SEP "/"
 #endif
 
-static settings_t current = { .return_mode = RETURN_KEY_OPENED };
+static settings_t current = { .return_mode = RETURN_KEY_OPENED, .look = LOOK_PLAIN };
 static char file_path[512];
 static char dir_path[512];
 
 static const char *const return_names[] = { "never", "key", "always" };
+static const char *const look_names[] = { "plain", "picture" };
 
 static void default_path(void)
 {
@@ -60,6 +61,10 @@ void settings_load(const char *path)
             for (int i = 0; i < 3; i++)
                 if (strcmp(val, return_names[i]) == 0)
                     current.return_mode = (return_mode_t)i;
+        } else if (strcmp(key, "look") == 0) {
+            for (int i = 0; i < 2; i++)
+                if (strcmp(val, look_names[i]) == 0)
+                    current.look = (look_t)i;
         }
     }
     fclose(f);
@@ -85,6 +90,7 @@ void settings_save(void)
         return;
     }
     fprintf(f, "return_mode=%s\n", return_names[current.return_mode]);
+    fprintf(f, "look=%s\n", look_names[current.look]);
     fclose(f);
 }
 

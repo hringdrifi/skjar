@@ -51,6 +51,7 @@ add_executable(skjar-ui
     src/touch_source.c
     src/keylabel.c
     src/icons.c
+    src/background.c
     src/settings.c
     src/sysinfo.c
     src/backlight.c)

@@ -25,6 +25,7 @@
 
 #include "lvgl.h"
 
+#include "background.h"
 #include "backlight.h"
 #include "icons.h"
 #include "keylabel.h"
@@ -131,6 +132,45 @@ static lv_obj_t *text(lv_obj_t *parent, const lv_font_t *font)
     return l;
 }
 
+/* ---- 見た目：背景の画像と、半透明のボタン（試し） ---- */
+
+/* 背景を出すときに半透明にするところ。普段は、テーマの色（不透明）のまま */
+typedef struct {
+    lv_obj_t *obj;
+    lv_style_selector_t sel;
+    lv_opa_t opa;
+} glass_t;
+
+static glass_t glass_list[64];
+static int glass_count;
+
+static void glass(lv_obj_t *obj, lv_style_selector_t sel, lv_opa_t opa)
+{
+    if (glass_count < (int)COUNT(glass_list))
+        glass_list[glass_count++] = (glass_t){ obj, sel, opa };
+}
+
+/* ボタンの並び（buttonmatrix）：枠は透明、ボタンは半透明、選んでいる・押しているボタンは濃いめ */
+static void glass_matrix(lv_obj_t *m)
+{
+    glass(m, LV_PART_MAIN, LV_OPA_TRANSP);
+    glass(m, LV_PART_ITEMS, 110);
+    glass(m, LV_PART_ITEMS | LV_STATE_CHECKED, 230);
+    glass(m, LV_PART_ITEMS | LV_STATE_PRESSED, 200);
+}
+
+static void apply_look(look_t look)
+{
+    bool picture = look == LOOK_PICTURE;
+    background_show(picture);
+    for (int i = 0; i < glass_count; i++) {
+        if (picture)
+            lv_obj_set_style_bg_opa(glass_list[i].obj, glass_list[i].opa, glass_list[i].sel);
+        else
+            lv_obj_remove_local_style_prop(glass_list[i].obj, LV_STYLE_BG_OPA, glass_list[i].sel);
+    }
+}
+
 static chip_t chip(lv_obj_t *parent)
 {
     chip_t c;
@@ -198,6 +238,7 @@ static void tab_bar_cb(lv_event_t *e)
 static void create_top(lv_obj_t *parent)
 {
     lv_obj_t *top = lv_obj_create(parent);
+    glass(top, LV_PART_MAIN, 110);
     lv_obj_set_size(top, SCREEN_W, TOP_H);
     lv_obj_set_style_radius(top, 0, 0);
     lv_obj_set_style_border_width(top, 0, 0);
@@ -229,6 +270,7 @@ static void create_top(lv_obj_t *parent)
     lv_obj_set_style_pad_all(tab_bar, 4, 0);
     lv_obj_set_style_text_font(tab_bar, &lv_font_montserrat_20, 0);
     lv_obj_add_event_cb(tab_bar, tab_bar_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    glass_matrix(tab_bar);
 
     /* 状態の札（右寄せ）：レイヤー、物理キーの出力先、電源、CPU と温度、RP2040 とのつながり */
     lv_obj_t *chips = plain_box(top);
@@ -419,6 +461,7 @@ static void create_keys_panel(lv_obj_t *parent)
     lv_obj_set_style_text_font(keys_matrix, &lv_font_montserrat_28, 0);
     /* 押した・離したは keys_input で指から決める（LVGL のポインタは 1 本分しか持たないため） */
     lv_obj_set_clickable(keys_matrix, false);
+    glass_matrix(keys_matrix);
     refresh_labels();
 }
 
@@ -489,6 +532,7 @@ static lv_obj_t *pad_button(lv_obj_t *parent, const char *label)
     lv_obj_t *l = lv_label_create(b);
     lv_label_set_text(l, label);
     lv_obj_center(l);
+    glass(b, LV_PART_MAIN, 150);
     return b;
 }
 
@@ -506,6 +550,7 @@ static void create_pad_panel(lv_obj_t *parent)
     lv_obj_set_scrollable(pad_area, false);
     lv_obj_set_style_bg_color(pad_area, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
     lv_obj_set_style_radius(pad_area, 16, 0);
+    glass(pad_area, LV_PART_MAIN, 90);
     lv_obj_t *hint = lv_label_create(pad_area);
     lv_label_set_text(hint, "1 finger: move / tap: click / tap + drag: drag\n"
                             "2 fingers: scroll / tap: right click      3 fingers tap: middle click");
@@ -519,6 +564,7 @@ static void create_pad_panel(lv_obj_t *parent)
     lv_obj_set_scrollable(pad_strip, false);
     lv_obj_set_style_bg_color(pad_strip, lv_palette_darken(LV_PALETTE_BLUE_GREY, 4), 0);
     lv_obj_set_style_radius(pad_strip, 16, 0);
+    glass(pad_strip, LV_PART_MAIN, 110);
     lv_obj_t *arrows = lv_label_create(pad_strip);
     lv_label_set_text(arrows, LV_SYMBOL_UP "\n\nScroll\n\n" LV_SYMBOL_DOWN);
     lv_obj_set_style_text_align(arrows, LV_TEXT_ALIGN_CENTER, 0);
@@ -564,6 +610,7 @@ static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_width(m, LV_PCT(100));
     lv_obj_set_flex_grow(m, 1);
     lv_obj_add_event_cb(m, media_event_cb, LV_EVENT_ALL, NULL);
+    glass_matrix(m);
 
     lv_obj_t *row = lv_obj_create(*panel);
     lv_obj_set_size(row, LV_PCT(100), 80);
@@ -571,6 +618,7 @@ static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(row, 32, 0);
+    glass(row, LV_PART_MAIN, 90);
     /* 太陽のアイコン（LVGL の記号にないので icons.c で描く）と「Backlight」 */
     lv_obj_t *title = plain_box(row);
     lv_obj_set_size(title, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -629,7 +677,18 @@ static lv_obj_t *hold_button(lv_obj_t *parent, const char *label, lv_event_cb_t 
     lv_obj_t *l = lv_label_create(b);
     lv_label_set_text(l, label);
     lv_obj_center(l);
+    glass(b, LV_PART_MAIN, 150);
     return b;
+}
+
+static void look_selector_cb(lv_event_t *e)
+{
+    uint32_t id = lv_buttonmatrix_get_selected_button(lv_event_get_target_obj(e));
+    if (id <= LOOK_PICTURE) {
+        settings()->look = (look_t)id;
+        settings_save();
+        apply_look(settings()->look);
+    }
 }
 
 static lv_obj_t *selector(lv_obj_t *parent, const char *title, const char **map, int width)
@@ -638,6 +697,7 @@ static lv_obj_t *selector(lv_obj_t *parent, const char *title, const char **map,
     lv_obj_set_size(col, width, LV_PCT(100));
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollable(col, false);
+    glass(col, LV_PART_MAIN, 90);
     lv_obj_t *l = lv_label_create(col);
     lv_label_set_text(l, title);
     lv_obj_t *m = lv_buttonmatrix_create(col);
@@ -646,6 +706,7 @@ static lv_obj_t *selector(lv_obj_t *parent, const char *title, const char **map,
     lv_buttonmatrix_set_one_checked(m, true);
     lv_obj_set_width(m, LV_PCT(100));
     lv_obj_set_flex_grow(m, 1);
+    glass_matrix(m);
     return m;
 }
 
@@ -658,14 +719,20 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_set_flex_flow(*panel, LV_FLEX_FLOW_ROW);
 
     static const char *out_map[] = { "Auto", "PC", "CM0", "" };
-    out_selector = selector(*panel, LV_SYMBOL_KEYBOARD "  Physical keys to", out_map, 420);
+    out_selector = selector(*panel, LV_SYMBOL_KEYBOARD "  Physical keys to", out_map, 380);
     lv_buttonmatrix_set_button_ctrl(out_selector, 0, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(out_selector, out_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     static const char *return_map[] = { "Never", "Key-opened", "Always", "" };
-    return_selector = selector(*panel, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 560);
+    return_selector = selector(*panel, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 500);
     lv_buttonmatrix_set_button_ctrl(return_selector, (uint32_t)settings()->return_mode, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    /* 見た目（試し）：背景の画像と半透明のボタン */
+    static const char *look_map[] = { "Plain", "Picture", "" };
+    lv_obj_t *look_selector = selector(*panel, LV_SYMBOL_IMAGE "  Look", look_map, 260);
+    lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)settings()->look, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(look_selector, look_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     /* CPU の使用率（直近 60 秒）とメモリ */
     lv_obj_t *stats = plain_box(*panel);
@@ -678,6 +745,7 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     cpu_chart = lv_chart_create(stats);
     lv_obj_set_width(cpu_chart, LV_PCT(100));
     lv_obj_set_flex_grow(cpu_chart, 1);
+    glass(cpu_chart, LV_PART_MAIN, 90);
     lbl_ram = text(stats, &lv_font_montserrat_20);
     lv_chart_set_type(cpu_chart, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(cpu_chart, 60);
@@ -795,6 +863,10 @@ void ui_create(const ui_actions_t *a)
     panels[TAB_PAD] = pad_panel;
     for (int i = 0; i < TAB_COUNT; i++)
         lv_obj_set_hidden(panels[i], i != TAB_KEYS);
+
+    /* 背景の画像（画面の一番奥）。見た目の設定に合わせて出す */
+    background_create(scr, actions.background_png);
+    apply_look(settings()->look);
 
     touch_source_open(lv_obj_get_display(scr), NULL);
     lv_timer_create(input_timer_cb, 10, NULL);

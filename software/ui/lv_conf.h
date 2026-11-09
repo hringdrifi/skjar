@@ -29,6 +29,12 @@
 
 #define LV_THEME_DEFAULT_DARK 1
 
+/* 背景の画像（background.c）：PNG を読み、展開したものを覚えておく（毎回展開し直さない） */
+#define LV_USE_LODEPNG 1
+#define LV_USE_FS_STDIO 1
+#define LV_FS_STDIO_LETTER 'A'
+#define LV_CACHE_DEF_SIZE (8 * 1024 * 1024)
+
 /* 文字は英数字だけにしている（Montserrat に日本語の字形はない） */
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_20 1

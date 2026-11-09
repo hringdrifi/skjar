@@ -13,8 +13,15 @@ typedef enum {
     RETURN_ALWAYS,          /* いつでも戻る */
 } return_mode_t;
 
+/* 画面の見た目（試し） */
+typedef enum {
+    LOOK_PLAIN = 0,         /* 背景なし、ボタンは不透明 */
+    LOOK_PICTURE,           /* 背景の画像（background.h）と、半透明のボタン */
+} look_t;
+
 typedef struct {
     return_mode_t return_mode;
+    look_t look;
 } settings_t;
 
 /* path が NULL なら上の場所を使う */

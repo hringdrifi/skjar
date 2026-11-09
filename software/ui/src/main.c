@@ -7,7 +7,7 @@
  * PC（windows）：Windows で同じ窓を開く（Win32）。
  *
  * 使い方：skjar-ui [--link <tty か COMn か ->] [--rotate 0|90|180|270] [--fb <path>]
- *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--no-poweroff]
+ *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--no-poweroff]
  */
 #include <signal.h>
 #include <stdio.h>
@@ -38,6 +38,7 @@ typedef struct {
     const char *vt_path;        /* グラフィックモードにする仮想端末。NULL なら触らない */
     int zoom;                   /* 窓の大きさ（%）。PC の窓だけ */
     const char *config_path;    /* 設定のファイル。NULL なら settings.h の場所 */
+    const char *background;     /* 背景の画像（PNG）。NULL なら描いた絵 */
     int no_poweroff;
 } options_t;
 
@@ -59,7 +60,7 @@ static void usage(const char *argv0)
 {
     fprintf(stderr,
             "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
-            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--no-poweroff]\n", argv0);
+            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--no-poweroff]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
@@ -85,6 +86,7 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--vt") == 0 && v) { opt.vt_path = strcmp(v, "-") == 0 ? NULL : v; i++; }
         else if (strcmp(a, "--zoom") == 0 && v) { opt.zoom = atoi(v); i++; }
         else if (strcmp(a, "--config") == 0 && v) { opt.config_path = v; i++; }
+        else if (strcmp(a, "--background") == 0 && v) { opt.background = v; i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
     }
@@ -283,7 +285,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "running without the RP2040 link\n");
     lv_timer_create(link_timer_cb, 10, NULL);
 
-    const ui_actions_t actions = { .poweroff = do_poweroff };
+    const ui_actions_t actions = { .poweroff = do_poweroff, .background_png = opt.background };
     ui_create(&actions);
 
     /* 窓を閉じると表示がなくなる（Windows のドライバ） */

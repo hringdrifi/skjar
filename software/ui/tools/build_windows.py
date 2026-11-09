@@ -30,7 +30,7 @@ INCS = ["-I", UI, "-I", LVGL, "-I", os.path.join(LVGL, "include"), "-I", os.path
 CFLAGS = ["-std=gnu11", "-O2"] + DEFS + INCS
 LIBS = ["-luser32", "-lgdi32", "-lwinmm", "-limm32", "-lshcore", "-ldwmapi"]
 
-UI_SOURCES = ["main.c", "ui.c", "link.c", "serial_port.c", "platform.c", "trackpad.c", "touch_source.c", "keylabel.c", "settings.c", "icons.c",
+UI_SOURCES = ["main.c", "ui.c", "link.c", "serial_port.c", "platform.c", "trackpad.c", "touch_source.c", "keylabel.c", "settings.c", "icons.c", "background.c",
               "sysinfo.c", "backlight.c"]
 
 
@@ -58,7 +58,7 @@ def compile_one(src, warn):
             and not src.startswith(os.path.join(UI, "src")):
         return obj, 0, ""
     flags = ["-Wall", "-Wextra"] if warn else ["-w"]
-    r = subprocess.run(ZIG + CFLAGS + flags + ["-c", src, "-o", obj], capture_output=True, text=True)
+    r = subprocess.run(ZIG + CFLAGS + flags + ["-c", src, "-o", obj], capture_output=True, text=True, encoding="utf-8", errors="replace")
     return obj, r.returncode, r.stderr
 
 
@@ -66,7 +66,7 @@ def link(objs, exe):
     rsp = exe + ".rsp"
     with open(rsp, "w") as f:
         f.write("\n".join(o.replace("\\", "/") for o in objs))
-    r = subprocess.run(ZIG + ["@" + rsp] + LIBS + ["-o", exe], capture_output=True, text=True)
+    r = subprocess.run(ZIG + ["@" + rsp] + LIBS + ["-o", exe], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         print(r.stderr)
         sys.exit(f"link failed: {exe}")

@@ -11,6 +11,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | タッチキー（Keys）：2 段 × 12 キー、160 px（18.32 mm）ピッチ。割り当ては RMK のキーマップの 7〜10 行目（レイヤーで変わり、Vial で変えられる） | 実装した。押した・離したを番号で送り（`TK`）、表示は RP2040 から届く割り当て（`TKL`）。マルチタッチで同時押しできる |
 | タブ：上のボタンと、Vial の USER0〜3 キーで開く。キー入力で元のタブに戻る（戻らない / キーで開いたときだけ / いつでも。System タブで選ぶ） | 実装した |
 | メディアキー（Media） | 実装した。割り当ては固定（`KEY`） |
+| 見た目（試し）：背景の画像と、半透明のボタン・パネル（すりガラス風）。System タブの Look で Plain / Picture を選ぶ | 実装した。画像は `--background` の PNG か、なければ起動時に描くオーロラ風の絵 |
 | トラックパッド（Pad）：1 本指で移動・叩いてクリック・叩いてすぐ動かしてドラッグ、2 本指でスクロール・叩いて右クリック、3 本指で叩いて中クリック、スクロールの帯、L / M / R ボタン | 実装した。UART の `PTR` / `WHEEL` で RP2040 に送る。実機（Linux）ではタッチパネルの evdev からマルチタッチを読む。実機のパネルでは未確認 |
 | バックライトの明るさ（スライダー）と、RP2040 から届く上限 | 実装した |
 | 物理キーの出力先の手動切り替え、CPU のグラフ、RP2040 の UF2、電源を切る（System） | 実装した。UF2 と電源は長押し |
@@ -29,6 +30,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/ui.c](src/ui.c) | 画面の中身。タッチキーの既定の割り当て（RP2040 から届くまでの表示）もここ |
 | [src/keylabel.c](src/keylabel.c) | キーの動作の符号（`TKL`）をキーの表示にする |
 | [src/settings.c](src/settings.c) | 設定（元のタブに戻るか）の保存 |
+| [src/background.c](src/background.c) | 背景の画像（PNG を読むか、オーロラ風の絵を描く） |
 | [src/icons.c](src/icons.c) | LVGL の記号にないアイコン（明るさの太陽）を、起動時に描く |
 | [src/link.c](src/link.c) | RP2040 との UART のやり取り |
 | [src/serial_port.c](src/serial_port.c) | UART の線（Linux の tty、Windows の COM ポート） |
@@ -116,6 +118,7 @@ ctest --test-dir build
 | `--touch <path>` | 自動で探す | タッチの evdev。探すときは、座標が絶対値のもの（タッチパネル）だけを使う |
 | `--vt <path>` | `/dev/tty1` | グラフィックモードにする仮想端末。`-` で触らない |
 | `--zoom <%>` | 100 | 窓の大きさ（SDL と Windows のみ） |
+| `--background <png>` | 起動時に描くオーロラ風の絵 | 背景の画像（Look が Picture のとき）。1920 × 480 だと描き換えが軽い。ほかの大きさは画面を覆うように拡大・縮小する |
 | `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか） |
 | `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 
@@ -127,3 +130,4 @@ ctest --test-dir build
 - CPU の負荷（1920 × 480 を回して描くので、ソフトウェアの回転が重くないか）
 - タッチパネルのマルチタッチ（evdev で `ABS_MT_SLOT` が出るか、何本まで取れるか）と、Pad の指の座標が画面と合うか
 - トラックパッドの速さ・加速・スクロールの量（`trackpad.c` の先頭の定数）
+- 背景の画像（Look が Picture）のときの描き換えの速さ。キーを押すたびに、背景ごと重ねて描き直す（画面を回して描くので、Plain より重い）
