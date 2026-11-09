@@ -143,7 +143,7 @@ py tools/build_windows.py
 py tools/make_demo.py
 ```
 
-- `build-demo/` に 2 本できる（git の対象外）：`demo_16x9.mp4`（1920 × 1080。画面を真ん中に置き、上にタイトル、下に 1 行。`--title` / `--subtitle` で変える）と、`demo_screen.mp4`（画面だけ、1920 × 480。編集の素材）。ffmpeg が要る。
+- `build-demo/` に 3 本できる（git の対象外）：`demo_16x9.mp4`（1920 × 1080。画面を真ん中に置き、上にタイトル、下に 1 行。`--title` / `--subtitle` で変える）、`demo_2.39.mp4`（1920 × 804、2.39:1。タイトルなしで、下に 1 行）、`demo_screen.mp4`（画面だけ、1920 × 480。編集の素材）。ffmpeg が要る。録画をそのままに枠の動画だけ作り直すときは `--reuse`。
 - 台本は 1 行に 1 つ、`<秒> <命令> [引数]`。命令は、RP2040 から届いたことにする行（`link LAYER,1` など）、打鍵（`type 80 5.0`）、タッチキー、タブ、見た目、Widget strip のスワイプ、ポモドーロのボタン（一覧は [src/recorder.h](src/recorder.h)）。
 - 設定・ニュース・天気は [tools/demo/](tools/demo/) の見本を使う（自分の設定は使わず、録画中は設定を保存しない）。ニュースは SKJÁR の紹介文、天気は作った値（公開する動画に、NHK の見出しや Open-Meteo のデータを映さないため）。隠し機能の動画も映さない。
 - UI だけで撮るときは `skjar-ui --record out.mp4 --demo script.txt --config tools/demo/ui.conf`。
