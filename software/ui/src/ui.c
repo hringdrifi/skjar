@@ -1,15 +1,14 @@
 /*
- * タッチ UI の画面（試作）。1920 × 480 を、上の帯（160 px）と下の面（320 px）に分ける。
+ * タッチ UI の画面（試作）。1920 × 480 を、ヘッダー（80 px）と下の面（400 px）に分ける。
  *
- * 上の帯：時計、タブのボタン（Keys / Pad / Media / System）、状態（物理キーの出力先、電源、レイヤー、
- *         CPU・メモリ・温度、RP2040 とのつながり）
+ * ヘッダー：時計、タブのボタン（Keys / Pad / Media / System）、状態の札（レイヤー、物理キーの出力先、
+ *           電源、CPU と温度。RP2040 とつながっていないときだけ赤い札）
  * 下の面（物理キーに近い側）：開いているタブの中身
- *   Keys   2 段 × 12 キーのタッチキー。物理キーの代わりに使う。割り当ては RMK のキーマップ
+ *   Keys   2 段 × 12 キーのタッチキーを一番下に寄せる。物理キーの代わりに使う。割り当ては RMK のキーマップ
  *          （7〜10 行目）で、レイヤーで変わり、Vial で変えられる。押した・離したを番号で RP2040 に送る
- *   Pad    トラックパッド（trackpad.c。マルチタッチは touch_source.c）、スクロールの帯、L / M / R。
- *          開いている間は上の帯を細くして（160 → 80 px）、パッドを高くする
+ *   Pad    トラックパッド（trackpad.c。マルチタッチは touch_source.c）、スクロールの帯、L / M / R
  *   Media  メディアキー（固定）と、バックライトの明るさ
- *   System 物理キーの出力先、元のタブに戻る設定、CPU のグラフ、RP2040 の UF2、電源を切る
+ *   System 物理キーの出力先、元のタブに戻る設定、CPU のグラフとメモリ、RP2040 の UF2、電源を切る
  *
  * タブは、上のボタンのほかに、Vial の USER0〜3 キー（Keys / Pad / Media / System）でも開ける。
  * 文字や機能のキーを押すと、設定によって元のタブに戻る（settings.h）。
@@ -36,8 +35,8 @@
 #include "trackpad.h"
 
 #define SCREEN_W      1920
-#define TOP_H         160
-#define BODY_H        320
+#define TOP_H         80      /* ヘッダー */
+#define BODY_H        400     /* タブの中身 */
 #define KEY_PITCH     160     /* 18.32 mm */
 #define KEY_GAP       10
 #define KEY_COLS      12
@@ -90,13 +89,27 @@ static void media_event_cb(lv_event_t *e)
     }
 }
 
-/* ---- 上の帯 ---- */
+/* ---- 上の帯（ヘッダー）：時計、タブのボタン、状態の札 ---- */
 
-static lv_obj_t *lbl_time, *lbl_date, *lbl_out, *lbl_pwr, *lbl_layer, *lbl_sys, *lbl_link;
-static lv_obj_t *top_bar, *body;
+static lv_obj_t *lbl_time, *lbl_date, *lbl_ram;
+static lv_obj_t *body;
 static lv_obj_t *tab_bar;
 static lv_obj_t *out_selector, *return_selector, *bl_slider, *bl_note, *cpu_chart;
 static lv_chart_series_t *cpu_series;
+
+/* 状態の札：角の丸い小さな箱に、色と文字。色で状態が分かるようにする */
+typedef struct {
+    lv_obj_t *box;
+    lv_obj_t *label;
+} chip_t;
+
+static chip_t chip_layer, chip_out, chip_pwr, chip_sys, chip_link;
+
+#define COLOR_MUTED  lv_color_hex(0x3A3F47)
+#define COLOR_ACCENT lv_palette_main(LV_PALETTE_ORANGE)
+#define COLOR_OK     lv_palette_darken(LV_PALETTE_GREEN, 2)
+#define COLOR_WARN   lv_palette_darken(LV_PALETTE_AMBER, 2)
+#define COLOR_BAD    lv_palette_darken(LV_PALETTE_RED, 1)
 
 static lv_obj_t *plain_box(lv_obj_t *parent)
 {
@@ -116,6 +129,29 @@ static lv_obj_t *text(lv_obj_t *parent, const lv_font_t *font)
     return l;
 }
 
+static chip_t chip(lv_obj_t *parent)
+{
+    chip_t c;
+    c.box = lv_obj_create(parent);
+    lv_obj_set_size(c.box, LV_SIZE_CONTENT, 48);
+    lv_obj_set_scrollable(c.box, false);
+    lv_obj_set_style_radius(c.box, 24, 0);
+    lv_obj_set_style_border_width(c.box, 0, 0);
+    lv_obj_set_style_pad_hor(c.box, 18, 0);
+    lv_obj_set_style_pad_ver(c.box, 0, 0);
+    lv_obj_set_style_bg_color(c.box, COLOR_MUTED, 0);
+    c.label = text(c.box, &lv_font_montserrat_20);
+    lv_obj_set_style_text_color(c.label, lv_color_white(), 0);
+    lv_obj_center(c.label);
+    return c;
+}
+
+static void chip_set(chip_t *c, lv_color_t color, const char *s)
+{
+    lv_obj_set_style_bg_color(c->box, color, 0);
+    lv_label_set_text(c->label, s);
+}
+
 static void show_tab(int tab, bool by_key);
 
 static void tab_bar_cb(lv_event_t *e)
@@ -128,7 +164,6 @@ static void tab_bar_cb(lv_event_t *e)
 static void create_top(lv_obj_t *parent)
 {
     lv_obj_t *top = lv_obj_create(parent);
-    top_bar = top;
     lv_obj_set_size(top, SCREEN_W, TOP_H);
     lv_obj_set_style_radius(top, 0, 0);
     lv_obj_set_style_border_width(top, 0, 0);
@@ -139,42 +174,40 @@ static void create_top(lv_obj_t *parent)
     lv_obj_set_flex_flow(top, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(top, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    /* 時計 */
+    /* 時計：時刻を大きく、日付をその下に小さく */
     lv_obj_t *clock = plain_box(top);
-    lv_obj_set_size(clock, 260, LV_SIZE_CONTENT);
+    lv_obj_set_size(clock, 200, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(clock, LV_FLEX_FLOW_COLUMN);
     lbl_time = text(clock, &lv_font_montserrat_40);
-    lbl_date = text(clock, &lv_font_montserrat_20);
+    lbl_date = text(clock, &lv_font_montserrat_14);
+    lv_obj_set_style_text_color(lbl_date, lv_palette_main(LV_PALETTE_GREY), 0);
 
     /* タブのボタン */
     static const char *tab_map[] = {
-        LV_SYMBOL_KEYBOARD "  Keys", "Pad", LV_SYMBOL_AUDIO "  Media", LV_SYMBOL_SETTINGS "  System", "",
+        LV_SYMBOL_KEYBOARD "  Keys", LV_SYMBOL_GPS "  Pad", LV_SYMBOL_AUDIO "  Media", LV_SYMBOL_SETTINGS "  System", "",
     };
     tab_bar = lv_buttonmatrix_create(top);
     lv_buttonmatrix_set_map(tab_bar, tab_map);
     lv_buttonmatrix_set_button_ctrl_all(tab_bar, LV_BUTTONMATRIX_CTRL_CHECKABLE | LV_BUTTONMATRIX_CTRL_NO_REPEAT);
     lv_buttonmatrix_set_one_checked(tab_bar, true);
     lv_buttonmatrix_set_button_ctrl(tab_bar, TAB_KEYS, LV_BUTTONMATRIX_CTRL_CHECKED);
-    lv_obj_set_size(tab_bar, 820, 120);
-    lv_obj_set_style_text_font(tab_bar, &lv_font_montserrat_28, 0);
+    lv_obj_set_size(tab_bar, 800, 72);
+    lv_obj_set_style_pad_all(tab_bar, 4, 0);
+    lv_obj_set_style_text_font(tab_bar, &lv_font_montserrat_20, 0);
     lv_obj_add_event_cb(tab_bar, tab_bar_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-    /* 状態 */
-    lv_obj_t *status = plain_box(top);
-    lv_obj_set_height(status, LV_SIZE_CONTENT);
-    lv_obj_set_flex_grow(status, 1);
-    lv_obj_set_flex_flow(status, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(status, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
-    lv_obj_set_style_pad_row(status, 10, 0);
-    lv_obj_t *row1 = plain_box(status);
-    lv_obj_set_size(row1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(row1, LV_FLEX_FLOW_ROW);
-    lv_obj_set_style_pad_column(row1, 28, 0);
-    lbl_out = text(row1, &lv_font_montserrat_20);
-    lbl_pwr = text(row1, &lv_font_montserrat_20);
-    lbl_layer = text(row1, &lv_font_montserrat_20);
-    lbl_link = text(row1, &lv_font_montserrat_20);
-    lbl_sys = text(status, &lv_font_montserrat_20);
+    /* 状態の札（右寄せ）：レイヤー、物理キーの出力先、電源、CPU と温度、RP2040 とのつながり */
+    lv_obj_t *chips = plain_box(top);
+    lv_obj_set_height(chips, LV_SIZE_CONTENT);
+    lv_obj_set_flex_grow(chips, 1);
+    lv_obj_set_flex_flow(chips, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(chips, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(chips, 12, 0);
+    chip_link = chip(chips);
+    chip_layer = chip(chips);
+    chip_out = chip(chips);
+    chip_pwr = chip(chips);
+    chip_sys = chip(chips);
 }
 
 static void update_clock(void)
@@ -184,7 +217,7 @@ static void update_clock(void)
     char buf[32];
     strftime(buf, sizeof buf, "%H:%M", &tm);
     lv_label_set_text(lbl_time, buf);
-    strftime(buf, sizeof buf, "%a %d %b %Y", &tm);
+    strftime(buf, sizeof buf, "%a %d %b", &tm);
     lv_label_set_text(lbl_date, buf);
 }
 
@@ -192,14 +225,16 @@ static void update_sysinfo(void)
 {
     sysinfo_t s;
     sysinfo_read(&s);
-    char cpu[8] = "--", temp[16] = "--";
-    if (s.cpu_percent >= 0)
-        snprintf(cpu, sizeof cpu, "%d%%", s.cpu_percent);
+    char buf[48];
+    int n = snprintf(buf, sizeof buf, s.cpu_percent >= 0 ? "CPU %d%%" : "CPU --", s.cpu_percent);
     if (s.temp_decic >= 0)
-        snprintf(temp, sizeof temp, "%d.%d C", s.temp_decic / 10, s.temp_decic % 10);
-    lv_label_set_text_fmt(lbl_sys, "CPU %s   RAM %d/%d MB   %s", cpu, s.mem_used_mb, s.mem_total_mb, temp);
+        snprintf(buf + n, sizeof buf - (size_t)n, "  %dC", (s.temp_decic + 5) / 10);
+    /* 熱いとき（70 °C 以上）は色で知らせる */
+    chip_set(&chip_sys, s.temp_decic >= 700 ? COLOR_WARN : COLOR_MUTED, buf);
     if (s.cpu_percent >= 0)
         lv_chart_set_next_value(cpu_chart, cpu_series, s.cpu_percent);
+    if (lbl_ram && s.mem_total_mb > 0)
+        lv_label_set_text_fmt(lbl_ram, "RAM %d / %d MB", s.mem_used_mb, s.mem_total_mb);
 }
 
 static void tick_1s(lv_timer_t *t)
@@ -305,7 +340,7 @@ static void release_all_keys(void)
 static void keys_input(const touch_contacts_t *c)
 {
     lv_area_t a;
-    lv_obj_get_coords(keys_panel, &a);
+    lv_obj_get_coords(keys_matrix, &a);
     uint32_t now = 0;
     for (int k = 0; k < c->count; k++) {
         const lv_point_t *p = &c->points[k];
@@ -331,8 +366,11 @@ static void create_keys_panel(lv_obj_t *parent)
     keys_map[KEY_COLS] = "\n";
     keys_map[TOUCH_KEYS + 1] = "";
 
+    /* キーは 2 段 × 160 px を面の一番下（物理キーに近い側）に寄せる。上の 80 px は、
+     * ヘッダーのボタンとタッチキーの間の空き（押しまちがいよけ） */
     keys_matrix = lv_buttonmatrix_create(keys_panel);
-    lv_obj_set_size(keys_matrix, SCREEN_W, BODY_H);
+    lv_obj_set_size(keys_matrix, SCREEN_W, KEY_ROWS * KEY_PITCH);
+    lv_obj_align(keys_matrix, LV_ALIGN_BOTTOM_MID, 0, 0);
     /* 外側の余白 5 px ＋ 間 10 px で、キーは 150 px、ピッチは 160 px */
     lv_obj_set_style_pad_all(keys_matrix, KEY_GAP / 2, 0);
     lv_obj_set_style_pad_row(keys_matrix, KEY_GAP, 0);
@@ -582,10 +620,18 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_buttonmatrix_set_button_ctrl(return_selector, (uint32_t)settings()->return_mode, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-    /* CPU の使用率（直近 60 秒） */
-    cpu_chart = lv_chart_create(*panel);
-    lv_obj_set_height(cpu_chart, LV_PCT(100));
+    /* CPU の使用率（直近 60 秒）とメモリ */
+    lv_obj_t *stats = plain_box(*panel);
+    lv_obj_set_height(stats, LV_PCT(100));
+    lv_obj_set_flex_grow(stats, 1);
+    lv_obj_set_flex_flow(stats, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(stats, 8, 0);
+    lv_obj_t *cpu_title = lv_label_create(stats);
+    lv_label_set_text(cpu_title, "CPU (60 s)");
+    cpu_chart = lv_chart_create(stats);
+    lv_obj_set_width(cpu_chart, LV_PCT(100));
     lv_obj_set_flex_grow(cpu_chart, 1);
+    lbl_ram = text(stats, &lv_font_montserrat_20);
     lv_chart_set_type(cpu_chart, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(cpu_chart, 60);
     lv_chart_set_axis_range(cpu_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
@@ -604,24 +650,6 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
 }
 
 /* ---- タブの切り替え ---- */
-
-/* Pad を開いている間は、上の帯を細く（160 → 80 px）して、Pad の面を高くする（320 → 400 px）。
- * タブのボタンは同じところに残す。日付と CPU などの行は隠す */
-#define TOP_COMPACT_H 80
-
-static void set_compact_top(bool compact)
-{
-    int top_h = compact ? TOP_COMPACT_H : TOP_H;
-    lv_obj_set_height(top_bar, top_h);
-    lv_obj_set_hidden(lbl_date, compact);
-    lv_obj_set_hidden(lbl_sys, compact);
-    lv_obj_set_style_text_font(lbl_time, compact ? &lv_font_montserrat_28 : &lv_font_montserrat_40, 0);
-    lv_obj_set_height(tab_bar, compact ? 72 : 120);
-    lv_obj_set_style_pad_all(tab_bar, compact ? 4 : 12, 0);
-    lv_obj_set_style_text_font(tab_bar, compact ? &lv_font_montserrat_20 : &lv_font_montserrat_28, 0);
-    lv_obj_set_height(body, 480 - top_h);
-    lv_obj_set_height(pad_panel, 480 - top_h);
-}
 
 static lv_obj_t *panels[TAB_COUNT];
 static int active_tab = TAB_KEYS;
@@ -654,7 +682,6 @@ static void show_tab(int tab, bool by_key)
     wait_release = true;
     for (int i = 0; i < TAB_COUNT; i++)
         lv_obj_set_hidden(panels[i], i != tab);
-    set_compact_top(tab == TAB_PAD);
     lv_buttonmatrix_set_button_ctrl(tab_bar, (uint32_t)tab, LV_BUTTONMATRIX_CTRL_CHECKED);
 }
 
@@ -733,28 +760,39 @@ void ui_create(const ui_actions_t *a)
 
 void ui_show_link_state(const link_state_t *s)
 {
-    if (!lbl_link)
+    if (!chip_link.box)
         return;     /* 画面を作る前 */
+    char buf[48];
 
-    lv_label_set_text(lbl_link, s->connected ? LV_SYMBOL_OK " RP2040" : LV_SYMBOL_WARNING " RP2040");
+    /* RP2040 とのつながり：切れているときだけ出す */
+    chip_set(&chip_link, COLOR_BAD, LV_SYMBOL_WARNING "  RP2040");
+    lv_obj_set_hidden(chip_link.box, s->connected);
 
+    /* レイヤー：0 以外は目立つ色に（タッチキーの中身が変わっている） */
+    if (s->layer >= 0)
+        snprintf(buf, sizeof buf, "L%d", s->layer);
+    else
+        snprintf(buf, sizeof buf, "L?");
+    chip_set(&chip_layer, s->layer > 0 ? COLOR_ACCENT : COLOR_MUTED, buf);
+    labels_dirty = true;    /* レイヤーが変わるとタッチキーの表示も変わる */
+
+    /* 物理キーの出力先：A は自動、M は手動 */
     const char *out = s->out == LINK_OUT_PC ? "PC" : s->out == LINK_OUT_CM0 ? "CM0"
                     : s->out == LINK_OUT_NONE ? "none" : "?";
-    lv_label_set_text_fmt(lbl_out, LV_SYMBOL_KEYBOARD " %s%s", out,
-                          s->out == LINK_OUT_UNKNOWN ? "" : s->out_manual ? " (manual)" : " (auto)");
+    snprintf(buf, sizeof buf, LV_SYMBOL_KEYBOARD "  %s%s", out,
+             s->out == LINK_OUT_UNKNOWN ? "" : s->out_manual ? "  M" : "  A");
+    chip_set(&chip_out, s->out == LINK_OUT_NONE ? COLOR_WARN : COLOR_MUTED, buf);
 
+    /* 電源：使っているポートと電流宣言。3A は緑、1.5A は黄、Default は赤 */
     const char *cur = s->current == LINK_CURRENT_3A ? "3A" : s->current == LINK_CURRENT_1A5 ? "1.5A"
                     : s->current == LINK_CURRENT_DEFAULT ? "Default" : "?";
+    lv_color_t pc = s->current == LINK_CURRENT_3A ? COLOR_OK : s->current == LINK_CURRENT_1A5 ? COLOR_WARN
+                  : s->current == LINK_CURRENT_DEFAULT ? COLOR_BAD : COLOR_MUTED;
     if (s->port)
-        lv_label_set_text_fmt(lbl_pwr, LV_SYMBOL_USB " %c %s", s->port, cur);
+        snprintf(buf, sizeof buf, LV_SYMBOL_CHARGE "  %c  %s", s->port, cur);
     else
-        lv_label_set_text(lbl_pwr, LV_SYMBOL_USB " ?");
-
-    if (s->layer >= 0)
-        lv_label_set_text_fmt(lbl_layer, "Layer %d", s->layer);
-    else
-        lv_label_set_text(lbl_layer, "Layer ?");
-    labels_dirty = true;    /* レイヤーが変わるとタッチキーの表示も変わる */
+        snprintf(buf, sizeof buf, LV_SYMBOL_CHARGE "  ?");
+    chip_set(&chip_pwr, pc, buf);
 
     /* 出力先の選択：手動なら PC か CM0、自動なら Auto に印を付ける */
     if (s->out != LINK_OUT_UNKNOWN) {
