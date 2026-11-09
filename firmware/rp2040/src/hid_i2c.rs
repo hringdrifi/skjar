@@ -39,6 +39,7 @@ const VERSION: u16 = 0x0001;
 
 const REPORT_ID_KEYBOARD: u8 = 1;
 const REPORT_ID_CONSUMER: u8 = 2;
+const REPORT_ID_MOUSE: u8 = 3;
 
 /// 入力レポートの最大の長さ（長さ 2 ＋ レポート ID 1 ＋ キーボード 8）。
 const MAX_INPUT_LEN: usize = 11;
@@ -94,6 +95,40 @@ const REPORT_DESCRIPTOR: &[u8] = &[
     0x75, 0x10,             //   Report Size (16)
     0x95, 0x01,             //   Report Count (1)
     0x81, 0x00,             //   Input (Data, Array)
+    0xC0,                   // End Collection
+
+    // マウス（レポート ID 3。トラックパッドと RMK のマウスキー）
+    0x05, 0x01,             // Usage Page (Generic Desktop)
+    0x09, 0x02,             // Usage (Mouse)
+    0xA1, 0x01,             // Collection (Application)
+    0x85, REPORT_ID_MOUSE,  //   Report ID (3)
+    0x09, 0x01,             //   Usage (Pointer)
+    0xA1, 0x00,             //   Collection (Physical)
+    0x05, 0x09,             //     Usage Page (Button)
+    0x19, 0x01,             //     Usage Minimum (1)
+    0x29, 0x05,             //     Usage Maximum (5)
+    0x15, 0x00,             //     Logical Minimum (0)
+    0x25, 0x01,             //     Logical Maximum (1)
+    0x75, 0x01,             //     Report Size (1)
+    0x95, 0x05,             //     Report Count (5)
+    0x81, 0x02,             //     Input (Data, Var, Abs)：ボタン 5 個
+    0x75, 0x03,             //     Report Size (3)
+    0x95, 0x01,             //     Report Count (1)
+    0x81, 0x01,             //     Input (Const)：詰め物
+    0x05, 0x01,             //     Usage Page (Generic Desktop)
+    0x09, 0x30,             //     Usage (X)
+    0x09, 0x31,             //     Usage (Y)
+    0x09, 0x38,             //     Usage (Wheel)
+    0x15, 0x81,             //     Logical Minimum (-127)
+    0x25, 0x7F,             //     Logical Maximum (127)
+    0x75, 0x08,             //     Report Size (8)
+    0x95, 0x03,             //     Report Count (3)
+    0x81, 0x06,             //     Input (Data, Var, Rel)
+    0x05, 0x0C,             //     Usage Page (Consumer)
+    0x0A, 0x38, 0x02,       //     Usage (AC Pan)
+    0x95, 0x01,             //     Report Count (1)
+    0x81, 0x06,             //     Input (Data, Var, Rel)：横のスクロール
+    0xC0,                   //   End Collection
     0xC0,                   // End Collection
 ];
 
@@ -163,6 +198,11 @@ impl InputReport {
 
     pub fn consumer(usage: u16) -> Self {
         Self::new(REPORT_ID_CONSUMER, &usage.to_le_bytes())
+    }
+
+    /// x / y / wheel / pan は相対値。wheel は正で上、pan は正で右。
+    pub fn mouse(buttons: u8, x: i8, y: i8, wheel: i8, pan: i8) -> Self {
+        Self::new(REPORT_ID_MOUSE, &[buttons, x as u8, y as u8, wheel as u8, pan as u8])
     }
 
     fn len(&self) -> usize {
@@ -242,7 +282,8 @@ pub fn push_input(report: InputReport) {
             return;
         }
         if s.queue.is_full() {
-            // レポートはどれもその時点の全部の状態を持つので、古いものから捨てる。
+            // キーボードと Consumer のレポートはその時点の全部の状態を持つので、古いものから捨てる。
+            // マウスの動きは相対値なので、捨てた分だけカーソルが進まない（CM0 が読みに来ない間だけ起きる）。
             warn!("hid_i2c: queue full, dropping the oldest report");
             s.queue.pop_front();
         }
@@ -444,6 +485,7 @@ fn set_output_report(report_type: u8, id: u8, data: &[u8]) {
 fn get_report(report_type: u8, id: u8) -> InputReport {
     match (report_type, id) {
         (REPORT_TYPE_INPUT, REPORT_ID_CONSUMER) => InputReport::consumer(0),
+        (REPORT_TYPE_INPUT, REPORT_ID_MOUSE) => InputReport::mouse(0, 0, 0, 0, 0),
         (REPORT_TYPE_OUTPUT, REPORT_ID_KEYBOARD) => InputReport::new(REPORT_ID_KEYBOARD, &[with_state(|s| s.leds)]),
         _ => InputReport::keyboard(0, [0; 6]),
     }

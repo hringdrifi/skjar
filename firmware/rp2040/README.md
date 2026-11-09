@@ -23,6 +23,7 @@ HID over I²C を確かめるための試作。基板ができる前に、Raspbe
 | HID over I²C のターゲット（[src/hid_i2c.rs](src/hid_i2c.rs)） | 実装した。実機では未確認 |
 | CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。実機では未確認。`PWR` と `SHUTDOWN` はまだ送らない（CC と電源の判定がないため）。`BLMAX` は 255 固定、`LCD` は記録だけ |
 | タッチキー（[src/reports.rs](src/reports.rs)） | 実装した。UART で届いたキーを、RMK の物理キーのレポートと合わせて送る（修飾キーは OR、キーは合わせて 6 個まで） |
+| トラックパッド（UART の `PTR` / `WHEEL`） | 実装した。HID over I²C にマウスのレポート（ID 3）を足し、RMK のマウスキーと合わせて送る（ボタンは OR、動きはそのまま） |
 | USB | HID にせず、ログ用の仮想シリアルにしている |
 | 出力先の切り替え、USB HID、電源、RGB、CC | まだ。出力先は CM0 だけで、UI から `PC` を選んでも CM0 のまま（`OUT,CM0,MAN` を返す） |
 

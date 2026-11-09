@@ -5,6 +5,7 @@
  * 下：左のタブで切り替える
  *   Num    数字と記号のタッチキー
  *   F      F1〜F12、編集キー、矢印
+ *   Pad    トラックパッド（trackpad.c。マルチタッチは touch_source.c）
  *   Media  メディアキーと、バックライトの明るさ
  *   System 物理キーの出力先、CPU のグラフ、RP2040 の UF2、電源を切る
  *
@@ -22,6 +23,8 @@
 #include "link.h"
 #include "platform.h"
 #include "sysinfo.h"
+#include "touch_source.h"
+#include "trackpad.h"
 
 /* ---- HID の使用法（HID Usage Tables 1.5） ---- */
 
@@ -338,6 +341,115 @@ static void create_system_tab(lv_obj_t *tab)
     hold_button(btns, LV_SYMBOL_POWER "  Power off (hold)", poweroff_cb);
 }
 
+/* ---- トラックパッド ---- */
+
+static lv_obj_t *tabview, *pad_tab, *pad_area, *pad_btn_left, *pad_btn_right;
+static bool pad_was_active;
+
+static void tp_pointer(int dx, int dy, uint8_t buttons, void *user)
+{
+    (void)user;
+    link_send_pointer(dx, dy, buttons);
+}
+
+static void tp_wheel(int v, int h, void *user)
+{
+    (void)user;
+    link_send_wheel(v, h);
+}
+
+static bool point_in(const lv_obj_t *obj, const lv_point_t *p)
+{
+    lv_area_t a;
+    lv_obj_get_coords(obj, &a);
+    return p->x >= a.x1 && p->x <= a.x2 && p->y >= a.y1 && p->y <= a.y2;
+}
+
+/* 10 ms ごと：パッドのタブを開いているときだけ、指を読んで判定に渡す */
+static void pad_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+    uint32_t active = lv_tabview_get_tab_active(tabview);
+    bool is_active = lv_obj_get_index(pad_tab) == (int32_t)active;
+    if (!is_active) {
+        if (pad_was_active)
+            trackpad_reset();
+        pad_was_active = false;
+        return;
+    }
+    pad_was_active = true;
+
+    touch_contacts_t c;
+    touch_source_read(&c);
+
+    /* パッドの上の指は動きに、L / R の上の指はボタンにする（マルチタッチなら同時に使える） */
+    trackpad_frame_t f = { 0, 0, 0 };
+    uint8_t side = 0;
+    for (int i = 0; i < c.count; i++) {
+        const lv_point_t *p = &c.points[i];
+        if (point_in(pad_area, p)) {
+            f.x += (float)p->x;
+            f.y += (float)p->y;
+            f.count++;
+        } else if (point_in(pad_btn_left, p)) {
+            side |= TRACKPAD_BTN_LEFT;
+        } else if (point_in(pad_btn_right, p)) {
+            side |= TRACKPAD_BTN_RIGHT;
+        }
+    }
+    if (f.count > 0) {
+        f.x /= (float)f.count;
+        f.y /= (float)f.count;
+    }
+    trackpad_set_side_buttons(side);
+    trackpad_update(&f, lv_tick_get());
+}
+
+static lv_obj_t *pad_button(lv_obj_t *parent, const char *text)
+{
+    lv_obj_t *b = lv_button_create(parent);
+    lv_obj_set_width(b, LV_PCT(100));
+    lv_obj_set_flex_grow(b, 1);
+    lv_obj_t *l = lv_label_create(b);
+    lv_label_set_text(l, text);
+    lv_obj_center(l);
+    return b;
+}
+
+static void create_pad_tab(lv_obj_t *tab)
+{
+    pad_tab = tab;
+    lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_ROW);
+    lv_obj_set_style_pad_column(tab, 24, 0);
+    lv_obj_set_scrollable(tab, false);
+
+    pad_area = lv_obj_create(tab);
+    lv_obj_set_height(pad_area, LV_PCT(100));
+    lv_obj_set_flex_grow(pad_area, 1);
+    lv_obj_set_scrollable(pad_area, false);
+    lv_obj_set_style_bg_color(pad_area, lv_palette_darken(LV_PALETTE_GREY, 4), 0);
+    lv_obj_set_style_radius(pad_area, 16, 0);
+    lv_obj_t *hint = lv_label_create(pad_area);
+    lv_label_set_text(hint, "1 finger: move / tap: click / tap + drag: drag\n"
+                            "2 fingers: scroll / tap: right click      3 fingers tap: middle click");
+    lv_obj_set_style_text_color(hint, lv_palette_main(LV_PALETTE_GREY), 0);
+    lv_obj_set_style_text_font(hint, &lv_font_montserrat_14, 0);
+    lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    lv_obj_t *col = lv_obj_create(tab);
+    lv_obj_set_size(col, 220, LV_PCT(100));
+    lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(col, 16, 0);
+    lv_obj_set_scrollable(col, false);
+    pad_btn_left = pad_button(col, "L");
+    pad_btn_right = pad_button(col, "R");
+
+    static const trackpad_output_t out = { .pointer = tp_pointer, .wheel = tp_wheel };
+    trackpad_init(&out);
+    touch_source_open(lv_obj_get_display(tab), NULL);
+    lv_timer_create(pad_timer_cb, 10, NULL);
+}
+
 static lv_obj_t *add_keypad_tab(lv_obj_t *tv, const char *name, const touch_key_t *keys, size_t n)
 {
     lv_obj_t *tab = lv_tabview_add_tab(tv, name);
@@ -362,9 +474,13 @@ void ui_create(const ui_actions_t *a)
     lv_obj_set_flex_grow(tv, 1);
     lv_tabview_set_tab_bar_position(tv, LV_DIR_LEFT);
     lv_tabview_set_tab_bar_size(tv, 150);
+    /* 横になぞってタブが切り替わると、パッドやキーの操作とぶつかるので、タブはボタンでだけ切り替える */
+    lv_obj_set_scrollable(lv_tabview_get_content(tv), false);
+    tabview = tv;
 
     add_keypad_tab(tv, "Num", keys_num, COUNT(keys_num));
     add_keypad_tab(tv, "F", keys_fn, COUNT(keys_fn));
+    create_pad_tab(lv_tabview_add_tab(tv, "Pad"));
     create_media_tab(lv_tabview_add_tab(tv, "Media"));
     create_system_tab(lv_tabview_add_tab(tv, "System"));
 

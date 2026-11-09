@@ -68,7 +68,7 @@
 - [ ] HID over I²C を Pico と Pi Zero 2 W で確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
 - [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）
-- [ ] キーボードモードのトラックパッド（タッチパネルを PC のマウスにする）：UART でタッチの動きを送るメッセージ、RP2040 から PC へのマウスのレポート、オートマウスレイヤーを使うか
+- [ ] キーボードモードのトラックパッド：UI の Pad タブ（指の判定）、UART の `PTR` / `WHEEL`、RP2040 のマウスのレポート（HID over I²C のレポート ID 3）は試作した。残り：実機のタッチパネルでのマルチタッチの確認と、速さ・加速・スクロールの量の調整、PC への USB HID、オートマウスレイヤーを使うか、トラックパッドを出力先が PC のときだけにするか
 - [ ] キーの RGB の明るさの上限（電流宣言ごと。全点灯で約 1.5 A）を実測で決める
 - [ ] CC の判定の時間の扱い（[design-decisions.md](design-decisions.md) の 2.3 には電圧の範囲しか決めていない）。数値は USB Type-C の規格のもの
   - **つないだとき：** 相手は Rp を出してから最大 275 ms で VBUS を出す（tVBUSON）。相手が DRP なら、役割が決まるまで Rp が点いたり消えたりする。CC が 100〜200 ms 安定してから判定する（tCCDebounce）。RP2040 には VBUS を直接見る線がない。B は `PWR_ST` で間接的にわかるが、B から給電しているときに A の VBUS があるかは見えない

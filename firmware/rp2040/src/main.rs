@@ -84,6 +84,7 @@ async fn report_bridge_task() {
         match USB_REPORT_CHANNEL.receive().await {
             Report::KeyboardReport(r) => reports::rmk_keyboard(r.modifier, r.keycodes),
             Report::MediaKeyboardReport(r) => reports::rmk_consumer(r.usage_id),
+            Report::MouseReport(r) => reports::rmk_mouse(r.buttons, r.x, r.y, r.wheel, r.pan),
             _ => warn!("bridge: report type not supported over I2C yet"),
         }
     }

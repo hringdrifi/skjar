@@ -54,6 +54,9 @@ const link_state_t *link_state(void);
 
 /* page は 0x07（キーボード）か 0x0C（Consumer） */
 void link_send_key(uint8_t page, uint16_t usage, bool down);
+/* トラックパッド：dx / dy / v / h は −127〜127。buttons はビット 0 左、1 右、2 中 */
+void link_send_pointer(int dx, int dy, uint8_t buttons);
+void link_send_wheel(int v, int h);
 void link_send_out(link_out_t target_or_unknown_for_auto);
 void link_send_lcd(bool on);
 void link_send_uf2(void);

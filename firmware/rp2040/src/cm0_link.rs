@@ -4,7 +4,8 @@
 //! CM0 の起動中のログ（コンソール）も同じ線に流れてくるので、この形でない行は捨てる。
 //!
 //! いまできること：
-//! - CM0 → RP2040：`HELLO`、`ALIVE`、`KEY`（タッチキー）、`OUT`、`LCD`（記録だけ）、`UF2`
+//! - CM0 → RP2040：`HELLO`、`ALIVE`、`KEY`（タッチキー）、`PTR` / `WHEEL`（トラックパッド）、`OUT`、
+//!   `LCD`（記録だけ）、`UF2`
 //! - RP2040 → CM0：`ALIVE`、`BLMAX`（いまは 255 固定）、`OUT`、`LAYER`
 //! - `PWR` は CC の判定を作るまで送らない。`SHUTDOWN` を出すきっかけもまだない（[`request_shutdown`]）
 
@@ -162,6 +163,12 @@ fn parse_line(line: &[u8]) -> Option<&str> {
     core::str::from_utf8(&frame[4..star]).ok()
 }
 
+/// −127〜127 の 10 進数
+fn parse_rel(s: &str) -> Option<i8> {
+    let v: i16 = s.parse().ok()?;
+    (-127..=127).contains(&v).then_some(v as i8)
+}
+
 fn handle_line(line: &[u8]) {
     let Some(body) = parse_line(line) else {
         return;
@@ -189,6 +196,20 @@ fn handle_line(line: &[u8]) {
                 _ => return,
             };
             reports::touch_key(page as u8, usage, down);
+        }
+        "PTR" => {
+            let (Some(dx), Some(dy), Ok(buttons)) = (parse_rel(args[0]), parse_rel(args[1]), args[2].parse::<u8>()) else {
+                warn!("cm0_link: bad PTR {}", body);
+                return;
+            };
+            reports::touch_pointer(dx, dy, buttons);
+        }
+        "WHEEL" => {
+            let (Some(v), Some(h)) = (parse_rel(args[0]), parse_rel(args[1])) else {
+                warn!("cm0_link: bad WHEEL {}", body);
+                return;
+            };
+            reports::touch_wheel(v, h);
         }
         "OUT" => {
             let mode = match args[0] {

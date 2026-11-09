@@ -47,12 +47,17 @@ add_executable(skjar-ui
     src/link.c
     src/serial_port.c
     src/platform.c
+    src/trackpad.c
+    src/touch_source.c
     src/sysinfo.c
     src/backlight.c)
 if(NOT MSVC)
     target_compile_options(skjar-ui PRIVATE -Wall -Wextra)
 endif()
 target_link_libraries(skjar-ui PRIVATE lvgl::lvgl)
+if(NOT WIN32)
+    target_link_libraries(skjar-ui PRIVATE m)
+endif()
 if(SKJAR_UI_BACKEND STREQUAL "windows")
     # コンソールのアプリのまま（ログが見える）、Win32 の窓を開く
     target_link_libraries(skjar-ui PRIVATE user32 gdi32 winmm)
@@ -67,3 +72,12 @@ if(NOT MSVC)
     target_compile_options(link-test PRIVATE -Wall -Wextra)
 endif()
 add_test(NAME link COMMAND link-test)
+
+add_executable(trackpad-test tests/trackpad_test.c src/trackpad.c)
+if(NOT MSVC)
+    target_compile_options(trackpad-test PRIVATE -Wall -Wextra)
+endif()
+if(NOT WIN32)
+    target_link_libraries(trackpad-test PRIVATE m)
+endif()
+add_test(NAME trackpad COMMAND trackpad-test)

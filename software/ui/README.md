@@ -9,6 +9,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | 画面：480 × 1920 のパネルを 90° 回して、1920 × 480 の横長で使う | 実装した。向き（90° か 270° か）は実機で決める |
 | 状態の帯：時計、物理キーの出力先、電源、レイヤー、CPU・メモリ・温度、RP2040 とのつながり | 実装した |
 | タッチキー：数字・記号（Num）、F1〜F12・編集キー・矢印（F）、メディアキー（Media） | 実装した。押したとき・離したときに UART で RP2040 に送る |
+| トラックパッド（Pad）：1 本指で移動・叩いてクリック・叩いてすぐ動かしてドラッグ、2 本指でスクロール・叩いて右クリック、3 本指で叩いて中クリック、横の L / R ボタン | 実装した。UART の `PTR` / `WHEEL` で RP2040 に送る。実機（Linux）ではタッチパネルの evdev からマルチタッチを読む。実機のパネルでは未確認 |
 | バックライトの明るさ（スライダー）と、RP2040 から届く上限 | 実装した |
 | 物理キーの出力先の手動切り替え、CPU のグラフ、RP2040 の UF2、電源を切る（System） | 実装した。UF2 と電源は長押し |
 | RP2040 との UART（[docs/protocol.md](../../docs/protocol.md) の 1 章。形式は案） | 実装した。RP2040 側も [firmware/rp2040/](../../firmware/rp2040/) にある |
@@ -27,10 +28,13 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/link.c](src/link.c) | RP2040 との UART のやり取り |
 | [src/serial_port.c](src/serial_port.c) | UART の線（Linux の tty、Windows の COM ポート） |
 | [src/platform.c](src/platform.c) | 時刻と待ち（Linux と Windows） |
+| [src/trackpad.c](src/trackpad.c) | トラックパッドの判定（指の数と重心から、動き・クリック・スクロール） |
+| [src/touch_source.c](src/touch_source.c) | 触れている指をすべて読む（Linux の evdev のマルチタッチ。ほかは LVGL のポインタ） |
 | [src/backlight.c](src/backlight.c) | `/sys/class/backlight` の明るさ |
 | [src/sysinfo.c](src/sysinfo.c) | CPU・メモリ・温度 |
 | [lv_conf.h](lv_conf.h) | LVGL の設定 |
 | [tests/link_test.c](tests/link_test.c) | UART の行の組み立てと読み取りのテスト |
+| [tests/trackpad_test.c](tests/trackpad_test.c) | トラックパッドの判定のテスト |
 | [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具（Linux 用） |
 | [tools/build_windows.py](tools/build_windows.py) | Windows 向けのビルド（zig を使う） |
 
@@ -73,7 +77,8 @@ build-windows\skjar-ui.exe
 
 - 初回は LVGL を `.deps/lvgl` に取ってきて、全部をコンパイルする（数分）。2 回目からは変わったファイルだけ。
 - 窓は 1920 × 480。画面に収まらないときは `--zoom 75` や `--zoom 50` で縮める（Windows の拡大率の設定には従わない）。
-- RP2040 とはつながないので、送る行（`$SK,KEY,...`）がコンソールに出る。出力先・電源・レイヤーは「?」のまま。
+- RP2040 とはつながないので、送る行（`$SK,KEY,...`、`$SK,PTR,...`）がコンソールに出る。出力先・電源・レイヤーは「?」のまま。
+- Pad タブはマウスで試せる。マウスは 1 本指で、**Shift を押しながら操作すると 2 本指、Ctrl を押しながらだと 3 本指**として扱う（2 本指のスクロールや右クリックを試すため）。Windows では LVGL のポインタ（1 本）しか読まないので、タッチ画面の PC でも 2 本指は Shift で代わりにする。
 - USB シリアルの変換器で本物の RP2040 とつなぐときは `--link COM5` のように COM ポートを渡す。
 - 電源を切るボタンは、PC で試すときは表示だけ（PC の電源は切らない）。
 - CMake と MinGW / Visual Studio があれば、`cmake -B build-win` でもビルドできる（Windows では描画先が自動で `windows` になる）。
@@ -108,3 +113,5 @@ ctest --test-dir build
 - フレームバッファの色の深さ（16 か 32 ビット。LVGL が合わせる）と、描き換えの速さ
 - バックライトのデバイスの名前と、`max_brightness`
 - CPU の負荷（1920 × 480 を回して描くので、ソフトウェアの回転が重くないか）
+- タッチパネルのマルチタッチ（evdev で `ABS_MT_SLOT` が出るか、何本まで取れるか）と、Pad の指の座標が画面と合うか
+- トラックパッドの速さ・加速・スクロールの量（`trackpad.c` の先頭の定数）

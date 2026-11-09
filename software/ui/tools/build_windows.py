@@ -4,8 +4,8 @@
 C コンパイラには zig（PyPI の ziglang）を使う。LVGL は .deps/lvgl に取ってくる（git が要る）。
 
     py -m pip install ziglang
-    py tools/build_windows.py            # build-windows/skjar-ui.exe と link-test.exe を作る
-    py tools/build_windows.py --test     # 作ったあと link-test を走らせる
+    py tools/build_windows.py            # build-windows/skjar-ui.exe と、テストの exe を作る
+    py tools/build_windows.py --test     # 作ったあとテスト（link-test、trackpad-test）を走らせる
     build-windows\\skjar-ui.exe --zoom 75
 
 2 回目からは、変わったファイルだけをコンパイルし直す。
@@ -30,7 +30,8 @@ INCS = ["-I", UI, "-I", LVGL, "-I", os.path.join(LVGL, "include"), "-I", os.path
 CFLAGS = ["-std=gnu11", "-O2"] + DEFS + INCS
 LIBS = ["-luser32", "-lgdi32", "-lwinmm", "-limm32", "-lshcore", "-ldwmapi"]
 
-UI_SOURCES = ["main.c", "ui.c", "link.c", "serial_port.c", "platform.c", "sysinfo.c", "backlight.c"]
+UI_SOURCES = ["main.c", "ui.c", "link.c", "serial_port.c", "platform.c", "trackpad.c", "touch_source.c",
+              "sysinfo.c", "backlight.c"]
 
 
 def fetch_lvgl():
@@ -73,7 +74,7 @@ def link(objs, exe):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--test", action="store_true", help="run link-test after building")
+    ap.add_argument("--test", action="store_true", help="run the tests after building")
     ap.add_argument("-j", type=int, default=os.cpu_count() or 4)
     args = ap.parse_args()
 
@@ -82,7 +83,7 @@ def main():
 
     lv = lvgl_sources()
     ui = [os.path.join(UI, "src", f) for f in UI_SOURCES]
-    test = [os.path.join(UI, "tests", "link_test.c")]
+    test = [os.path.join(UI, "tests", "link_test.c"), os.path.join(UI, "tests", "trackpad_test.c")]
     print(f"compiling {len(lv)} LVGL files and {len(ui) + len(test)} SKJAR files ...")
     with ThreadPoolExecutor(args.j) as ex:
         res_lv = list(ex.map(lambda s: compile_one(s, False), lv))
@@ -100,10 +101,14 @@ def main():
     ui_objs = {os.path.basename(s): o for s, (o, _, _) in zip(ui + test, res_ui)}
     link(lv_objs + [ui_objs[f] for f in UI_SOURCES], os.path.join(OUT, "skjar-ui.exe"))
     link([ui_objs["link_test.c"], ui_objs["link.c"], ui_objs["serial_port.c"]], os.path.join(OUT, "link-test.exe"))
+    link([ui_objs["trackpad_test.c"], ui_objs["trackpad.c"]], os.path.join(OUT, "trackpad-test.exe"))
     print(f"built {os.path.join(OUT, 'skjar-ui.exe')}")
 
     if args.test:
-        sys.exit(subprocess.run([os.path.join(OUT, "link-test.exe")]).returncode)
+        rc = 0
+        for t in ("link-test.exe", "trackpad-test.exe"):
+            rc |= subprocess.run([os.path.join(OUT, t)]).returncode
+        sys.exit(rc)
 
 
 if __name__ == "__main__":

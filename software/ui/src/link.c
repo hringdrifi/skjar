@@ -283,6 +283,25 @@ void link_send_key(uint8_t page, uint16_t usage, bool down)
     send_body(body);
 }
 
+static int clamp127(int v)
+{
+    return v < -127 ? -127 : v > 127 ? 127 : v;
+}
+
+void link_send_pointer(int dx, int dy, uint8_t buttons)
+{
+    char body[32];
+    snprintf(body, sizeof body, "PTR,%d,%d,%u", clamp127(dx), clamp127(dy), (unsigned)buttons);
+    send_body(body);
+}
+
+void link_send_wheel(int v, int h)
+{
+    char body[32];
+    snprintf(body, sizeof body, "WHEEL,%d,%d", clamp127(v), clamp127(h));
+    send_body(body);
+}
+
 void link_send_out(link_out_t target)
 {
     const char *s = target == LINK_OUT_PC ? "PC" : target == LINK_OUT_CM0 ? "CM0" : "AUTO";
