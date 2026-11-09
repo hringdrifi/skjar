@@ -1,19 +1,16 @@
 #include "link.h"
 
-#include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
-#include <unistd.h>
+
+#include "serial_port.h"
 
 #define LINE_MAX_LEN     64     /* docs/protocol.md 1.2 */
 #define ALIVE_PERIOD_MS  1000
 #define LINK_TIMEOUT_MS  3000
 #define MAX_FIELDS       8
 
-static int fd = -1;
 static bool dry_run;            /* 線を開かず、送る行を標準エラーに出す */
 static link_callbacks_t cbs;
 static link_state_t state;
@@ -62,11 +59,11 @@ static void send_body(const char *body)
         fprintf(stderr, "link > %s", line);
         return;
     }
-    if (fd < 0)
+    if (!serial_is_open())
         return;
-    ssize_t w = write(fd, line, len);
-    if (w != (ssize_t)len)
-        fprintf(stderr, "link: write failed (%zd of %zu): %s\n", w, len, w < 0 ? strerror(errno) : "short write");
+    int w = serial_write(line, len);
+    if (w != (int)len)
+        fprintf(stderr, "link: write failed (%d of %u bytes)\n", w, (unsigned)len);
 }
 
 static void notify_changed(void)
@@ -173,10 +170,15 @@ bool link_handle_line(const char *line, uint32_t now_ms)
 
     char *fields[MAX_FIELDS];
     int n = 0;
-    char *save = NULL;
-    for (char *tok = strtok_r(body, ",", &save); tok && n < MAX_FIELDS; tok = strtok_r(NULL, ",", &save))
-        fields[n++] = tok;
-    if (n == 0)
+    for (char *p = body; n < MAX_FIELDS;) {
+        fields[n++] = p;
+        char *comma = strchr(p, ',');
+        if (!comma)
+            break;
+        *comma = '\0';
+        p = comma + 1;
+    }
+    if (fields[0][0] == '\0')
         return false;
 
     last_rx_ms = now_ms;
@@ -213,21 +215,6 @@ static void feed(const char *data, size_t len, uint32_t now_ms)
     }
 }
 
-static bool configure_tty(int tty_fd)
-{
-    struct termios t;
-    if (tcgetattr(tty_fd, &t) != 0)
-        return false;
-    cfmakeraw(&t);
-    cfsetispeed(&t, B115200);
-    cfsetospeed(&t, B115200);
-    t.c_cflag |= CLOCAL | CREAD;
-    t.c_cflag &= ~(CSTOPB | CRTSCTS);
-    t.c_cc[VMIN] = 0;
-    t.c_cc[VTIME] = 0;
-    return tcsetattr(tty_fd, TCSANOW, &t) == 0;
-}
-
 bool link_open(const char *path, const link_callbacks_t *cb)
 {
     if (cb)
@@ -240,14 +227,8 @@ bool link_open(const char *path, const link_callbacks_t *cb)
     if (!path || strcmp(path, "-") == 0) {
         dry_run = true;
         fprintf(stderr, "link: no serial port, printing messages instead\n");
-    } else {
-        fd = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK);
-        if (fd < 0) {
-            fprintf(stderr, "link: cannot open %s: %s\n", path, strerror(errno));
-            return false;
-        }
-        if (isatty(fd) && !configure_tty(fd))
-            fprintf(stderr, "link: cannot configure %s: %s\n", path, strerror(errno));
+    } else if (!serial_open(path)) {
+        return false;
     }
     send_body("HELLO");
     notify_changed();
@@ -256,24 +237,22 @@ bool link_open(const char *path, const link_callbacks_t *cb)
 
 void link_close(void)
 {
-    if (fd >= 0)
-        close(fd);
-    fd = -1;
+    serial_close();
     dry_run = false;
 }
 
 void link_poll(uint32_t now_ms)
 {
-    if (fd >= 0) {
+    if (serial_is_open()) {
         char buf[256];
         for (;;) {
-            ssize_t r = read(fd, buf, sizeof buf);
+            int r = serial_read(buf, sizeof buf);
             if (r > 0) {
                 feed(buf, (size_t)r, now_ms);
                 continue;
             }
-            if (r < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
-                fprintf(stderr, "link: read failed: %s\n", strerror(errno));
+            if (r < 0)
+                fprintf(stderr, "link: read failed\n");
             break;
         }
     }

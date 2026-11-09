@@ -12,7 +12,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | バックライトの明るさ（スライダー）と、RP2040 から届く上限 | 実装した |
 | 物理キーの出力先の手動切り替え、CPU のグラフ、RP2040 の UF2、電源を切る（System） | 実装した。UF2 と電源は長押し |
 | RP2040 との UART（[docs/protocol.md](../../docs/protocol.md) の 1 章。形式は案） | 実装した。RP2040 側も [firmware/rp2040/](../../firmware/rp2040/) にある |
-| 確認したこと | aarch64 Linux 向けに、LVGL ごとコンパイルとリンクが通る（fbdev。zig cc で確認）。実機、SDL の窓、`link-test` の実行はまだ |
+| 確認したこと | Windows の窓で起動し、画面とボタンが動く。`link-test` は Windows で通る。aarch64 Linux 向け（fbdev）はコンパイルとリンクまで。実機と、Linux の SDL の窓はまだ |
 
 - 記号のラベルは US 配列のもの。PC 側が JIS 配列だと、Shift を使う記号（`@` など）は別の文字になる。
 - 文字は英数字だけ。LVGL の Montserrat には日本語の字形がない。日本語を出すときは、フォントを足す。
@@ -22,14 +22,17 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 
 | ファイル | 内容 |
 |---|---|
-| [src/main.c](src/main.c) | 起動、描画先（fbdev か SDL）、タッチ、メインループ |
+| [src/main.c](src/main.c) | 起動、描画先（fbdev、SDL、Windows）、タッチ、メインループ |
 | [src/ui.c](src/ui.c) | 画面の中身。タッチキーの表もここ |
 | [src/link.c](src/link.c) | RP2040 との UART のやり取り |
+| [src/serial_port.c](src/serial_port.c) | UART の線（Linux の tty、Windows の COM ポート） |
+| [src/platform.c](src/platform.c) | 時刻と待ち（Linux と Windows） |
 | [src/backlight.c](src/backlight.c) | `/sys/class/backlight` の明るさ |
 | [src/sysinfo.c](src/sysinfo.c) | CPU・メモリ・温度 |
 | [lv_conf.h](lv_conf.h) | LVGL の設定 |
 | [tests/link_test.c](tests/link_test.c) | UART の行の組み立てと読み取りのテスト |
-| [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具 |
+| [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具（Linux 用） |
+| [tools/build_windows.py](tools/build_windows.py) | Windows 向けのビルド（zig を使う） |
 
 ## ビルド
 
@@ -58,6 +61,23 @@ python3 tools/fake_rp2040.py          # 疑似端末のパスが出る
 
 `fake_rp2040.py` に `pwr A 1.5A`、`blmax 100`、`layer 2`、`shutdown` などを打つと、UI の表示が変わる。タッチキーを押すと、届いた `KEY` が表示される。
 
+### PC の窓で試す（Windows）
+
+CMake も Visual Studio も要らない。Python と git があればよい。C コンパイラには zig（PyPI の `ziglang`）を使う。
+
+```bat
+py -m pip install ziglang
+py tools/build_windows.py --test
+build-windows\skjar-ui.exe
+```
+
+- 初回は LVGL を `.deps/lvgl` に取ってきて、全部をコンパイルする（数分）。2 回目からは変わったファイルだけ。
+- 窓は 1920 × 480。画面に収まらないときは `--zoom 75` や `--zoom 50` で縮める（Windows の拡大率の設定には従わない）。
+- RP2040 とはつながないので、送る行（`$SK,KEY,...`）がコンソールに出る。出力先・電源・レイヤーは「?」のまま。
+- USB シリアルの変換器で本物の RP2040 とつなぐときは `--link COM5` のように COM ポートを渡す。
+- 電源を切るボタンは、PC で試すときは表示だけ（PC の電源は切らない）。
+- CMake と MinGW / Visual Studio があれば、`cmake -B build-win` でもビルドできる（Windows では描画先が自動で `windows` になる）。
+
 ### テスト
 
 ```sh
@@ -74,12 +94,13 @@ ctest --test-dir build
 
 | オプション | 初期値 | 内容 |
 |---|---|---|
-| `--link <path>` | `/dev/serial0`（SDL では `-`） | RP2040 との UART。`-` なら開かずに、送る行を標準エラーに出す |
-| `--rotate <0/90/180/270>` | 90（SDL では 0） | 画面の回転 |
+| `--link <path>` | `/dev/serial0`（SDL と Windows では `-`） | RP2040 との UART（Windows では `COM5` など）。`-` なら開かずに、送る行を標準エラーに出す |
+| `--rotate <0/90/180/270>` | 90（SDL と Windows では 0） | 画面の回転（fbdev のみ） |
 | `--fb <path>` | `/dev/fb0` | フレームバッファ |
 | `--touch <path>` | 自動で探す | タッチの evdev。探すときは、座標が絶対値のもの（タッチパネル）だけを使う |
 | `--vt <path>` | `/dev/tty1` | グラフィックモードにする仮想端末。`-` で触らない |
-| `--no-poweroff` | — | 電源を切る要求を受けても、表示だけにする |
+| `--zoom <%>` | 100 | 窓の大きさ（SDL と Windows のみ） |
+| `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 
 ## 実機で確かめること
 

@@ -20,6 +20,7 @@
 
 #include "backlight.h"
 #include "link.h"
+#include "platform.h"
 #include "sysinfo.h"
 
 /* ---- HID の使用法（HID Usage Tables 1.5） ---- */
@@ -195,9 +196,8 @@ static void create_status_bar(lv_obj_t *parent)
 
 static void update_clock(void)
 {
-    time_t now = time(NULL);
     struct tm tm;
-    localtime_r(&now, &tm);
+    platform_localtime(time(NULL), &tm);
     char buf[32];
     strftime(buf, sizeof buf, "%H:%M", &tm);
     lv_label_set_text(lbl_time, buf);

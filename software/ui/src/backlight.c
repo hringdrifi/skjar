@@ -1,14 +1,28 @@
 #include "backlight.h"
 
-#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
+
+#if !defined(_WIN32)
+#include <dirent.h>
+#endif
 
 static char brightness_path[300];
 static int max_brightness = -1;
 static int level = 255;
 static int limit = 255;
 static int written = -1;
+
+#if defined(_WIN32)
+
+/* Windows（PC で画面を試すとき）：パネルはないので、値を覚えるだけ */
+bool backlight_open(void)
+{
+    fprintf(stderr, "backlight: not available on Windows\n");
+    return false;
+}
+
+#else
 
 bool backlight_open(void)
 {
@@ -44,6 +58,8 @@ bool backlight_open(void)
         fprintf(stderr, "backlight: no device found\n");
     return found;
 }
+
+#endif
 
 int backlight_effective(void)
 {

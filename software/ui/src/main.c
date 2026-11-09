@@ -3,29 +3,30 @@
  *
  * 実機（fbdev）：/dev/fb0 に描き、タッチは evdev から読む。パネルは 480 × 1920 の縦長なので、
  *   LVGL の中で 90° 回して 1920 × 480 の横長として使う。
- * PC（sdl）：1920 × 480 の窓を開き、マウスでタッチの代わりをする。
+ * PC（sdl）：Linux / WSL で 1920 × 480 の窓を開き、マウスでタッチの代わりをする。
+ * PC（windows）：Windows で同じ窓を開く（Win32）。
  *
- * 使い方：skjar-ui [--link <tty か ->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]
- *                  [--vt <path>] [--no-poweroff]
+ * 使い方：skjar-ui [--link <tty か COMn か ->] [--rotate 0|90|180|270] [--fb <path>]
+ *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--no-poweroff]
  */
-#include <errno.h>
-#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
 
-#if !defined(SKJAR_UI_SDL)
+#if defined(SKJAR_UI_FBDEV)
+#include <errno.h>
+#include <fcntl.h>
 #include <linux/kd.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 #endif
 
 #include "lvgl.h"
 
 #include "backlight.h"
 #include "link.h"
+#include "platform.h"
 #include "ui.h"
 
 typedef struct {
@@ -34,6 +35,7 @@ typedef struct {
     const char *fb_path;
     const char *touch_path;     /* NULL なら /dev/input を探す */
     const char *vt_path;        /* グラフィックモードにする仮想端末。NULL なら触らない */
+    int zoom;                   /* 窓の大きさ（%）。PC の窓だけ */
     int no_poweroff;
 } options_t;
 
@@ -48,29 +50,29 @@ static void on_signal(int sig)
 
 static uint32_t now_ms(void)
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (uint32_t)(ts.tv_sec * 1000u + ts.tv_nsec / 1000000u);
+    return platform_now_ms();
 }
 
 static void usage(const char *argv0)
 {
     fprintf(stderr,
-            "usage: %s [--link <tty|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
-            "          [--vt <path>] [--no-poweroff]\n", argv0);
+            "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
+            "          [--vt <path>] [--zoom <percent>] [--no-poweroff]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
 {
-#if defined(SKJAR_UI_SDL)
-    opt.link_path = "-";
-    opt.rotate = 0;
-#else
+#if defined(SKJAR_UI_FBDEV)
     opt.link_path = "/dev/serial0";
     opt.rotate = 90;            /* TODO（実機）：パネルの向きと付け方で 90 か 270 かを決める */
     opt.fb_path = "/dev/fb0";
     opt.vt_path = "/dev/tty1";
+#else
+    opt.link_path = "-";
+    opt.rotate = 0;
+    opt.no_poweroff = 1;        /* PC で試すときに PC の電源を切らない */
 #endif
+    opt.zoom = 100;
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
         const char *v = (i + 1 < argc) ? argv[i + 1] : NULL;
@@ -79,11 +81,16 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--fb") == 0 && v) { opt.fb_path = v; i++; }
         else if (strcmp(a, "--touch") == 0 && v) { opt.touch_path = v; i++; }
         else if (strcmp(a, "--vt") == 0 && v) { opt.vt_path = strcmp(v, "-") == 0 ? NULL : v; i++; }
+        else if (strcmp(a, "--zoom") == 0 && v) { opt.zoom = atoi(v); i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
     }
     if (opt.rotate != 0 && opt.rotate != 90 && opt.rotate != 180 && opt.rotate != 270) {
         fprintf(stderr, "--rotate must be 0, 90, 180 or 270\n");
+        return -1;
+    }
+    if (opt.zoom < 25 || opt.zoom > 400) {
+        fprintf(stderr, "--zoom must be between 25 and 400\n");
         return -1;
     }
     return 0;
@@ -94,7 +101,7 @@ static int parse_args(int argc, char **argv)
 static void do_poweroff(void)
 {
     if (opt.no_poweroff) {
-        fprintf(stderr, "poweroff requested (ignored: --no-poweroff)\n");
+        fprintf(stderr, "poweroff requested (ignored)\n");
         return;
     }
     fprintf(stderr, "poweroff\n");
@@ -129,17 +136,35 @@ static void link_timer_cb(lv_timer_t *t)
 
 static int create_display(void)
 {
+    lv_tick_set_cb(now_ms);
     lv_display_t *disp = lv_sdl_window_create(1920, 480);
     if (!disp)
         return -1;
     lv_sdl_window_set_title(disp, "SKJAR UI");
+    if (opt.zoom != 100)
+        lv_sdl_window_set_zoom(disp, opt.zoom / 100.0f);
     lv_sdl_mouse_create();
     return 0;
 }
 
 static void restore_console(void) {}
 
-#else
+#elif defined(SKJAR_UI_WINDOWS)
+
+static int create_display(void)
+{
+    /* 時刻の関数は、LVGL の Windows のドライバが登録する。
+     * 画面の拡大率（DPI）には従わず、--zoom の大きさにする */
+    lv_display_t *disp = lv_windows_create_display(L"SKJAR UI", 1920, 480, opt.zoom, true, true);
+    if (!disp)
+        return -1;
+    lv_windows_acquire_pointer_indev(disp);
+    return 0;
+}
+
+static void restore_console(void) {}
+
+#else /* fbdev */
 
 static int vt_fd = -1;
 
@@ -179,6 +204,7 @@ static void touch_found(lv_indev_t *indev, lv_evdev_type_t type, void *user)
 
 static int create_display(void)
 {
+    lv_tick_set_cb(now_ms);
     lv_display_t *disp = lv_linux_fbdev_create();
     if (!disp)
         return -1;
@@ -215,7 +241,6 @@ int main(int argc, char **argv)
     signal(SIGTERM, on_signal);
 
     lv_init();
-    lv_tick_set_cb(now_ms);
 
     if (create_display() != 0) {
         fprintf(stderr, "cannot create the display\n");
@@ -232,11 +257,12 @@ int main(int argc, char **argv)
     const ui_actions_t actions = { .poweroff = do_poweroff };
     ui_create(&actions);
 
-    while (!quit) {
+    /* 窓を閉じると表示がなくなる（Windows のドライバ） */
+    while (!quit && lv_display_get_default() != NULL) {
         uint32_t idle = lv_timer_handler();
         if (idle > 10)
             idle = 10;
-        usleep(idle * 1000);
+        platform_sleep_ms(idle);
     }
 
     link_close();
