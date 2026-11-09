@@ -304,9 +304,8 @@ fn check_timeout() {
 // ---- レイヤー ----
 
 async fn layer_loop() {
-    // RMK の初期設定では、レイヤーの通知を受けられるのは 1 か所だけ（LAYER_CHANGE_EVENT_SUB_SIZE = 1）。
-    // 2 か所目を作ると起動時に panic する。RMK の vial / host を有効にすると、そちらも 1 つ使うので、
-    // そのときは RMK の設定で数を増やす。
+    // レイヤーの通知を受けられる数は keyboard.toml の [event.layer_change] subs で決まる。
+    // 足りないと起動時に panic するので、受け取る場所を足すときはそちらも増やす。
     let mut sub = LayerChangeEvent::subscriber();
     loop {
         let LayerChangeEvent(layer) = sub.next_event().await;

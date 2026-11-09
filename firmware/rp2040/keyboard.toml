@@ -1,0 +1,13 @@
+# RMK のビルド時の設定（.cargo/config.toml の KEYBOARD_TOML_PATH で渡す）。
+# キーマップやピンはコード（src/）に書くので、ここでは RMK の内部の大きさだけを変える。
+# 書いていない項目は RMK の初期値になる。
+
+# レイヤーの変化の通知を受けられる数。RMK の初期値は 1。
+# 足りないと、起動時に subscriber を作るところで panic する。
+#   1. cm0_link.rs：CM0 に今のレイヤーを知らせる（LAYER）
+#   2. オートマウスレイヤー（AutoMouseLayerRunner）：キーボードモードで、タッチパネルを
+#      PC のトラックパッドにするときに使う見込み（docs/design-decisions.md の 3 章）
+# RMK の機能が自分で使う分（rynk、display、split など）は、RMK がその機能を有効にしたときに
+# 自動で足す。Vial（vial 機能）はレイヤーの通知を使わない。
+[event.layer_change]
+subs = 2
