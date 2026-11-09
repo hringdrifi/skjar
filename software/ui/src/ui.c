@@ -110,7 +110,6 @@ static lv_obj_t *lbl_cpu, *lbl_temp;    /* CPU の札の、数字の欄 */
 
 #define COLOR_MUTED  lv_color_hex(0x3A3F47)
 #define COLOR_ACCENT lv_palette_main(LV_PALETTE_ORANGE)
-#define COLOR_OK     lv_palette_darken(LV_PALETTE_GREEN, 2)
 #define COLOR_WARN   lv_palette_darken(LV_PALETTE_AMBER, 2)
 #define COLOR_BAD    lv_palette_darken(LV_PALETTE_RED, 1)
 
@@ -927,11 +926,11 @@ void ui_show_link_state(const link_state_t *s)
              s->out == LINK_OUT_UNKNOWN ? "" : s->out_manual ? "  M" : "  A");
     chip_set(&chip_out, s->out == LINK_OUT_NONE ? COLOR_WARN : COLOR_MUTED, buf);
 
-    /* 電源：使っているポートと電流宣言。3A は緑、1.5A は黄、Default は赤 */
+    /* 電源：使っているポートと電流宣言。色は気づいてほしいときだけ：3A と 1.5A は普段の色
+     * （1.5A もバックライトを絞るだけで、普段使いでありうる）、Default（CM0 と画面が止まる）は赤 */
     const char *cur = s->current == LINK_CURRENT_3A ? "3A" : s->current == LINK_CURRENT_1A5 ? "1.5A"
                     : s->current == LINK_CURRENT_DEFAULT ? "Default" : "?";
-    lv_color_t pc = s->current == LINK_CURRENT_3A ? COLOR_OK : s->current == LINK_CURRENT_1A5 ? COLOR_WARN
-                  : s->current == LINK_CURRENT_DEFAULT ? COLOR_BAD : COLOR_MUTED;
+    lv_color_t pc = s->current == LINK_CURRENT_DEFAULT ? COLOR_BAD : COLOR_MUTED;
     if (s->port)
         snprintf(buf, sizeof buf, LV_SYMBOL_CHARGE "  %c  %s", s->port, cur);
     else
