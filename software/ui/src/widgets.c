@@ -271,6 +271,13 @@ static struct {
 
 static void news_set(const char *text, time_t mtime)
 {
+    /* 1 周の時間は、文字の幅から自分で決める。LVGL の速さ指定（lv_anim_speed）は 1 周を 10 秒までに
+     * 抑えるので、見出しを何本もつなぐと、決めた速さよりずっと速く流れてしまう */
+    lv_point_t size;
+    lv_text_get_size(&size, text, lv_obj_get_style_text_font(news.ticker, LV_PART_MAIN), 0, 0, LV_COORD_MAX,
+                     LV_TEXT_FLAG_NONE);
+    uint32_t ms = (uint32_t)((uint64_t)size.x * 1000 / NEWS_SPEED);
+    lv_obj_set_style_anim_duration(news.ticker, ms ? ms : 1, 0);
     lv_label_set_text(news.ticker, text);
     if (mtime) {
         struct tm tm;
@@ -367,7 +374,6 @@ static void create_news(lv_obj_t *page)
     news.ticker = label(board, &lv_font_montserrat_40, amber);
     lv_obj_set_width(news.ticker, LV_PCT(100));
     lv_label_set_long_mode(news.ticker, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);
-    lv_obj_set_style_anim_duration(news.ticker, lv_anim_speed(NEWS_SPEED), 0);
     lv_obj_align(news.ticker, LV_ALIGN_LEFT_MID, 0, 0);
 
     news_load();
