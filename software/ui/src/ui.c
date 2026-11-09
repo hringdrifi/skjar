@@ -36,6 +36,7 @@
 #include "sysinfo.h"
 #include "touch_source.h"
 #include "trackpad.h"
+#include "widgets.h"
 
 #define SCREEN_W      1920
 #define TOP_H         80      /* ヘッダー */
@@ -141,7 +142,7 @@ typedef struct {
     lv_opa_t opa;
 } glass_t;
 
-static glass_t glass_list[64];
+static glass_t glass_list[96];
 static int glass_count;
 
 static void glass(lv_obj_t *obj, lv_style_selector_t sel, lv_opa_t opa)
@@ -165,7 +166,7 @@ typedef struct {
     lv_style_selector_t sel;
 } press_t;
 
-static press_t press_list[32];
+static press_t press_list[64];
 static int press_count;
 
 static void press_look(lv_obj_t *obj, lv_style_selector_t sel)
@@ -520,6 +521,7 @@ static void release_all_keys(void)
 /* 触れている指から、押しているキーを決める（マルチタッチなら同時押しできる） */
 static void keys_input(const touch_contacts_t *c)
 {
+    widgets_input(c);   /* 上の Widget strip（スワイプで切り替え、ボタン） */
     lv_area_t a;
     lv_obj_get_coords(keys_matrix, &a);
     uint32_t now = 0;
@@ -536,6 +538,14 @@ static void keys_input(const touch_contacts_t *c)
         set_key_down(i, (now & (1u << i)) != 0);
 }
 
+/* Widget strip のボタンも、ほかのボタンと同じ見た目（押すと暗く、Picture では半透明）にする */
+static void widget_button_style(lv_obj_t *b)
+{
+    press_look(b, LV_STATE_PRESSED);
+    glass(b, LV_PART_MAIN, 150);
+    glass(b, LV_PART_MAIN | LV_STATE_PRESSED, GLASS_SELECTED_OPA);
+}
+
 static void create_keys_panel(lv_obj_t *parent)
 {
     keys_panel = plain_box(parent);
@@ -547,8 +557,14 @@ static void create_keys_panel(lv_obj_t *parent)
     keys_map[KEY_COLS] = "\n";
     keys_map[TOUCH_KEYS + 1] = "";
 
-    /* キーは 2 段 × 160 px を面の一番下（物理キーに近い側）に寄せる。上の 1920 × 80 px は、
-     * 将来ウィジェット（タイマー、音楽の再生、ニュースの電光掲示板など）を置く場所。いまは空き */
+    /* キーは 2 段 × 160 px を面の一番下（物理キーに近い側）に寄せる。上の 1920 × 80 px は
+     * Widget strip（ポモドーロ・タイマー、ニュースの電光掲示板など。widgets.h）。スワイプで切り替える */
+    lv_obj_t *strip = plain_box(keys_panel);
+    lv_obj_set_size(strip, SCREEN_W, BODY_H - KEY_ROWS * KEY_PITCH);
+    lv_obj_align(strip, LV_ALIGN_TOP_MID, 0, 0);
+    const widgets_hooks_t hooks = { .style_button = widget_button_style, .notify = toast };
+    widgets_create(strip, &hooks);
+
     keys_matrix = lv_buttonmatrix_create(keys_panel);
     lv_obj_set_size(keys_matrix, SCREEN_W, KEY_ROWS * KEY_PITCH);
     lv_obj_align(keys_matrix, LV_ALIGN_BOTTOM_MID, 0, 0);
@@ -834,6 +850,18 @@ static void look_selector_cb(lv_event_t *e)
     }
 }
 
+static void widget_selector_cb(lv_event_t *e)
+{
+    lv_obj_t *m = lv_event_get_target_obj(e);
+    uint32_t id = lv_buttonmatrix_get_selected_button(m);
+    int w = (int)id + 1;    /* 0 は None */
+    if (w >= SETTINGS_WIDGETS)
+        return;
+    settings()->widgets[w] = lv_buttonmatrix_has_button_ctrl(m, id, LV_BUTTONMATRIX_CTRL_CHECKED);
+    settings_save();
+    widgets_refresh();
+}
+
 /* 選ぶボタンの並びと見出し。icon を渡すと、見出しの前に描いたアイコン（icons.h）を置く
  * （渡さないときは、見出しの文字に LVGL の記号を入れて使う） */
 static lv_obj_t *selector(lv_obj_t *parent, const lv_image_dsc_t *icon, const char *title, const char **map,
@@ -893,10 +921,29 @@ static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     /* 見た目（試し）：背景の画像と半透明のボタン */
+    /* Look と Widget strip は、1 つの列に上下に重ねる */
+    lv_obj_t *stack = plain_box(*panel);
+    lv_obj_set_size(stack, 320, LV_PCT(100));
+    lv_obj_set_flex_flow(stack, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(stack, 12, 0);
+
     static const char *look_map[] = { "Plain", "Picture", "" };
-    lv_obj_t *look_selector = selector(*panel, icon_palette(22), "Look", look_map, 260);
+    lv_obj_t *look_selector = selector(stack, icon_palette(22), "Look", look_map, 320);
     lv_buttonmatrix_set_button_ctrl(look_selector, (uint32_t)settings()->look, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(look_selector, look_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_set_height(lv_obj_get_parent(look_selector), 0);
+    lv_obj_set_flex_grow(lv_obj_get_parent(look_selector), 1);
+
+    /* Widget strip に出すもの（いくつでも選べる。None はいつも出す） */
+    static const char *widget_map[] = { "Pomodoro", "News", "" };
+    lv_obj_t *widget_selector = selector(stack, NULL, LV_SYMBOL_LIST "  Widget strip", widget_map, 320);
+    lv_buttonmatrix_set_one_checked(widget_selector, false);
+    for (int i = 1; i < SETTINGS_WIDGETS; i++)
+        if (settings()->widgets[i])
+            lv_buttonmatrix_set_button_ctrl(widget_selector, (uint32_t)(i - 1), LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(widget_selector, widget_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_set_height(lv_obj_get_parent(widget_selector), 0);
+    lv_obj_set_flex_grow(lv_obj_get_parent(widget_selector), 1);
 
     /* CPU の使用率（直近 60 秒）とメモリ */
     lv_obj_t *stats = plain_box(*panel);
@@ -950,8 +997,10 @@ static void show_tab(int tab, bool by_key)
     }
 
     /* 離れるタブの、押しっぱなしを片付ける */
-    if (active_tab == TAB_KEYS)
+    if (active_tab == TAB_KEYS) {
         release_all_keys();
+        widgets_release();
+    }
     if (active_tab == TAB_PAD) {
         trackpad_reset();
         lv_obj_set_state(pad_btn_left, LV_STATE_PRESSED, false);
@@ -996,6 +1045,10 @@ static void input_timer_cb(lv_timer_t *t)
     /* 動画を流している間は、指を読まない。止めたあとは、止めるのに叩いた指が離れるまで待つ */
     static bool was_playing;
     if (movie_playing()) {
+        if (!was_playing) {
+            release_all_keys();
+            widgets_release();
+        }
         was_playing = true;
         return;
     }

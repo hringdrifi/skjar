@@ -20,6 +20,8 @@ static char dir_path[512];
 
 static const char *const return_names[] = { "never", "key", "always" };
 static const char *const look_names[] = { "plain", "picture" };
+/* widgets=pomodoro,news のように、有効なものをカンマで並べる */
+static const char *const widget_names[SETTINGS_WIDGETS] = { "none", "pomodoro", "news" };
 
 static void default_path(void)
 {
@@ -65,6 +67,13 @@ void settings_load(const char *path)
             for (int i = 0; i < 2; i++)
                 if (strcmp(val, look_names[i]) == 0)
                     current.look = (look_t)i;
+        } else if (strcmp(key, "widgets") == 0) {
+            char list[128];
+            snprintf(list, sizeof list, "%s", val);
+            for (char *name = strtok(list, ","); name; name = strtok(NULL, ","))
+                for (int i = 1; i < SETTINGS_WIDGETS; i++)
+                    if (strcmp(name, widget_names[i]) == 0)
+                        current.widgets[i] = true;
         }
     }
     fclose(f);
@@ -91,6 +100,15 @@ void settings_save(void)
     }
     fprintf(f, "return_mode=%s\n", return_names[current.return_mode]);
     fprintf(f, "look=%s\n", look_names[current.look]);
+    fprintf(f, "widgets=");
+    bool first = true;
+    for (int i = 1; i < SETTINGS_WIDGETS; i++) {
+        if (current.widgets[i]) {
+            fprintf(f, "%s%s", first ? "" : ",", widget_names[i]);
+            first = false;
+        }
+    }
+    fprintf(f, "\n");
     fclose(f);
 }
 

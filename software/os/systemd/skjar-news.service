@@ -1,0 +1,19 @@
+# SKJÁR: fetch news headlines for the News widget (Widget strip of the touch UI).
+# Run by skjar-news.timer. Writes news.txt next to the UI's ui.conf; the UI reloads it when it changes.
+#
+# Install:
+#   sudo install -D -m 755 ../../ui/tools/fetch_news.py /usr/local/lib/skjar/fetch_news.py
+#   sudo cp skjar-news.service skjar-news.timer /etc/systemd/system/
+#   sudo systemctl enable --now skjar-news.timer
+#
+# It runs as root because the UI runs as root for now (news.txt goes to /root/.config/skjar).
+# Change the feeds with --feed URL (more than one is fine).
+
+[Unit]
+Description=Fetch news headlines for the SKJAR News widget
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/skjar/fetch_news.py

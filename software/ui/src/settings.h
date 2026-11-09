@@ -6,6 +6,8 @@
 #ifndef SKJAR_SETTINGS_H
 #define SKJAR_SETTINGS_H
 
+#include <stdbool.h>
+
 /* キー入力で元のタブに戻るか */
 typedef enum {
     RETURN_NEVER = 0,       /* 戻らない */
@@ -19,9 +21,13 @@ typedef enum {
     LOOK_PICTURE,           /* 背景の画像（background.h）と、半透明のボタン */
 } look_t;
 
+/* ウィジェット（widgets.h の widget_id_t の順。0 の None はいつも出す） */
+#define SETTINGS_WIDGETS 3
+
 typedef struct {
     return_mode_t return_mode;
     look_t look;
+    bool widgets[SETTINGS_WIDGETS];     /* System タブで有効にしたウィジェット。初期値はどれも無効 */
 } settings_t;
 
 /* path が NULL なら上の場所を使う */

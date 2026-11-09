@@ -10,6 +10,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | 割り付け：ヘッダー（80 px）に時計・タブのボタン・状態の札、下の面（400 px、物理キーに近い側）にタブの中身 | 実装した（[docs/design-decisions.md](../../docs/design-decisions.md) の 4 章） |
 | タッチキー（Keys）：2 段 × 12 キー、160 px（18.32 mm）ピッチ。割り当ては RMK のキーマップの 7〜10 行目（レイヤーで変わり、Vial で変えられる） | 実装した。押した・離したを番号で送り（`TK`）、表示は RP2040 から届く割り当て（`TKL`）。マルチタッチで同時押しできる |
 | タブ：上のボタンと、Vial の USER0〜3 キーで開く。キー入力で元のタブに戻る（戻らない / キーで開いたときだけ / いつでも。System タブで選ぶ） | 実装した |
+| Widget strip（Keys タブのタッチキーの上、1920 × 80 px）：左右にスワイプして切り替える。None（初期値）と、System タブで有効にしたもの（ポモドーロ・タイマー、ニュースの電光掲示板） | 実装した（[src/widgets.c](src/widgets.c)。下の「Widget strip」）。Windows の窓で、スワイプ、タイマーの開始、ニュースが流れるのを確かめた |
 | メディアキー（Media） | 実装した。割り当ては固定（`KEY`） |
 | 隠し機能：ヘッダーの時計を 5 回叩くと、動画を全画面で流し、キーのライトも合わせて光らせる。叩くと止まる | 実装した（[src/movie.c](src/movie.c)）。動画は自分で用意して [tools/make_movie.py](tools/make_movie.py) で変換する（下の「隠し機能の動画」） |
 | 見た目（試し）：背景の画像と、半透明のボタン・パネル（すりガラス風）。System タブの Look で Plain / Picture を選ぶ | 実装した。画像は `--background` の PNG か、なければ起動時に描くオーロラ風の絵 |
@@ -42,12 +43,14 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | [src/touch_source.c](src/touch_source.c) | 触れている指をすべて読む（Linux の evdev のマルチタッチ。ほかは LVGL のポインタ） |
 | [src/backlight.c](src/backlight.c) | `/sys/class/backlight` の明るさ |
 | [src/sysinfo.c](src/sysinfo.c) | CPU・メモリ・温度 |
+| [src/widgets.c](src/widgets.c) | Widget strip（スワイプでの切り替え、ポモドーロ・タイマー、ニュースの電光掲示板） |
 | [lv_conf.h](lv_conf.h) | LVGL の設定 |
 | [tests/link_test.c](tests/link_test.c) | UART の行の組み立てと読み取りのテスト |
 | [tests/trackpad_test.c](tests/trackpad_test.c) | トラックパッドの判定のテスト |
 | [tests/keylabel_test.c](tests/keylabel_test.c) | キーの表示のテスト |
 | [tools/fake_rp2040.py](tools/fake_rp2040.py) | RP2040 の代わりに UART のやり取りをする道具（Linux 用） |
 | [tools/make_movie.py](tools/make_movie.py) | 隠し機能の動画を作る（手元の動画 → .skm と .wav。ffmpeg を使う） |
+| [tools/fetch_news.py](tools/fetch_news.py) | ニュースの見出しを RSS / Atom から取ってきて `news.txt` にする（Python の標準ライブラリだけ） |
 | [tools/build_windows.py](tools/build_windows.py) | Windows 向けのビルド（zig を使う） |
 
 ## ビルド
@@ -107,6 +110,22 @@ build-windows\skjar-ui.exe
 ctest --test-dir build
 ```
 
+## Widget strip
+
+Keys タブの、ヘッダーとタッチキーの間の帯（1920 × 80 px）。ウィジェットを 1 つ出し、左右にスワイプして切り替える。
+
+- いちばん左は **None**（何も出さない。初期値）。その右に、System タブの「Widget strip」で有効にしたものが並ぶ（いくつでも選べる。`ui.conf` に `widgets=pomodoro,news` のように保存）。1 つも有効にしていなければ、スワイプしても何も起きない。
+- 帯の中のボタンは、指で押した・離したをこの帯で決める。横に 40 px 動くとスワイプになり、ボタンは押されない。160 px 以上はらうと次のウィジェットへ移る。
+- **Pomodoro：** 集中 25 分、休憩 5 分、4 回ごとに長い休憩 15 分。▶ / ⏸、⏭（次の区切りへ飛ばす）、⟳（最初から）。区切りが終わったら止めて待ち、画面に文字を出して、キーのライトを点滅させる（`LEDF`）。ほかのウィジェットやタブにしていても数え続ける。
+- **News：** 設定のフォルダ（`ui.conf` と同じ所）の `news.txt` の見出し（1 行に 1 つ）を、右から左へ流し続ける。30 秒ごとにファイルが変わったかを見て読み直す。左の札の時刻は、`news.txt` を書いた時刻。
+  - 見出しは [tools/fetch_news.py](tools/fetch_news.py) で取ってくる（初期値は BBC World の RSS。`--feed URL` で変える。何度でも書ける）。フォントが英数字だけなので、ASCII にして書く（アクセントを落とす、曲がった引用符をまっすぐに）。ASCII にできない見出し（日本語など）は捨てる。
+  - 実機では systemd のタイマーで 15 分ごとに回す（[software/os/systemd/skjar-news.timer](../os/systemd/skjar-news.timer)）。
+  - Windows で試すとき：
+
+```bat
+py tools/fetch_news.py
+```
+
 ## 隠し機能の動画
 
 ヘッダーの時計を続けて 5 回叩くと、動画が全画面で流れ、キーのライトも映像に合わせて光る。画面のどこかを叩くと止まる（始まって 1 秒は止まらない）。
@@ -143,7 +162,7 @@ py tools/make_movie.py 手元の動画.mp4 movie
 | `--zoom <%>` | 100 | 窓の大きさ（SDL と Windows のみ） |
 | `--background <png>` | 起動時に描くオーロラ風の絵 | 背景の画像（Look が Picture のとき）。1920 × 480 だと描き換えが軽い。ほかの大きさは画面を覆うように拡大・縮小する |
 | `--movie <skm>` | 設定のフォルダの `movie.skm` | 隠し機能の動画 |
-| `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか） |
+| `--config <path>` | Linux：`~/.config/skjar/ui.conf`、Windows：`%APPDATA%\skjar\ui.conf` | 設定のファイル（元のタブに戻るか、見た目、Widget strip に出すもの）。ニュースの `news.txt` と隠し機能の動画も、このファイルと同じフォルダから読む |
 | `--start <boot/manual>` | `manual` | `boot`：電源を入れたときの起動。RP2040 から PC がつながっているかを 3 秒まで待ち、なければ UI を閉じてコンソールへ。`manual`：コンソールで `skjar` と打ったとき。PC がなければ「PC につないで」を出す |
 | `--no-poweroff` | SDL と Windows では常に有効 | 電源を切る要求を受けても、表示だけにする |
 
