@@ -27,6 +27,8 @@ static bool dragging;
 static uint8_t side_buttons;
 static float acc_x, acc_y;      /* カーソルの端数 */
 static float acc_v, acc_h;      /* スクロールの端数 */
+static bool strip_touching;     /* スクロールの帯 */
+static float strip_prev_y, strip_acc;
 
 static uint8_t buttons_now(void)
 {
@@ -83,8 +85,31 @@ void trackpad_reset(void)
     dragging = false;
     side_buttons = 0;
     acc_x = acc_y = acc_v = acc_h = 0;
+    strip_touching = false;
+    strip_acc = 0;
     if (had_buttons)
         send_buttons();
+}
+
+void trackpad_strip_update(bool touching, float y)
+{
+    if (!touching) {
+        strip_touching = false;
+        strip_acc = 0;
+        return;
+    }
+    if (strip_touching) {
+        float dy = y - strip_prev_y;
+        if (fabsf(dy) <= JUMP_PX) {
+            strip_acc += dy / SCROLL_STEP_PX;
+            int iv = (int)strip_acc;
+            strip_acc -= (float)iv;
+            if (iv != 0 && out.wheel)
+                out.wheel(clamp127(iv), 0, out.user);
+        }
+    }
+    strip_touching = true;
+    strip_prev_y = y;
 }
 
 void trackpad_set_side_buttons(uint8_t buttons)

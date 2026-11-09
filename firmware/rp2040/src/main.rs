@@ -19,6 +19,7 @@ mod keymap;
 mod reports;
 
 use embassy_executor::Spawner;
+use embassy_futures::join::join;
 use embassy_rp::gpio::{Flex, Input, Level, Output, Pull};
 use embassy_rp::i2c_slave::{self, I2cSlave};
 use embassy_rp::peripherals::{UART0, USB};
@@ -37,7 +38,7 @@ use rmk::types::connection::UsbState;
 use rmk::{KeymapData, initialize_keymap, run_all};
 use static_cell::StaticCell;
 
-use crate::keymap::{COL, NUM_LAYER, ROW};
+use crate::keymap::{COL, MATRIX_ROW, NUM_LAYER, ROW};
 
 #[cfg(all(feature = "pico", feature = "skjar"))]
 compile_error!("feature の `pico` と `skjar` は、どちらか一方だけを選ぶ");
@@ -70,11 +71,6 @@ async fn logger_task(driver: Driver<'static, USB>) {
 #[embassy_executor::task]
 async fn hid_i2c_task(i2c: I2cSlave<'static, KbI2c>) {
     hid_i2c::run_target(i2c).await
-}
-
-#[embassy_executor::task]
-async fn cm0_link_task(uart: BufferedUart) {
-    cm0_link::run(uart).await
 }
 
 /// RMK が出すレポートを、タッチキーと合わせて出力先に送る。
@@ -128,14 +124,14 @@ async fn main(spawner: Spawner) {
         UART_RX_BUF.init([0; 256]),
         uart_config,
     );
-    spawner.spawn(cm0_link_task(uart).unwrap());
+    // CM0 とのやり取りはキーマップを読むので、キーマップを作ったあと、キーボードと並べて動かす（下）
 
     // RMK は USB がつながったときだけ USB 用のチャンネルにレポートを出す。
     // いまは USB の HID を使わないので、つながったことにしてチャンネルを横取りする。
     rmk::state::set_usb_state(UsbState::Configured);
     spawner.spawn(report_bridge_task().unwrap());
 
-    // キーマトリクス（7 行 × 6 列、ダイオードは列 → 行）。
+    // キーマトリクス（7 行 × 6 列、ダイオードは列 → 行）。キーマップは、これにタッチキーの 4 行を足した 11 行（keymap.rs）。
     // RMK の COL2ROW は、列を High に駆動して行を読む（行はプルダウン）。
     let rows = [
         Input::new(p.PIN_10, Pull::Down), // ROW0
@@ -154,7 +150,7 @@ async fn main(spawner: Spawner) {
         Output::new(p.PIN_1, Level::Low), // COL4
         Output::new(p.PIN_0, Level::Low), // COL5
     ];
-    let mut matrix = Matrix::<_, _, _, ROW, COL, true>::new(rows, cols, DefaultDebouncer::new());
+    let mut matrix = Matrix::<_, _, _, MATRIX_ROW, COL, true>::new(rows, cols, DefaultDebouncer::new());
 
     static KEYMAP_DATA: StaticCell<KeymapData<ROW, COL, NUM_LAYER, 0>> = StaticCell::new();
     static BEHAVIOR: StaticCell<BehaviorConfig> = StaticCell::new();
@@ -166,5 +162,5 @@ async fn main(spawner: Spawner) {
     let mut keyboard = Keyboard::new(&keymap);
 
     info!("SKJÁR RP2040 started");
-    run_all!(matrix, keyboard).await;
+    join(run_all!(matrix, keyboard), cm0_link::run(uart, &keymap)).await;
 }

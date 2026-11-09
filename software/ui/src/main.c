@@ -7,7 +7,7 @@
  * PC（windows）：Windows で同じ窓を開く（Win32）。
  *
  * 使い方：skjar-ui [--link <tty か COMn か ->] [--rotate 0|90|180|270] [--fb <path>]
- *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--no-poweroff]
+ *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--no-poweroff]
  */
 #include <signal.h>
 #include <stdio.h>
@@ -27,6 +27,7 @@
 #include "backlight.h"
 #include "link.h"
 #include "platform.h"
+#include "settings.h"
 #include "ui.h"
 
 typedef struct {
@@ -36,6 +37,7 @@ typedef struct {
     const char *touch_path;     /* NULL なら /dev/input を探す */
     const char *vt_path;        /* グラフィックモードにする仮想端末。NULL なら触らない */
     int zoom;                   /* 窓の大きさ（%）。PC の窓だけ */
+    const char *config_path;    /* 設定のファイル。NULL なら settings.h の場所 */
     int no_poweroff;
 } options_t;
 
@@ -57,7 +59,7 @@ static void usage(const char *argv0)
 {
     fprintf(stderr,
             "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
-            "          [--vt <path>] [--zoom <percent>] [--no-poweroff]\n", argv0);
+            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--no-poweroff]\n", argv0);
 }
 
 static int parse_args(int argc, char **argv)
@@ -82,6 +84,7 @@ static int parse_args(int argc, char **argv)
         else if (strcmp(a, "--touch") == 0 && v) { opt.touch_path = v; i++; }
         else if (strcmp(a, "--vt") == 0 && v) { opt.vt_path = strcmp(v, "-") == 0 ? NULL : v; i++; }
         else if (strcmp(a, "--zoom") == 0 && v) { opt.zoom = atoi(v); i++; }
+        else if (strcmp(a, "--config") == 0 && v) { opt.config_path = v; i++; }
         else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
         else { usage(argv[0]); return -1; }
     }
@@ -122,6 +125,24 @@ static void link_shutdown(void *user)
     (void)user;
     fprintf(stderr, "link: shutdown requested by the RP2040\n");
     do_poweroff();
+}
+
+static void link_touch_label(int layer, int index, const char *code, void *user)
+{
+    (void)user;
+    ui_set_touch_label(layer, index, code);
+}
+
+static void link_user_key(int id, bool pressed, void *user)
+{
+    (void)user;
+    ui_user_key(id, pressed);
+}
+
+static void link_activity(void *user)
+{
+    (void)user;
+    ui_activity();
 }
 
 static void link_timer_cb(lv_timer_t *t)
@@ -249,7 +270,15 @@ int main(int argc, char **argv)
 
     backlight_open();
 
-    const link_callbacks_t cb = { .changed = link_changed, .shutdown = link_shutdown };
+    settings_load(opt.config_path);
+
+    const link_callbacks_t cb = {
+        .changed = link_changed,
+        .shutdown = link_shutdown,
+        .touch_label = link_touch_label,
+        .user_key = link_user_key,
+        .activity = link_activity,
+    };
     if (!link_open(opt.link_path, &cb))
         fprintf(stderr, "running without the RP2040 link\n");
     lv_timer_create(link_timer_cb, 10, NULL);

@@ -49,6 +49,8 @@ add_executable(skjar-ui
     src/platform.c
     src/trackpad.c
     src/touch_source.c
+    src/keylabel.c
+    src/settings.c
     src/sysinfo.c
     src/backlight.c)
 if(NOT MSVC)
@@ -67,7 +69,7 @@ install(TARGETS skjar-ui RUNTIME DESTINATION bin)
 
 # UART の行の組み立てと読み取りのテスト（ctest で走らせる）
 enable_testing()
-add_executable(link-test tests/link_test.c src/link.c src/serial_port.c)
+add_executable(link-test tests/link_test.c src/link.c src/serial_port.c src/platform.c)
 if(NOT MSVC)
     target_compile_options(link-test PRIVATE -Wall -Wextra)
 endif()
@@ -81,3 +83,7 @@ if(NOT WIN32)
     target_link_libraries(trackpad-test PRIVATE m)
 endif()
 add_test(NAME trackpad COMMAND trackpad-test)
+
+add_executable(keylabel-test tests/keylabel_test.c src/keylabel.c)
+target_link_libraries(keylabel-test PRIVATE lvgl::lvgl)
+add_test(NAME keylabel COMMAND keylabel-test)

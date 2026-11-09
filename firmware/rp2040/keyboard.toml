@@ -11,3 +11,9 @@
 # 自動で足す。Vial（vial 機能）はレイヤーの通知を使わない。
 [event.layer_change]
 subs = 2
+
+# キーの動作が決まるたびの通知（ActionEvent）を受けられる数。RMK の初期値は 0（誰も受けない）。
+#   1. cm0_link.rs：USER キー（タブを開く）と、元のタブに戻すきっかけ（ACT）を CM0 に知らせる
+# オートマウスレイヤーで deactivate_on_key / reset_timeout_on_key を使うときは、もう 1 つ増やす。
+[event.action]
+subs = 1

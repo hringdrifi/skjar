@@ -68,7 +68,7 @@
 - [ ] HID over I²C を Pico と Pi Zero 2 W で確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
 - [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）
-- [ ] キーボードモードのトラックパッド：UI の Pad タブ（指の判定）、UART の `PTR` / `WHEEL`、RP2040 のマウスのレポート（HID over I²C のレポート ID 3）は試作した。残り：実機のタッチパネルでのマルチタッチの確認と、速さ・加速・スクロールの量の調整、PC への USB HID、オートマウスレイヤーを使うか、トラックパッドを出力先が PC のときだけにするか
+- [ ] キーボードモードのトラックパッド：UI の Pad タブ（指の判定、スクロールの帯、L / M / R）、UART の `PTR` / `WHEEL`、RP2040 のマウスのレポート（HID over I²C のレポート ID 3）は試作した。残り：実機のタッチパネルでのマルチタッチの確認と、速さ・加速・スクロールの量の調整、PC への USB HID、オートマウスレイヤーを使うか、トラックパッドを出力先が PC のときだけにするか
 - [ ] キーの RGB の明るさの上限（電流宣言ごと。全点灯で約 1.5 A）を実測で決める
 - [ ] CC の判定の時間の扱い（[design-decisions.md](design-decisions.md) の 2.3 には電圧の範囲しか決めていない）。数値は USB Type-C の規格のもの
   - **つないだとき：** 相手は Rp を出してから最大 275 ms で VBUS を出す（tVBUSON）。相手が DRP なら、役割が決まるまで Rp が点いたり消えたりする。CC が 100〜200 ms 安定してから判定する（tCCDebounce）。RP2040 には VBUS を直接見る線がない。B は `PWR_ST` で間接的にわかるが、B から給電しているときに A の VBUS があるかは見えない
@@ -79,6 +79,9 @@
   - 今より弱い電源を B につないだときは、CC_B を見て先回りで負荷を落とすと決めた（[design-decisions.md](design-decisions.md) の 2.4）。USB-A → C の変換ケーブルで、後追いの対処（`PWR_ST` の割り込みで LCD を切る）が間に合うかを実物で確かめる
 - [ ] CM0 の USB ブート要求のキーの組み合わせ（SW102 の代わり）
 - [ ] タッチ UI の試作（LVGL、[software/ui/](../software/ui/)）を実機で確かめる：パネルとタッチの向き、描き換えの速さと CPU の負荷、バックライトのデバイス
+- [ ] タッチキー（Keys タブ、2 段 × 12 キー。[design-decisions.md](design-decisions.md) の 4 章）の使い勝手：実物の画面で 18.32 mm のピッチと、外側の列のずれ（約 4 mm）が気にならないか。レイヤー 1・2 のタッチキーの割り当て（いまは仮）
+- [ ] Vial でタッチキーを変えられるようにする：Vial 用の JSON に 7〜10 行目を 2 段 × 12 キーとして並べる、Vial で変えたあとに `TKL` を送り直す
+- [ ] 透過キーの表示：UI には一番上のレイヤーしか届かないので、透過キーは「今のレイヤー → レイヤー 0」の順に見ている。レイヤーを 2 つ以上重ねる使い方をするなら、有効なレイヤーの一覧を送る
 - [ ] CM0 と RP2040 の間の UART の形式は案を書いた（[protocol.md](protocol.md) の 1 章）。CM0 側（UI）と RP2040 側（`cm0_link.rs`）の試作がある。Pico と Pi Zero 2 W で確かめたら、決定にする。`PWR` と `SHUTDOWN` は、CC と電源の判定を作るときに足す
 - [ ] CM0 のウォッチドッグ（「動作中」の信号が途絶えたときの扱い）
 - [ ] いきなりの電源断への備えの細部（方針は [design-decisions.md](design-decisions.md) の 1.5）：パーティションの分け方と容量、Overlay File System の設定、データの領域を書き込みにする・戻す仕組み、書き込み中の表示、OS の更新を Port B の給電があるときだけにする仕組み

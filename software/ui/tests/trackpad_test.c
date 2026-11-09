@@ -146,6 +146,14 @@ int main(void)
     CHECK(sum_h == 0);
     CHECK(sum_v >= 3);
 
+    /* スクロールの帯：1 本指で下へなぞると上へスクロール（2 本指と同じ向き）。カーソルは動かない */
+    clear();
+    for (int i = 0; i <= 12; i++)
+        trackpad_strip_update(true, 100.0f + i * 10);
+    trackpad_strip_update(false, 0);
+    CHECK(sum_v >= 4 && sum_v <= 5);    /* 120 px ÷ 24 px（端数の丸めで 4 もありうる） */
+    CHECK(sum_dx == 0 && sum_dy == 0);
+
     if (failures == 0)
         printf("trackpad_test: ok\n");
     return failures ? 1 : 0;

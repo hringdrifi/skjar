@@ -40,6 +40,10 @@ typedef struct {
 typedef struct {
     void (*changed)(const link_state_t *state, void *user);  /* 状態が変わった */
     void (*shutdown)(void *user);                            /* SHUTDOWN を受けた */
+    /* TKL：タッチキー index（0〜23）の、レイヤー layer での割り当て（keylabel.h の符号） */
+    void (*touch_label)(int layer, int index, const char *code, void *user);
+    void (*user_key)(int id, bool pressed, void *user);     /* USER：Vial の USER キー */
+    void (*activity)(void *user);                            /* ACT：文字や機能のキーが押された */
     void *user;
 } link_callbacks_t;
 
@@ -52,7 +56,9 @@ void link_poll(uint32_t now_ms);
 
 const link_state_t *link_state(void);
 
-/* page は 0x07（キーボード）か 0x0C（Consumer） */
+/* 画面のタッチキー（0〜23。RP2040 がキーマップの 7〜10 行目として RMK に渡す） */
+void link_send_touch_key(int index, bool down);
+/* 固定のキー（Media タブなど）。page は 0x07（キーボード）か 0x0C（Consumer） */
 void link_send_key(uint8_t page, uint16_t usage, bool down);
 /* トラックパッド：dx / dy / v / h は −127〜127。buttons はビット 0 左、1 右、2 中 */
 void link_send_pointer(int dx, int dy, uint8_t buttons);

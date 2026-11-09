@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "platform.h"
 #include "serial_port.h"
 
 #define LINE_MAX_LEN     64     /* docs/protocol.md 1.2 */
@@ -12,6 +13,7 @@
 #define MAX_FIELDS       8
 
 static bool dry_run;            /* 線を開かず、送る行を標準エラーに出す */
+static bool stdin_used;         /* 標準入力から行を打った（PC で試している） */
 static link_callbacks_t cbs;
 static link_state_t state;
 
@@ -127,6 +129,17 @@ static void handle_message(char **f, int n)
     } else if (strcmp(cmd, "SHUTDOWN") == 0 && n == 1) {
         if (cbs.shutdown)
             cbs.shutdown(cbs.user);
+    } else if (strcmp(cmd, "TKL") == 0 && n == 4) {
+        int layer, index;
+        if (parse_int(f[1], 0, 31, &layer) && parse_int(f[2], 0, 23, &index) && cbs.touch_label)
+            cbs.touch_label(layer, index, f[3], cbs.user);
+    } else if (strcmp(cmd, "USER") == 0 && n == 3) {
+        int id, pressed;
+        if (parse_int(f[1], 0, 31, &id) && parse_int(f[2], 0, 1, &pressed) && cbs.user_key)
+            cbs.user_key(id, pressed != 0, cbs.user);
+    } else if (strcmp(cmd, "ACT") == 0 && n == 1) {
+        if (cbs.activity)
+            cbs.activity(cbs.user);
     }
     /* 知らないコマンドは捨てる（1.2） */
 
@@ -241,8 +254,39 @@ void link_close(void)
     dry_run = false;
 }
 
+/* 線を開いていないとき（PC で試すとき）は、標準入力に打った行を RP2040 から届いたものとして扱う。
+ * `LAYER,1` のように中身だけを打てば、CRC は付け足す。`$SK,...*CC` の形もそのまま受ける */
+static void poll_stdin(uint32_t now_ms)
+{
+    char raw[96], line[LINE_MAX_LEN + 2];
+    while (platform_read_stdin_line(raw, sizeof raw)) {
+        /* 先頭の見えない文字（パイプで流し込んだときの BOM など）と空白を読み飛ばす */
+        const char *in = raw;
+        while (*in && ((unsigned char)*in >= 0x80 || *in == ' ' || *in == '\t'))
+            in++;
+        if (in[0] == '\0')
+            continue;
+        stdin_used = true;
+        if (strncmp(in, "$SK,", 4) == 0) {
+            snprintf(line, sizeof line, "%s", in);
+        } else {
+            size_t len = link_format(line, sizeof line, in);
+            if (len == 0) {
+                fprintf(stderr, "link: too long: %s\n", in);
+                continue;
+            }
+            line[len - 1] = '\0';   /* 改行を除く */
+        }
+        if (!link_handle_line(line, now_ms))
+            fprintf(stderr, "link: ignored: %s\n", in);
+    }
+}
+
 void link_poll(uint32_t now_ms)
 {
+    if (dry_run)
+        poll_stdin(now_ms);
+
     if (serial_is_open()) {
         char buf[256];
         for (;;) {
@@ -265,7 +309,8 @@ void link_poll(uint32_t now_ms)
         alive_started = true;
     }
 
-    if (state.connected && now_ms - last_rx_ms >= LINK_TIMEOUT_MS) {
+    /* 標準入力から手で打って試しているときは、ALIVE が届かなくても状態を消さない */
+    if (state.connected && !stdin_used && now_ms - last_rx_ms >= LINK_TIMEOUT_MS) {
         reset_state();      /* わからない状態に戻す（古い値を表示し続けない） */
         notify_changed();
     }
@@ -274,6 +319,13 @@ void link_poll(uint32_t now_ms)
 const link_state_t *link_state(void)
 {
     return &state;
+}
+
+void link_send_touch_key(int index, bool down)
+{
+    char body[24];
+    snprintf(body, sizeof body, "TK,%d,%d", index, down ? 1 : 0);
+    send_body(body);
 }
 
 void link_send_key(uint8_t page, uint16_t usage, bool down)

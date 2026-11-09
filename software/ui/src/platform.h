@@ -9,4 +9,9 @@ uint32_t platform_now_ms(void);         /* 単調増加のミリ秒 */
 void platform_sleep_ms(uint32_t ms);
 void platform_localtime(time_t t, struct tm *out);
 
+/* 標準入力から 1 行読む（待たない）。読めたら true（改行は除く） */
+#include <stdbool.h>
+#include <stddef.h>
+bool platform_read_stdin_line(char *buf, size_t size);
+
 #endif /* SKJAR_PLATFORM_H */

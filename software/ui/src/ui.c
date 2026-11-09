@@ -1,166 +1,114 @@
 /*
- * タッチ UI の画面（試作）。
+ * タッチ UI の画面（試作）。1920 × 480 を、上の帯（160 px）と下の面（320 px）に分ける。
  *
- * 上：状態の帯（時計、物理キーの出力先、電源、レイヤー、CPU・メモリ・温度、RP2040 とのつながり）
- * 下：左のタブで切り替える
- *   Num    数字と記号のタッチキー
- *   F      F1〜F12、編集キー、矢印
- *   Pad    トラックパッド（trackpad.c。マルチタッチは touch_source.c）
- *   Media  メディアキーと、バックライトの明るさ
- *   System 物理キーの出力先、CPU のグラフ、RP2040 の UF2、電源を切る
+ * 上の帯：時計、タブのボタン（Keys / Pad / Media / System）、状態（物理キーの出力先、電源、レイヤー、
+ *         CPU・メモリ・温度、RP2040 とのつながり）
+ * 下の面（物理キーに近い側）：開いているタブの中身
+ *   Keys   2 段 × 12 キーのタッチキー。物理キーの代わりに使う。割り当ては RMK のキーマップ
+ *          （7〜10 行目）で、レイヤーで変わり、Vial で変えられる。押した・離したを番号で RP2040 に送る
+ *   Pad    トラックパッド（trackpad.c。マルチタッチは touch_source.c）、スクロールの帯、L / M / R。
+ *          開いている間は上の帯を細くして（160 → 80 px）、パッドを高くする
+ *   Media  メディアキー（固定）と、バックライトの明るさ
+ *   System 物理キーの出力先、元のタブに戻る設定、CPU のグラフ、RP2040 の UF2、電源を切る
  *
- * タッチキーは、押したときと離したときに UART で RP2040 に送る（docs/protocol.md の 1.3）。
- * 記号のラベルは US 配列のもの。PC 側が JIS 配列だと、Shift を使う記号は別の文字になる。
+ * タブは、上のボタンのほかに、Vial の USER0〜3 キー（Keys / Pad / Media / System）でも開ける。
+ * 文字や機能のキーを押すと、設定によって元のタブに戻る（settings.h）。
+ *
+ * キーの大きさ：表示領域は 219.88 mm（TOUCH-A の図面）で 1920 px、1 px = 0.1145 mm。12 キーを
+ * 19.05 mm（166 px）で並べると収まらないので、160 px（18.32 mm）で均等に並べる。真ん中は物理キーの
+ * 列と合い、外側ほどずれる（両端で約 4 mm）。
  */
 #include "ui.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "lvgl.h"
 
 #include "backlight.h"
+#include "keylabel.h"
 #include "link.h"
 #include "platform.h"
+#include "settings.h"
 #include "sysinfo.h"
 #include "touch_source.h"
 #include "trackpad.h"
 
-/* ---- HID の使用法（HID Usage Tables 1.5） ---- */
+#define SCREEN_W      1920
+#define TOP_H         160
+#define BODY_H        320
+#define KEY_PITCH     160     /* 18.32 mm */
+#define KEY_GAP       10
+#define KEY_COLS      12
+#define KEY_ROWS      2
+#define TOUCH_KEYS    (KEY_COLS * KEY_ROWS)
+#define MAX_LAYERS    8
+#define CODE_LEN      24
+#define LABEL_LEN     48
+
+#define COUNT(a)      (sizeof(a) / sizeof((a)[0]))
+
+enum { TAB_KEYS, TAB_PAD, TAB_MEDIA, TAB_SYSTEM, TAB_COUNT };
+
+static ui_actions_t actions;
+
+/* ---- 固定のキー（Media タブ。HID の使用法で送る） ---- */
 
 #define PAGE_KB       0x07
 #define PAGE_CONSUMER 0x0C
-#define MOD_LSHIFT    0x02      /* 修飾キーのビット。E0 + ビット位置が使用法 */
 
 typedef struct {
-    const char *label;          /* "\n" は行の区切り */
+    const char *label;
     uint8_t page;
     uint16_t usage;
-    uint8_t mods;               /* いっしょに押す修飾キー（ビット 0 = LCtrl … 7 = RGui） */
-} touch_key_t;
+} fixed_key_t;
 
-#define BR             { "\n", 0, 0, 0 }
-#define K(l, u)        { (l), PAGE_KB, (u), 0 }
-#define S(l, u)        { (l), PAGE_KB, (u), MOD_LSHIFT }
-#define C(l, u)        { (l), PAGE_CONSUMER, (u), 0 }
-#define COUNT(a)       (sizeof(a) / sizeof((a)[0]))
+#define C(l, u) { (l), PAGE_CONSUMER, (u) }
 
-static const touch_key_t keys_num[] = {
-    K("`", 0x35), K("1", 0x1E), K("2", 0x1F), K("3", 0x20), K("4", 0x21), K("5", 0x22),
-    K("6", 0x23), K("7", 0x24), K("8", 0x25), K("9", 0x26), K("0", 0x27), K("-", 0x2D),
-    K("=", 0x2E), K(LV_SYMBOL_BACKSPACE, 0x2A),
-    BR,
-    S("~", 0x35), S("!", 0x1E), S("@", 0x1F), S("#", 0x20), S("$", 0x21), S("%", 0x22),
-    S("^", 0x23), S("&", 0x24), S("*", 0x25), S("(", 0x26), S(")", 0x27), S("_", 0x2D),
-    S("+", 0x2E), K("Enter", 0x28),
-    BR,
-    K("[", 0x2F), K("]", 0x30), S("{", 0x2F), S("}", 0x30), K("\\", 0x31), S("|", 0x31),
-    K(";", 0x33), S(":", 0x33), K("'", 0x34), S("\"", 0x34), S("<", 0x36), S(">", 0x37),
-    S("?", 0x38), K("Del", 0x4C),
-};
-
-static const touch_key_t keys_fn[] = {
-    K("F1", 0x3A), K("F2", 0x3B), K("F3", 0x3C), K("F4", 0x3D), K("F5", 0x3E), K("F6", 0x3F),
-    K("F7", 0x40), K("F8", 0x41), K("F9", 0x42), K("F10", 0x43), K("F11", 0x44), K("F12", 0x45),
-    BR,
-    K("Esc", 0x29), K("Ins", 0x49), K("Del", 0x4C), K("Home", 0x4A), K("End", 0x4D),
-    K("PgUp", 0x4B), K("PgDn", 0x4E), K("PrtSc", 0x46), K("Pause", 0x48),
-    K(LV_SYMBOL_LEFT, 0x50), K(LV_SYMBOL_UP, 0x52), K(LV_SYMBOL_DOWN, 0x51), K(LV_SYMBOL_RIGHT, 0x4F),
-};
-
-static const touch_key_t keys_media[] = {
+static const fixed_key_t keys_media[] = {
     C(LV_SYMBOL_PREV, 0xB6), C(LV_SYMBOL_PLAY " " LV_SYMBOL_PAUSE, 0xCD), C(LV_SYMBOL_STOP, 0xB7),
     C(LV_SYMBOL_NEXT, 0xB5), C(LV_SYMBOL_MUTE, 0xE2), C(LV_SYMBOL_VOLUME_MID " -", 0xEA),
     C(LV_SYMBOL_VOLUME_MAX " +", 0xE9),
 };
 
-/* ---- タッチキー（buttonmatrix 1 つで 1 面） ---- */
+static int media_pressed = -1;
 
-typedef struct {
-    const touch_key_t *keys;
-    size_t n_keys;
-    const char **map;
-    uint16_t *button_to_key;
-    int pressed;                /* 押している keys の番号。なければ -1 */
-} keypad_t;
-
-static void send_mods(uint8_t mods, bool down)
+static void media_event_cb(lv_event_t *e)
 {
-    for (int bit = 0; bit < 8; bit++)
-        if (mods & (1u << bit))
-            link_send_key(PAGE_KB, (uint16_t)(0xE0 + bit), down);
-}
-
-static void key_down(const touch_key_t *k)
-{
-    send_mods(k->mods, true);
-    link_send_key(k->page, k->usage, true);
-}
-
-static void key_up(const touch_key_t *k)
-{
-    link_send_key(k->page, k->usage, false);
-    send_mods(k->mods, false);
-}
-
-static void keypad_event_cb(lv_event_t *e)
-{
-    keypad_t *kp = lv_event_get_user_data(e);
     lv_event_code_t code = lv_event_get_code(e);
-
     if (code == LV_EVENT_VALUE_CHANGED) {
         /* CLICK_TRIG を付けていないので、押した瞬間に届く */
         uint32_t id = *(uint32_t *)lv_event_get_param(e);
-        if (kp->pressed >= 0)
-            key_up(&kp->keys[kp->pressed]);
-        kp->pressed = kp->button_to_key[id];
-        key_down(&kp->keys[kp->pressed]);
-    } else if (code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
-        if (kp->pressed >= 0) {
-            key_up(&kp->keys[kp->pressed]);
-            kp->pressed = -1;
-        }
-    } else if (code == LV_EVENT_DELETE) {
-        lv_free(kp->map);
-        lv_free(kp->button_to_key);
-        lv_free(kp);
+        if (media_pressed >= 0)
+            link_send_key(keys_media[media_pressed].page, keys_media[media_pressed].usage, false);
+        media_pressed = (int)id;
+        link_send_key(keys_media[id].page, keys_media[id].usage, true);
+    } else if ((code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) && media_pressed >= 0) {
+        link_send_key(keys_media[media_pressed].page, keys_media[media_pressed].usage, false);
+        media_pressed = -1;
     }
 }
 
-static lv_obj_t *keypad_create(lv_obj_t *parent, const touch_key_t *keys, size_t n)
-{
-    keypad_t *kp = lv_malloc_zeroed(sizeof *kp);
-    kp->keys = keys;
-    kp->n_keys = n;
-    kp->pressed = -1;
-    kp->map = lv_malloc((n + 1) * sizeof(char *));
-    kp->button_to_key = lv_malloc(n * sizeof(uint16_t));
-
-    size_t buttons = 0;
-    for (size_t i = 0; i < n; i++) {
-        kp->map[i] = keys[i].label;
-        if (keys[i].label[0] != '\n')
-            kp->button_to_key[buttons++] = (uint16_t)i;
-    }
-    kp->map[n] = "";
-
-    lv_obj_t *m = lv_buttonmatrix_create(parent);
-    lv_buttonmatrix_set_map(m, kp->map);
-    lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_NO_REPEAT);
-    lv_obj_set_style_text_font(m, &lv_font_montserrat_28, 0);
-    lv_obj_add_event_cb(m, keypad_event_cb, LV_EVENT_ALL, kp);
-    return m;
-}
-
-/* ---- 状態の帯 ---- */
-
-static ui_actions_t actions;
+/* ---- 上の帯 ---- */
 
 static lv_obj_t *lbl_time, *lbl_date, *lbl_out, *lbl_pwr, *lbl_layer, *lbl_sys, *lbl_link;
-static lv_obj_t *out_selector, *bl_slider, *bl_note, *cpu_chart;
+static lv_obj_t *top_bar, *body;
+static lv_obj_t *tab_bar;
+static lv_obj_t *out_selector, *return_selector, *bl_slider, *bl_note, *cpu_chart;
 static lv_chart_series_t *cpu_series;
 
-static lv_obj_t *status_label(lv_obj_t *parent, const lv_font_t *font)
+static lv_obj_t *plain_box(lv_obj_t *parent)
+{
+    lv_obj_t *o = lv_obj_create(parent);
+    lv_obj_set_style_bg_opa(o, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(o, 0, 0);
+    lv_obj_set_style_pad_all(o, 0, 0);
+    lv_obj_set_scrollable(o, false);
+    return o;
+}
+
+static lv_obj_t *text(lv_obj_t *parent, const lv_font_t *font)
 {
     lv_obj_t *l = lv_label_create(parent);
     lv_obj_set_style_text_font(l, font, 0);
@@ -168,33 +116,65 @@ static lv_obj_t *status_label(lv_obj_t *parent, const lv_font_t *font)
     return l;
 }
 
-static void create_status_bar(lv_obj_t *parent)
+static void show_tab(int tab, bool by_key);
+
+static void tab_bar_cb(lv_event_t *e)
 {
-    lv_obj_t *bar = lv_obj_create(parent);
-    lv_obj_set_size(bar, LV_PCT(100), 64);
-    lv_obj_set_style_radius(bar, 0, 0);
-    lv_obj_set_style_border_width(bar, 0, 0);
-    lv_obj_set_style_pad_hor(bar, 24, 0);
-    lv_obj_set_style_pad_ver(bar, 0, 0);
-    lv_obj_set_style_pad_column(bar, 40, 0);
-    lv_obj_set_scrollable(bar, false);
-    lv_obj_set_flex_flow(bar, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(bar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    uint32_t id = lv_buttonmatrix_get_selected_button(lv_event_get_target_obj(e));
+    if (id < TAB_COUNT)
+        show_tab((int)id, false);
+}
 
-    lbl_time = status_label(bar, &lv_font_montserrat_40);
-    lbl_date = status_label(bar, &lv_font_montserrat_20);
+static void create_top(lv_obj_t *parent)
+{
+    lv_obj_t *top = lv_obj_create(parent);
+    top_bar = top;
+    lv_obj_set_size(top, SCREEN_W, TOP_H);
+    lv_obj_set_style_radius(top, 0, 0);
+    lv_obj_set_style_border_width(top, 0, 0);
+    lv_obj_set_style_pad_hor(top, 24, 0);
+    lv_obj_set_style_pad_ver(top, 0, 0);
+    lv_obj_set_style_pad_column(top, 32, 0);
+    lv_obj_set_scrollable(top, false);
+    lv_obj_set_flex_flow(top, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(top, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t *spacer = lv_obj_create(bar);
-    lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(spacer, 0, 0);
-    lv_obj_set_height(spacer, 1);
-    lv_obj_set_flex_grow(spacer, 1);
+    /* 時計 */
+    lv_obj_t *clock = plain_box(top);
+    lv_obj_set_size(clock, 260, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(clock, LV_FLEX_FLOW_COLUMN);
+    lbl_time = text(clock, &lv_font_montserrat_40);
+    lbl_date = text(clock, &lv_font_montserrat_20);
 
-    lbl_out = status_label(bar, &lv_font_montserrat_20);
-    lbl_pwr = status_label(bar, &lv_font_montserrat_20);
-    lbl_layer = status_label(bar, &lv_font_montserrat_20);
-    lbl_sys = status_label(bar, &lv_font_montserrat_20);
-    lbl_link = status_label(bar, &lv_font_montserrat_20);
+    /* タブのボタン */
+    static const char *tab_map[] = {
+        LV_SYMBOL_KEYBOARD "  Keys", "Pad", LV_SYMBOL_AUDIO "  Media", LV_SYMBOL_SETTINGS "  System", "",
+    };
+    tab_bar = lv_buttonmatrix_create(top);
+    lv_buttonmatrix_set_map(tab_bar, tab_map);
+    lv_buttonmatrix_set_button_ctrl_all(tab_bar, LV_BUTTONMATRIX_CTRL_CHECKABLE | LV_BUTTONMATRIX_CTRL_NO_REPEAT);
+    lv_buttonmatrix_set_one_checked(tab_bar, true);
+    lv_buttonmatrix_set_button_ctrl(tab_bar, TAB_KEYS, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_set_size(tab_bar, 820, 120);
+    lv_obj_set_style_text_font(tab_bar, &lv_font_montserrat_28, 0);
+    lv_obj_add_event_cb(tab_bar, tab_bar_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    /* 状態 */
+    lv_obj_t *status = plain_box(top);
+    lv_obj_set_height(status, LV_SIZE_CONTENT);
+    lv_obj_set_flex_grow(status, 1);
+    lv_obj_set_flex_flow(status, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(status, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
+    lv_obj_set_style_pad_row(status, 10, 0);
+    lv_obj_t *row1 = plain_box(status);
+    lv_obj_set_size(row1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(row1, LV_FLEX_FLOW_ROW);
+    lv_obj_set_style_pad_column(row1, 28, 0);
+    lbl_out = text(row1, &lv_font_montserrat_20);
+    lbl_pwr = text(row1, &lv_font_montserrat_20);
+    lbl_layer = text(row1, &lv_font_montserrat_20);
+    lbl_link = text(row1, &lv_font_montserrat_20);
+    lbl_sys = text(status, &lv_font_montserrat_20);
 }
 
 static void update_clock(void)
@@ -229,122 +209,145 @@ static void tick_1s(lv_timer_t *t)
     update_sysinfo();
 }
 
-/* ---- タブの中身 ---- */
+/* ---- Keys：タッチキー ---- */
 
-static void bl_slider_cb(lv_event_t *e)
+/* RP2040 から届いた割り当て（keylabel.h の符号）。届くまでは、ファームの既定の割り当て
+ * （firmware/rp2040/src/keymap.rs の 7〜10 行目と同じ。PC で試すとき用）を表示する */
+static char codes[MAX_LAYERS][TOUCH_KEYS][CODE_LEN];
+static bool have_code[MAX_LAYERS][TOUCH_KEYS];
+#define DEFAULT_LAYERS 3
+static const char *const default_codes[DEFAULT_LAYERS][TOUCH_KEYS] = {
+    {   /* 0：F1〜F12 / Esc 1〜0 Bksp */
+        "K3A", "K3B", "K3C", "K3D", "K3E", "K3F", "K40", "K41", "K42", "K43", "K44", "K45",
+        "K29", "K1E", "K1F", "K20", "K21", "K22", "K23", "K24", "K25", "K26", "K27", "K2A",
+    },
+    {   /* 1：数字の段にない記号 / 移動 */
+        "K35", "K2D", "K2E", "K2F", "K30", "K31", "K33", "K34", "K36", "K37", "K38", "K4C",
+        "K49", "K4A", "K4D", "K4B", "K4E", "K46", "K50", "K51", "K52", "K4F", "K47", "K48",
+    },
+    {   /* 2：メディアと明るさ / タブを開く */
+        "KA8", "KAA", "KA9", "KAC", "KAE", "KAB", "KBE", "KBD", "T", "T", "T", "T",
+        "U0", "U1", "U2", "U3", "T", "T", "T", "T", "T", "T", "T", "T",
+    },
+};
+
+static char labels[TOUCH_KEYS][LABEL_LEN];
+static const char *keys_map[TOUCH_KEYS + 2];
+static lv_obj_t *keys_panel, *keys_matrix;
+static bool labels_dirty = true;
+static uint32_t keys_down;          /* 押しているタッチキー（ビット i） */
+
+/* 透過（T）は下のレイヤーを見る。RMK は「有効になっている下のレイヤー」を見るが、UI に届くのは
+ * 一番上のレイヤーだけなので、今のレイヤーの次はレイヤー 0 を見る（スペースの長押しで 1 つだけ
+ * レイヤーを重ねる、ふつうの使い方ではこれで合う） */
+static const char *code_for(int layer, int i)
 {
-    lv_obj_t *s = lv_event_get_target_obj(e);
-    backlight_set_level(lv_slider_get_value(s));
+    const int order[2] = { layer, 0 };
+    for (int k = 0; k < (layer > 0 ? 2 : 1); k++) {
+        int l = order[k];
+        const char *c = NULL;
+        if (l < MAX_LAYERS && have_code[l][i])
+            c = codes[l][i];
+        else if (l < DEFAULT_LAYERS)
+            c = default_codes[l][i];
+        if (c && strcmp(c, "T") != 0)
+            return c;
+    }
+    return "-";
 }
 
-static void create_media_tab(lv_obj_t *tab)
+static void refresh_labels(void)
 {
-    lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(tab, 24, 0);
-
-    lv_obj_t *pad = keypad_create(tab, keys_media, COUNT(keys_media));
-    lv_obj_set_width(pad, LV_PCT(100));
-    lv_obj_set_flex_grow(pad, 1);
-
-    lv_obj_t *row = lv_obj_create(tab);
-    lv_obj_set_size(row, LV_PCT(100), 80);
-    lv_obj_set_scrollable(row, false);
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(row, 32, 0);
-
-    lv_obj_t *l = lv_label_create(row);
-    lv_label_set_text(l, LV_SYMBOL_IMAGE "  Backlight");
-
-    bl_slider = lv_slider_create(row);
-    lv_slider_set_range(bl_slider, 0, 255);
-    lv_slider_set_value(bl_slider, backlight_level(), LV_ANIM_OFF);
-    lv_obj_set_flex_grow(bl_slider, 1);
-    lv_obj_add_event_cb(bl_slider, bl_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
-
-    bl_note = lv_label_create(row);
-    lv_label_set_text(bl_note, "");
+    int layer = link_state()->layer;
+    if (layer < 0)
+        layer = 0;
+    for (int i = 0; i < TOUCH_KEYS; i++)
+        keylabel_format(code_for(layer, i), labels[i], LABEL_LEN);
+    lv_buttonmatrix_set_map(keys_matrix, keys_map);
+    /* set_map で印が消えるので、押しているキーの印を付け直す */
+    for (int i = 0; i < TOUCH_KEYS; i++)
+        if (keys_down & (1u << i))
+            lv_buttonmatrix_set_button_ctrl(keys_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_CHECKED);
+    labels_dirty = false;
 }
 
-static void out_selector_cb(lv_event_t *e)
+void ui_set_touch_label(int layer, int index, const char *code)
 {
-    lv_obj_t *m = lv_event_get_target_obj(e);
-    uint32_t id = lv_buttonmatrix_get_selected_button(m);
-    link_send_out(id == 1 ? LINK_OUT_PC : id == 2 ? LINK_OUT_CM0 : LINK_OUT_UNKNOWN);
+    if (layer < 0 || layer >= MAX_LAYERS || index < 0 || index >= TOUCH_KEYS)
+        return;
+    snprintf(codes[layer][index], CODE_LEN, "%s", code);
+    have_code[layer][index] = true;
+    labels_dirty = true;    /* まとめて届くので、次の入力の周期でまとめて描き直す */
 }
 
-static void uf2_cb(lv_event_t *e)
+static void set_key_down(int i, bool down)
 {
-    (void)e;
-    link_send_uf2();
+    uint32_t bit = 1u << i;
+    if (((keys_down & bit) != 0) == down)
+        return;
+    if (down) {
+        keys_down |= bit;
+        lv_buttonmatrix_set_button_ctrl(keys_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_CHECKED);
+    } else {
+        keys_down &= ~bit;
+        lv_buttonmatrix_clear_button_ctrl(keys_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_CHECKED);
+    }
+    link_send_touch_key(i, down);
 }
 
-static void poweroff_cb(lv_event_t *e)
+static void release_all_keys(void)
 {
-    (void)e;
-    if (actions.poweroff)
-        actions.poweroff();
+    for (int i = 0; i < TOUCH_KEYS; i++)
+        set_key_down(i, false);
 }
 
-static lv_obj_t *hold_button(lv_obj_t *parent, const char *text, lv_event_cb_t cb)
+/* 触れている指から、押しているキーを決める（マルチタッチなら同時押しできる） */
+static void keys_input(const touch_contacts_t *c)
 {
-    lv_obj_t *b = lv_button_create(parent);
-    lv_obj_set_size(b, LV_PCT(100), 110);
-    lv_obj_add_event_cb(b, cb, LV_EVENT_LONG_PRESSED, NULL);
-    lv_obj_t *l = lv_label_create(b);
-    lv_label_set_text(l, text);
-    lv_obj_center(l);
-    return b;
+    lv_area_t a;
+    lv_obj_get_coords(keys_panel, &a);
+    uint32_t now = 0;
+    for (int k = 0; k < c->count; k++) {
+        const lv_point_t *p = &c->points[k];
+        if (p->x < a.x1 || p->x > a.x2 || p->y < a.y1 || p->y > a.y2)
+            continue;
+        int col = (p->x - a.x1) / KEY_PITCH;
+        int row = (p->y - a.y1) / KEY_PITCH;
+        if (col >= 0 && col < KEY_COLS && row >= 0 && row < KEY_ROWS)
+            now |= 1u << (row * KEY_COLS + col);
+    }
+    for (int i = 0; i < TOUCH_KEYS; i++)
+        set_key_down(i, (now & (1u << i)) != 0);
 }
 
-static void create_system_tab(lv_obj_t *tab)
+static void create_keys_panel(lv_obj_t *parent)
 {
-    lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_ROW);
-    lv_obj_set_style_pad_column(tab, 32, 0);
+    keys_panel = plain_box(parent);
+    lv_obj_set_size(keys_panel, SCREEN_W, BODY_H);
 
-    /* 物理キーの出力先 */
-    lv_obj_t *col = lv_obj_create(tab);
-    lv_obj_set_size(col, 480, LV_PCT(100));
-    lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_scrollable(col, false);
-    lv_obj_t *l = lv_label_create(col);
-    lv_label_set_text(l, LV_SYMBOL_KEYBOARD "  Physical keys to");
-    static const char *out_map[] = { "Auto", "PC", "CM0", "" };
-    out_selector = lv_buttonmatrix_create(col);
-    lv_buttonmatrix_set_map(out_selector, out_map);
-    lv_buttonmatrix_set_button_ctrl_all(out_selector, LV_BUTTONMATRIX_CTRL_CHECKABLE);
-    lv_buttonmatrix_set_one_checked(out_selector, true);
-    lv_buttonmatrix_set_button_ctrl(out_selector, 0, LV_BUTTONMATRIX_CTRL_CHECKED);
-    lv_obj_set_width(out_selector, LV_PCT(100));
-    lv_obj_set_flex_grow(out_selector, 1);
-    lv_obj_add_event_cb(out_selector, out_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    for (int i = 0; i < TOUCH_KEYS; i++) {
+        keys_map[i + (i >= KEY_COLS ? 1 : 0)] = labels[i];
+    }
+    keys_map[KEY_COLS] = "\n";
+    keys_map[TOUCH_KEYS + 1] = "";
 
-    /* CPU の使用率（直近 60 秒） */
-    cpu_chart = lv_chart_create(tab);
-    lv_obj_set_height(cpu_chart, LV_PCT(100));
-    lv_obj_set_flex_grow(cpu_chart, 1);
-    lv_chart_set_type(cpu_chart, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(cpu_chart, 60);
-    lv_chart_set_axis_range(cpu_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
-    lv_chart_set_div_line_count(cpu_chart, 5, 7);
-    lv_chart_set_update_mode(cpu_chart, LV_CHART_UPDATE_MODE_SHIFT);
-    lv_obj_set_style_size(cpu_chart, 0, 0, LV_PART_INDICATOR);
-    cpu_series = lv_chart_add_series(cpu_chart, lv_palette_main(LV_PALETTE_CYAN), LV_CHART_AXIS_PRIMARY_Y);
-
-    /* 押し続けると動くボタン */
-    lv_obj_t *btns = lv_obj_create(tab);
-    lv_obj_set_size(btns, 360, LV_PCT(100));
-    lv_obj_set_flex_flow(btns, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(btns, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_scrollable(btns, false);
-    hold_button(btns, LV_SYMBOL_DOWNLOAD "  RP2040 UF2 (hold)", uf2_cb);
-    hold_button(btns, LV_SYMBOL_POWER "  Power off (hold)", poweroff_cb);
+    keys_matrix = lv_buttonmatrix_create(keys_panel);
+    lv_obj_set_size(keys_matrix, SCREEN_W, BODY_H);
+    /* 外側の余白 5 px ＋ 間 10 px で、キーは 150 px、ピッチは 160 px */
+    lv_obj_set_style_pad_all(keys_matrix, KEY_GAP / 2, 0);
+    lv_obj_set_style_pad_row(keys_matrix, KEY_GAP, 0);
+    lv_obj_set_style_pad_column(keys_matrix, KEY_GAP, 0);
+    lv_obj_set_style_border_width(keys_matrix, 0, 0);
+    lv_obj_set_style_radius(keys_matrix, 0, 0);
+    lv_obj_set_style_text_font(keys_matrix, &lv_font_montserrat_28, 0);
+    /* 押した・離したは keys_input で指から決める（LVGL のポインタは 1 本分しか持たないため） */
+    lv_obj_set_clickable(keys_matrix, false);
+    refresh_labels();
 }
 
-/* ---- トラックパッド ---- */
+/* ---- Pad：トラックパッド ---- */
 
-static lv_obj_t *tabview, *pad_tab, *pad_area, *pad_btn_left, *pad_btn_right;
-static bool pad_was_active;
+static lv_obj_t *pad_panel, *pad_area, *pad_strip, *pad_btn_left, *pad_btn_middle, *pad_btn_right;
 
 static void tp_pointer(int dx, int dy, uint8_t buttons, void *user)
 {
@@ -365,34 +368,29 @@ static bool point_in(const lv_obj_t *obj, const lv_point_t *p)
     return p->x >= a.x1 && p->x <= a.x2 && p->y >= a.y1 && p->y <= a.y2;
 }
 
-/* 10 ms ごと：パッドのタブを開いているときだけ、指を読んで判定に渡す */
-static void pad_timer_cb(lv_timer_t *t)
+/* パッドの上の指は動きに、帯の上の指はスクロールに、L / M / R の上の指はボタンにする
+ * （マルチタッチなら同時に使える） */
+static void pad_input(const touch_contacts_t *c)
 {
-    (void)t;
-    uint32_t active = lv_tabview_get_tab_active(tabview);
-    bool is_active = lv_obj_get_index(pad_tab) == (int32_t)active;
-    if (!is_active) {
-        if (pad_was_active)
-            trackpad_reset();
-        pad_was_active = false;
-        return;
-    }
-    pad_was_active = true;
-
-    touch_contacts_t c;
-    touch_source_read(&c);
-
-    /* パッドの上の指は動きに、L / R の上の指はボタンにする（マルチタッチなら同時に使える） */
     trackpad_frame_t f = { 0, 0, 0 };
     uint8_t side = 0;
-    for (int i = 0; i < c.count; i++) {
-        const lv_point_t *p = &c.points[i];
+    bool strip = false;
+    float strip_y = 0;
+    for (int i = 0; i < c->count; i++) {
+        const lv_point_t *p = &c->points[i];
         if (point_in(pad_area, p)) {
             f.x += (float)p->x;
             f.y += (float)p->y;
             f.count++;
+        } else if (point_in(pad_strip, p)) {
+            if (!strip) {           /* 帯の指は 1 本だけ見る */
+                strip = true;
+                strip_y = (float)p->y;
+            }
         } else if (point_in(pad_btn_left, p)) {
             side |= TRACKPAD_BTN_LEFT;
+        } else if (point_in(pad_btn_middle, p)) {
+            side |= TRACKPAD_BTN_MIDDLE;
         } else if (point_in(pad_btn_right, p)) {
             side |= TRACKPAD_BTN_RIGHT;
         }
@@ -402,28 +400,30 @@ static void pad_timer_cb(lv_timer_t *t)
         f.y /= (float)f.count;
     }
     trackpad_set_side_buttons(side);
+    trackpad_strip_update(strip, strip_y);
     trackpad_update(&f, lv_tick_get());
 }
 
-static lv_obj_t *pad_button(lv_obj_t *parent, const char *text)
+static lv_obj_t *pad_button(lv_obj_t *parent, const char *label)
 {
     lv_obj_t *b = lv_button_create(parent);
     lv_obj_set_width(b, LV_PCT(100));
     lv_obj_set_flex_grow(b, 1);
     lv_obj_t *l = lv_label_create(b);
-    lv_label_set_text(l, text);
+    lv_label_set_text(l, label);
     lv_obj_center(l);
     return b;
 }
 
-static void create_pad_tab(lv_obj_t *tab)
+static void create_pad_panel(lv_obj_t *parent)
 {
-    pad_tab = tab;
-    lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_ROW);
-    lv_obj_set_style_pad_column(tab, 24, 0);
-    lv_obj_set_scrollable(tab, false);
+    pad_panel = plain_box(parent);
+    lv_obj_set_size(pad_panel, SCREEN_W, BODY_H);
+    lv_obj_set_style_pad_all(pad_panel, 8, 0);
+    lv_obj_set_style_pad_column(pad_panel, 24, 0);
+    lv_obj_set_flex_flow(pad_panel, LV_FLEX_FLOW_ROW);
 
-    pad_area = lv_obj_create(tab);
+    pad_area = lv_obj_create(pad_panel);
     lv_obj_set_height(pad_area, LV_PCT(100));
     lv_obj_set_flex_grow(pad_area, 1);
     lv_obj_set_scrollable(pad_area, false);
@@ -436,26 +436,266 @@ static void create_pad_tab(lv_obj_t *tab)
     lv_obj_set_style_text_font(hint, &lv_font_montserrat_14, 0);
     lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, 0);
 
-    lv_obj_t *col = lv_obj_create(tab);
-    lv_obj_set_size(col, 220, LV_PCT(100));
+    /* スクロールの帯（1 キー分の幅）。縦になぞるとスクロール */
+    pad_strip = lv_obj_create(pad_panel);
+    lv_obj_set_size(pad_strip, KEY_PITCH, LV_PCT(100));
+    lv_obj_set_scrollable(pad_strip, false);
+    lv_obj_set_style_bg_color(pad_strip, lv_palette_darken(LV_PALETTE_BLUE_GREY, 4), 0);
+    lv_obj_set_style_radius(pad_strip, 16, 0);
+    lv_obj_t *arrows = lv_label_create(pad_strip);
+    lv_label_set_text(arrows, LV_SYMBOL_UP "\n\nScroll\n\n" LV_SYMBOL_DOWN);
+    lv_obj_set_style_text_align(arrows, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(arrows, lv_palette_main(LV_PALETTE_GREY), 0);
+    lv_obj_center(arrows);
+
+    /* L / M / R（1 キー分の幅） */
+    lv_obj_t *col = plain_box(pad_panel);
+    lv_obj_set_size(col, KEY_PITCH, LV_PCT(100));
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(col, 16, 0);
-    lv_obj_set_scrollable(col, false);
+    lv_obj_set_style_pad_row(col, 12, 0);
     pad_btn_left = pad_button(col, "L");
+    pad_btn_middle = pad_button(col, "M");
     pad_btn_right = pad_button(col, "R");
 
     static const trackpad_output_t out = { .pointer = tp_pointer, .wheel = tp_wheel };
     trackpad_init(&out);
-    touch_source_open(lv_obj_get_display(tab), NULL);
-    lv_timer_create(pad_timer_cb, 10, NULL);
 }
 
-static lv_obj_t *add_keypad_tab(lv_obj_t *tv, const char *name, const touch_key_t *keys, size_t n)
+/* ---- Media ---- */
+
+static void bl_slider_cb(lv_event_t *e)
 {
-    lv_obj_t *tab = lv_tabview_add_tab(tv, name);
-    lv_obj_t *pad = keypad_create(tab, keys, n);
-    lv_obj_set_size(pad, LV_PCT(100), LV_PCT(100));
-    return tab;
+    backlight_set_level(lv_slider_get_value(lv_event_get_target_obj(e)));
+}
+
+static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
+{
+    *panel = plain_box(parent);
+    lv_obj_set_size(*panel, SCREEN_W, BODY_H);
+    lv_obj_set_style_pad_all(*panel, 12, 0);
+    lv_obj_set_style_pad_row(*panel, 16, 0);
+    lv_obj_set_flex_flow(*panel, LV_FLEX_FLOW_COLUMN);
+
+    static const char *map[COUNT(keys_media) + 1];
+    for (size_t i = 0; i < COUNT(keys_media); i++)
+        map[i] = keys_media[i].label;
+    map[COUNT(keys_media)] = "";
+    lv_obj_t *m = lv_buttonmatrix_create(*panel);
+    lv_buttonmatrix_set_map(m, map);
+    lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_NO_REPEAT);
+    lv_obj_set_style_text_font(m, &lv_font_montserrat_28, 0);
+    lv_obj_set_width(m, LV_PCT(100));
+    lv_obj_set_flex_grow(m, 1);
+    lv_obj_add_event_cb(m, media_event_cb, LV_EVENT_ALL, NULL);
+
+    lv_obj_t *row = lv_obj_create(*panel);
+    lv_obj_set_size(row, LV_PCT(100), 80);
+    lv_obj_set_scrollable(row, false);
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(row, 32, 0);
+    lv_obj_t *l = lv_label_create(row);
+    lv_label_set_text(l, LV_SYMBOL_IMAGE "  Backlight");
+    bl_slider = lv_slider_create(row);
+    lv_slider_set_range(bl_slider, 0, 255);
+    lv_slider_set_value(bl_slider, backlight_level(), LV_ANIM_OFF);
+    lv_obj_set_flex_grow(bl_slider, 1);
+    lv_obj_add_event_cb(bl_slider, bl_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    bl_note = lv_label_create(row);
+    lv_label_set_text(bl_note, "");
+}
+
+/* ---- System ---- */
+
+static void out_selector_cb(lv_event_t *e)
+{
+    uint32_t id = lv_buttonmatrix_get_selected_button(lv_event_get_target_obj(e));
+    link_send_out(id == 1 ? LINK_OUT_PC : id == 2 ? LINK_OUT_CM0 : LINK_OUT_UNKNOWN);
+}
+
+static void return_selector_cb(lv_event_t *e)
+{
+    uint32_t id = lv_buttonmatrix_get_selected_button(lv_event_get_target_obj(e));
+    if (id <= RETURN_ALWAYS) {
+        settings()->return_mode = (return_mode_t)id;
+        settings_save();
+    }
+}
+
+static void uf2_cb(lv_event_t *e)
+{
+    (void)e;
+    link_send_uf2();
+}
+
+static void poweroff_cb(lv_event_t *e)
+{
+    (void)e;
+    if (actions.poweroff)
+        actions.poweroff();
+}
+
+static lv_obj_t *hold_button(lv_obj_t *parent, const char *label, lv_event_cb_t cb)
+{
+    lv_obj_t *b = lv_button_create(parent);
+    lv_obj_set_width(b, LV_PCT(100));
+    lv_obj_set_flex_grow(b, 1);
+    lv_obj_add_event_cb(b, cb, LV_EVENT_LONG_PRESSED, NULL);
+    lv_obj_t *l = lv_label_create(b);
+    lv_label_set_text(l, label);
+    lv_obj_center(l);
+    return b;
+}
+
+static lv_obj_t *selector(lv_obj_t *parent, const char *title, const char **map, int width)
+{
+    lv_obj_t *col = lv_obj_create(parent);
+    lv_obj_set_size(col, width, LV_PCT(100));
+    lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_scrollable(col, false);
+    lv_obj_t *l = lv_label_create(col);
+    lv_label_set_text(l, title);
+    lv_obj_t *m = lv_buttonmatrix_create(col);
+    lv_buttonmatrix_set_map(m, map);
+    lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_CHECKABLE | LV_BUTTONMATRIX_CTRL_NO_REPEAT);
+    lv_buttonmatrix_set_one_checked(m, true);
+    lv_obj_set_width(m, LV_PCT(100));
+    lv_obj_set_flex_grow(m, 1);
+    return m;
+}
+
+static void create_system_panel(lv_obj_t *parent, lv_obj_t **panel)
+{
+    *panel = plain_box(parent);
+    lv_obj_set_size(*panel, SCREEN_W, BODY_H);
+    lv_obj_set_style_pad_all(*panel, 12, 0);
+    lv_obj_set_style_pad_column(*panel, 24, 0);
+    lv_obj_set_flex_flow(*panel, LV_FLEX_FLOW_ROW);
+
+    static const char *out_map[] = { "Auto", "PC", "CM0", "" };
+    out_selector = selector(*panel, LV_SYMBOL_KEYBOARD "  Physical keys to", out_map, 420);
+    lv_buttonmatrix_set_button_ctrl(out_selector, 0, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(out_selector, out_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    static const char *return_map[] = { "Never", "Key-opened", "Always", "" };
+    return_selector = selector(*panel, LV_SYMBOL_LOOP "  Back to the previous tab on typing", return_map, 560);
+    lv_buttonmatrix_set_button_ctrl(return_selector, (uint32_t)settings()->return_mode, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(return_selector, return_selector_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    /* CPU の使用率（直近 60 秒） */
+    cpu_chart = lv_chart_create(*panel);
+    lv_obj_set_height(cpu_chart, LV_PCT(100));
+    lv_obj_set_flex_grow(cpu_chart, 1);
+    lv_chart_set_type(cpu_chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(cpu_chart, 60);
+    lv_chart_set_axis_range(cpu_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+    lv_chart_set_div_line_count(cpu_chart, 5, 7);
+    lv_chart_set_update_mode(cpu_chart, LV_CHART_UPDATE_MODE_SHIFT);
+    lv_obj_set_style_size(cpu_chart, 0, 0, LV_PART_INDICATOR);
+    cpu_series = lv_chart_add_series(cpu_chart, lv_palette_main(LV_PALETTE_CYAN), LV_CHART_AXIS_PRIMARY_Y);
+
+    /* 押し続けると動くボタン */
+    lv_obj_t *btns = plain_box(*panel);
+    lv_obj_set_size(btns, 320, LV_PCT(100));
+    lv_obj_set_flex_flow(btns, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(btns, 16, 0);
+    hold_button(btns, LV_SYMBOL_DOWNLOAD "  RP2040 UF2 (hold)", uf2_cb);
+    hold_button(btns, LV_SYMBOL_POWER "  Power off (hold)", poweroff_cb);
+}
+
+/* ---- タブの切り替え ---- */
+
+/* Pad を開いている間は、上の帯を細く（160 → 80 px）して、Pad の面を高くする（320 → 400 px）。
+ * タブのボタンは同じところに残す。日付と CPU などの行は隠す */
+#define TOP_COMPACT_H 80
+
+static void set_compact_top(bool compact)
+{
+    int top_h = compact ? TOP_COMPACT_H : TOP_H;
+    lv_obj_set_height(top_bar, top_h);
+    lv_obj_set_hidden(lbl_date, compact);
+    lv_obj_set_hidden(lbl_sys, compact);
+    lv_obj_set_style_text_font(lbl_time, compact ? &lv_font_montserrat_28 : &lv_font_montserrat_40, 0);
+    lv_obj_set_height(tab_bar, compact ? 72 : 120);
+    lv_obj_set_style_pad_all(tab_bar, compact ? 4 : 12, 0);
+    lv_obj_set_style_text_font(tab_bar, compact ? &lv_font_montserrat_20 : &lv_font_montserrat_28, 0);
+    lv_obj_set_height(body, 480 - top_h);
+    lv_obj_set_height(pad_panel, 480 - top_h);
+}
+
+static lv_obj_t *panels[TAB_COUNT];
+static int active_tab = TAB_KEYS;
+static int return_tab = TAB_KEYS;   /* 戻る先 */
+static bool opened_by_key;
+/* タブを替えたら、触れている指がすべて離れるまで入力を読まない。替える前から触れていた指
+ * （タブを開くタッチキーを押した指など）が、新しいタブで叩いたことにならないように */
+static bool wait_release;
+
+static void show_tab(int tab, bool by_key)
+{
+    if (tab < 0 || tab >= TAB_COUNT)
+        return;
+    if (tab == active_tab) {
+        /* 開いているタブのキーをもう一度押したら、元のタブに戻る */
+        if (by_key && tab != return_tab)
+            show_tab(return_tab, false);
+        return;
+    }
+
+    /* 離れるタブの、押しっぱなしを片付ける */
+    if (active_tab == TAB_KEYS)
+        release_all_keys();
+    if (active_tab == TAB_PAD)
+        trackpad_reset();
+
+    return_tab = active_tab;
+    opened_by_key = by_key;
+    active_tab = tab;
+    wait_release = true;
+    for (int i = 0; i < TAB_COUNT; i++)
+        lv_obj_set_hidden(panels[i], i != tab);
+    set_compact_top(tab == TAB_PAD);
+    lv_buttonmatrix_set_button_ctrl(tab_bar, (uint32_t)tab, LV_BUTTONMATRIX_CTRL_CHECKED);
+}
+
+void ui_user_key(int id, bool pressed)
+{
+    if (pressed && id >= 0 && id < TAB_COUNT)
+        show_tab(id, true);
+}
+
+void ui_activity(void)
+{
+    /* Keys では戻らない（打っている最中なので） */
+    if (active_tab == TAB_KEYS || active_tab == return_tab)
+        return;
+    return_mode_t mode = settings()->return_mode;
+    if (mode == RETURN_ALWAYS || (mode == RETURN_KEY_OPENED && opened_by_key)) {
+        int back = return_tab;
+        show_tab(back, false);
+        return_tab = TAB_KEYS;
+    }
+}
+
+/* 10 ms ごと：開いているタブが指を使うものなら、指を読んで渡す */
+static void input_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+    if (labels_dirty)
+        refresh_labels();
+    if (active_tab != TAB_KEYS && active_tab != TAB_PAD)
+        return;
+    touch_contacts_t c;
+    touch_source_read(&c);
+    if (wait_release) {
+        if (c.count > 0)
+            return;
+        wait_release = false;
+    }
+    if (active_tab == TAB_KEYS)
+        keys_input(&c);
+    else
+        pad_input(&c);
 }
 
 void ui_create(const ui_actions_t *a)
@@ -464,25 +704,26 @@ void ui_create(const ui_actions_t *a)
         actions = *a;
 
     lv_obj_t *scr = lv_screen_active();
-    lv_obj_set_flex_flow(scr, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollable(scr, false);
+    lv_obj_set_style_pad_all(scr, 0, 0);
+    lv_obj_set_flex_flow(scr, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(scr, 0, 0);
 
-    create_status_bar(scr);
+    create_top(scr);
 
-    lv_obj_t *tv = lv_tabview_create(scr);
-    lv_obj_set_width(tv, LV_PCT(100));
-    lv_obj_set_flex_grow(tv, 1);
-    lv_tabview_set_tab_bar_position(tv, LV_DIR_LEFT);
-    lv_tabview_set_tab_bar_size(tv, 150);
-    /* 横になぞってタブが切り替わると、パッドやキーの操作とぶつかるので、タブはボタンでだけ切り替える */
-    lv_obj_set_scrollable(lv_tabview_get_content(tv), false);
-    tabview = tv;
+    body = plain_box(scr);
+    lv_obj_set_size(body, SCREEN_W, BODY_H);
+    create_keys_panel(body);
+    create_pad_panel(body);
+    create_media_panel(body, &panels[TAB_MEDIA]);
+    create_system_panel(body, &panels[TAB_SYSTEM]);
+    panels[TAB_KEYS] = keys_panel;
+    panels[TAB_PAD] = pad_panel;
+    for (int i = 0; i < TAB_COUNT; i++)
+        lv_obj_set_hidden(panels[i], i != TAB_KEYS);
 
-    add_keypad_tab(tv, "Num", keys_num, COUNT(keys_num));
-    add_keypad_tab(tv, "F", keys_fn, COUNT(keys_fn));
-    create_pad_tab(lv_tabview_add_tab(tv, "Pad"));
-    create_media_tab(lv_tabview_add_tab(tv, "Media"));
-    create_system_tab(lv_tabview_add_tab(tv, "System"));
+    touch_source_open(lv_obj_get_display(scr), NULL);
+    lv_timer_create(input_timer_cb, 10, NULL);
 
     ui_show_link_state(link_state());
     update_clock();
@@ -513,6 +754,7 @@ void ui_show_link_state(const link_state_t *s)
         lv_label_set_text_fmt(lbl_layer, "Layer %d", s->layer);
     else
         lv_label_set_text(lbl_layer, "Layer ?");
+    labels_dirty = true;    /* レイヤーが変わるとタッチキーの表示も変わる */
 
     /* 出力先の選択：手動なら PC か CM0、自動なら Auto に印を付ける */
     if (s->out != LINK_OUT_UNKNOWN) {

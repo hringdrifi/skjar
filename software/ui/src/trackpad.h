@@ -36,8 +36,12 @@ void trackpad_init(const trackpad_output_t *out);
 /* 10 ms ごとくらいに呼ぶ */
 void trackpad_update(const trackpad_frame_t *frame, uint32_t now_ms);
 
-/* 画面の横の L / R ボタン（押している間ずっと立てる） */
+/* 画面の横の L / M / R ボタン（押している間ずっと立てる） */
 void trackpad_set_side_buttons(uint8_t buttons);
+
+/* スクロールの帯：1 本指で縦になぞるとスクロールする（2 本指のスクロールと同じ向き）。
+ * touching は帯に指があるか、y はその位置（画面の px） */
+void trackpad_strip_update(bool touching, float y);
 
 /* ボタンをすべて離し、途中の判定を捨てる（タブを離れたときなど） */
 void trackpad_reset(void);
