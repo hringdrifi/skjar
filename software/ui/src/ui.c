@@ -337,9 +337,9 @@ static const char *const default_codes[DEFAULT_LAYERS][TOUCH_KEYS] = {
         "K3A", "K3B", "K3C", "K3D", "K3E", "K3F", "K40", "K41", "K42", "K43", "K44", "K45",
         "K29", "K1E", "K1F", "K20", "K21", "K22", "K23", "K24", "K25", "K26", "K27", "K2A",
     },
-    {   /* 1：移動・編集（右端 2 つは透過） / 数字の段にない記号と Del */
-        "K4A", "K4D", "K4B", "K4E", "K49", "K46", "K39", "K65", "K47", "K48", "T", "T",
-        "K35", "K2D", "K2E", "K2F", "K30", "K31", "K33", "K34", "K36", "K37", "K38", "K4C",
+    {   /* 1：移動・編集、空き、↑、ScrLk、Pause / 数字の段にない記号、空き、← ↓ →、Del */
+        "K4A", "K4D", "K4B", "K4E", "K49", "K46", "K39", "K65", "-", "K52", "K47", "K48",
+        "K35", "K2E", "K2F", "K30", "K31", "K33", "K34", "-", "K50", "K51", "K4F", "K4C",
     },
     {   /* 2：メディアと明るさ / タブを開く */
         "KA8", "KAA", "KA9", "KAC", "KAE", "KAB", "KBE", "KBD", "T", "T", "T", "T",
@@ -377,13 +377,24 @@ static void refresh_labels(void)
     int layer = link_state()->layer;
     if (layer < 0)
         layer = 0;
-    for (int i = 0; i < TOUCH_KEYS; i++)
+    uint32_t empty = 0;     /* 何もしないキー（ビット i） */
+    for (int i = 0; i < TOUCH_KEYS; i++) {
         keylabel_format(code_for(layer, i), labels[i], LABEL_LEN);
+        /* buttonmatrix は空の文字 "" を並びの終わりとみなすので、空きのキーは空白 1 つにする */
+        if (labels[i][0] == '\0') {
+            snprintf(labels[i], LABEL_LEN, " ");
+            empty |= 1u << i;
+        }
+    }
     lv_buttonmatrix_set_map(keys_matrix, keys_map);
-    /* set_map で印が消えるので、押しているキーの印を付け直す */
-    for (int i = 0; i < TOUCH_KEYS; i++)
+    /* 印を付け直す（前のレイヤーの印が残らないよう、いったん消す）。空きのキーは薄く、押しているキーは押した色に */
+    lv_buttonmatrix_clear_button_ctrl_all(keys_matrix, LV_BUTTONMATRIX_CTRL_DISABLED | LV_BUTTONMATRIX_CTRL_CHECKED);
+    for (int i = 0; i < TOUCH_KEYS; i++) {
+        if (empty & (1u << i))
+            lv_buttonmatrix_set_button_ctrl(keys_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_DISABLED);
         if (keys_down & (1u << i))
             lv_buttonmatrix_set_button_ctrl(keys_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_CHECKED);
+    }
     labels_dirty = false;
 }
 
@@ -462,6 +473,9 @@ static void create_keys_panel(lv_obj_t *parent)
     /* 押した・離したは keys_input で指から決める（LVGL のポインタは 1 本分しか持たないため） */
     lv_obj_set_clickable(keys_matrix, false);
     glass_matrix(keys_matrix);
+    /* 空きのキー（何もしない）は、目立たないよう、うっすら形だけ見せる */
+    lv_obj_set_style_bg_opa(keys_matrix, LV_OPA_20, LV_PART_ITEMS | LV_STATE_DISABLED);
+    lv_obj_set_style_shadow_width(keys_matrix, 0, LV_PART_ITEMS | LV_STATE_DISABLED);
     refresh_labels();
 }
 
