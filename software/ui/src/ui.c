@@ -439,8 +439,8 @@ static const char *const default_codes[DEFAULT_LAYERS][TOUCH_KEYS] = {
         "K39", "K35", "K2E", "K2F", "K30", "K31", "K33", "K34", "K50", "K51", "K4F", "K4C",
     },
     {   /* 2：メディアと明るさ / タブを開く */
-        "KA8", "KAA", "KA9", "KAC", "KAE", "KAB", "KBE", "KBD", "T", "T", "T", "T",
-        "U0", "U1", "U2", "U3", "T", "T", "T", "T", "T", "T", "T", "T",
+        "KA8", "KAA", "KA9", "KAC", "KAE", "KAB", "KBE", "KBD", "-", "-", "-", "-",
+        "U0", "U1", "U2", "U3", "-", "-", "-", "-", "-", "-", "-", "-",
     },
 };
 

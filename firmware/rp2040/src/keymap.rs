@@ -102,12 +102,12 @@ pub const fn get_default_keymap() -> [[[KeyAction; COL]; ROW]; NUM_LAYER] {
             [a!(Transparent), user!(0), user!(1), user!(2), user!(3), a!(Transparent)],
             [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
             [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
-            // タッチキーの上の段：メディアと明るさ
+            // タッチキーの上の段：メディアと明るさ。下の段：タブを開く。
+            // ほかは空き（透過にすると、レイヤー 0 の F キーや数字が混ざって見えるため）
             [k!(AudioMute), k!(AudioVolDown), k!(AudioVolUp), k!(MediaPrevTrack), k!(MediaPlayPause), k!(MediaNextTrack)],
-            [k!(BrightnessDown), k!(BrightnessUp), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
-            // タッチキーの下の段：タブを開く
-            [user!(0), user!(1), user!(2), user!(3), a!(Transparent), a!(Transparent)],
-            [a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent), a!(Transparent)],
+            [k!(BrightnessDown), k!(BrightnessUp), a!(No), a!(No), a!(No), a!(No)],
+            [user!(0), user!(1), user!(2), user!(3), a!(No), a!(No)],
+            [a!(No), a!(No), a!(No), a!(No), a!(No), a!(No)],
             [df!(0), df!(3), a!(No), a!(No), a!(No), a!(No)]
         ]),
 
