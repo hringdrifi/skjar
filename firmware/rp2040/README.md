@@ -21,8 +21,10 @@ HID over I²C を確かめるための試作。基板ができる前に、Raspbe
 |---|---|
 | キーマトリクスと RMK のキーボード処理（レイヤー、タップ・ホールド） | 実装した。キーマップは仮（[src/keymap.rs](src/keymap.rs)） |
 | HID over I²C のターゲット（[src/hid_i2c.rs](src/hid_i2c.rs)） | 実装した。実機では未確認 |
+| CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。実機では未確認。`PWR` と `SHUTDOWN` はまだ送らない（CC と電源の判定がないため）。`BLMAX` は 255 固定、`LCD` は記録だけ |
+| タッチキー（[src/reports.rs](src/reports.rs)） | 実装した。UART で届いたキーを、RMK の物理キーのレポートと合わせて送る（修飾キーは OR、キーは合わせて 6 個まで） |
 | USB | HID にせず、ログ用の仮想シリアルにしている |
-| 出力先の切り替え、USB HID、UART、電源、RGB、CC | まだ |
+| 出力先の切り替え、USB HID、電源、RGB、CC | まだ。出力先は CM0 だけで、UI から `PC` を選んでも CM0 のまま（`OUT,CM0,MAN` を返す） |
 
 RMK は、USB がつながっているときだけ USB 用のチャンネル（`USB_REPORT_CHANNEL`）にレポートを出す。試作では USB の HID を使わないので、つながったことにして（`set_usb_state(Configured)`）、そのチャンネルを横取りして I²C に流している。USB の HID と並べるときは、レポートの行き先を切り替える仕組みが別に要る（RMK の改造か、上流への提案）。
 
@@ -46,11 +48,15 @@ BOOTSEL を押しながら USB につなぎ、`cargo run --release` で書き込
 | `KB_SDA` | GP26（31 番ピン） | GPIO23（16 番ピン） | 4.7 kΩ で Pi の 3.3V へ |
 | `KB_SCL` | GP27（32 番ピン） | GPIO24（18 番ピン） | 4.7 kΩ で Pi の 3.3V へ |
 | `KB_INT` | GP13（17 番ピン） | GPIO25（22 番ピン） | 10 kΩ で Pi の 3.3V へ |
+| `RP_TXD` | GP16（21 番ピン） | GPIO15 / RXD（10 番ピン） | 1 kΩ を直列に入れる（下記） |
+| `CM0_TXD` | GP17（22 番ピン） | GPIO14 / TXD（8 番ピン） | |
 | GND | GND | GND | |
 
 - プルアップは Pi の 3.3V（1 番ピン）へつなぐ。SKJÁR と同じく、Pico 側の内部プルアップは使わない。
 - キーは、列（COL、出力）と行（ROW、入力）をジャンパー線でつなぐと押したことになる。たとえば COL1（GP5）と ROW0（GP10）で `Q`。ダイオードを入れるなら、アノードを列、カソードを行に向ける。
-- Pi 側の設定は [software/os/overlays/README.md](../../software/os/overlays/README.md) の「skjar-keyboard」。
+- Pi 側の設定は [software/os/overlays/README.md](../../software/os/overlays/README.md) の「skjar-keyboard」と、[software/ui/README.md](../../software/ui/README.md) の「実機での設定」（UART）。
+- UART のピンは SKJÁR と同じ（UART0、GPIO16 / 17）。SKJÁR では `RP_TXD` を CM0 の 3.3V で動くバッファに通すが、試作にはないので、Pi の電源を切ったまま Pico を動かすときに流れ込む電流を 1 kΩ で抑える。
+- タッチ UI と組み合わせて試すときは、Pi で `skjar-ui` を動かす（`--link /dev/serial0`）。UI がなくても、Pi で `python3 -c` などから `$SK,KEY,07,1E,1*9B` と `$SK,KEY,07,1E,0*9C` を送れば、「1」が入力される（CRC は [software/ui/tools/fake_rp2040.py](../../software/ui/tools/fake_rp2040.py) の `frame()` で作れる）。
 
 ## CM0 に電流を流し込まないための約束
 

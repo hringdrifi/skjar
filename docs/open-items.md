@@ -77,6 +77,6 @@
   - 今より弱い電源を B につないだときは、CC_B を見て先回りで負荷を落とすと決めた（[design-decisions.md](design-decisions.md) の 2.4）。USB-A → C の変換ケーブルで、後追いの対処（`PWR_ST` の割り込みで LCD を切る）が間に合うかを実物で確かめる
 - [ ] CM0 の USB ブート要求のキーの組み合わせ（SW102 の代わり）
 - [ ] タッチ UI の試作（LVGL、[software/ui/](../software/ui/)）を実機で確かめる：パネルとタッチの向き、描き換えの速さと CPU の負荷、バックライトのデバイス
-- [ ] CM0 と RP2040 の間の UART の形式は案を書いた（[protocol.md](protocol.md) の 1 章。CM0 側は UI の試作が使っている）。RP2040 側を作って確かめたら、決定にする
+- [ ] CM0 と RP2040 の間の UART の形式は案を書いた（[protocol.md](protocol.md) の 1 章）。CM0 側（UI）と RP2040 側（`cm0_link.rs`）の試作がある。Pico と Pi Zero 2 W で確かめたら、決定にする。`PWR` と `SHUTDOWN` は、CC と電源の判定を作るときに足す
 - [ ] CM0 のウォッチドッグ（「動作中」の信号が途絶えたときの扱い）
 - [ ] いきなりの電源断への備えの細部（方針は [design-decisions.md](design-decisions.md) の 1.5）：パーティションの分け方と容量、Overlay File System の設定、データの領域を書き込みにする・戻す仕組み、書き込み中の表示、OS の更新を Port B の給電があるときだけにする仕組み

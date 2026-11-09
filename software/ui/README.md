@@ -11,7 +11,7 @@ CM0 で動く専用のタッチ UI。[LVGL](https://lvgl.io/) 9.6（C）で作�
 | タッチキー：数字・記号（Num）、F1〜F12・編集キー・矢印（F）、メディアキー（Media） | 実装した。押したとき・離したときに UART で RP2040 に送る |
 | バックライトの明るさ（スライダー）と、RP2040 から届く上限 | 実装した |
 | 物理キーの出力先の手動切り替え、CPU のグラフ、RP2040 の UF2、電源を切る（System） | 実装した。UF2 と電源は長押し |
-| RP2040 との UART（[docs/protocol.md](../../docs/protocol.md) の 1 章。形式は案） | CM0 側を実装した。RP2040 側はまだ |
+| RP2040 との UART（[docs/protocol.md](../../docs/protocol.md) の 1 章。形式は案） | 実装した。RP2040 側も [firmware/rp2040/](../../firmware/rp2040/) にある |
 | 確認したこと | aarch64 Linux 向けに、LVGL ごとコンパイルとリンクが通る（fbdev。zig cc で確認）。実機、SDL の窓、`link-test` の実行はまだ |
 
 - 記号のラベルは US 配列のもの。PC 側が JIS 配列だと、Shift を使う記号（`@` など）は別の文字になる。
