@@ -3859,6 +3859,16 @@
 		)
 		(uuid "2bfb1248-d412-44ec-ba54-6247fa137009")
 	)
+	(label "USB_DP"
+		(at 175.26 127 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "30ff00f6-9114-4daf-90b4-cd56c6fee2aa")
+	)
 	(label "SWDIO"
 		(at 177.8 175.26 180)
 		(effects
@@ -3928,6 +3938,16 @@
 			(justify right bottom)
 		)
 		(uuid "7fd1172f-f542-4329-b07b-dcb87b87c8dd")
+	)
+	(label "USB_DN"
+		(at 175.26 124.46 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9fd4292d-89d4-47a0-842f-87cea33f23ee")
 	)
 	(label "~{QSPI_SS}"
 		(at 167.64 134.62 0)

@@ -622,6 +622,10 @@
       {
         "netclass": "Power",
         "pattern": "+3V3"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "/RP2040 Sheet/USB_D?"
       }
     ]
   },

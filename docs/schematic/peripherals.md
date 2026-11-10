@@ -35,7 +35,7 @@
 | Y402 | 12 MHz 発振器（3.3 V、CMOS 出力、3225 4 ピン。仮に YXC OT2EL89CJI-111YLC-12M） | `Oscillator:ASE-xxxMHz` | `Oscillator:Oscillator_SMD_Abracon_ASE-4Pin_3.2x2.5mm` | C5280582（Extended、仮） |
 | C414 | 100 nF（Y402 のパスコン） | `Device:C` | 0603 | C14663 |
 | J402 | 3.5 mm ジャック（4 極） | `Connector_Audio:AudioJack4` | `Jack_3.5mm_KoreanHropartsElec_PJ-320D-4A_Horizontal` | C95562 |
-| J401 | スピーカーのコネクタ（2 ピン） | `Connector_Generic:Conn_01x02` | 未選定 | 未選定 |
+| J401 | スピーカーのコネクタ（2 ピン、1.25 mm。スピーカー 3525BOX-4Ω3W-2P1.25、C49247004 のプラグ用。挿さるかは実物で確認） | `Connector_Generic:Conn_01x02` | `Connector_Molex:Molex_PicoBlade_53261-0271_1x02-1MP_P1.25mm_Horizontal` | C177225（仮） |
 
 | 接続 | 内容 |
 |---|---|
