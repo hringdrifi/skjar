@@ -81,13 +81,18 @@ static wbutton_t *button(lv_obj_t *parent, const char *text, int width, void (*c
 }
 
 /* ボタンの形をしていない、叩ける場所（天気の「いま」など）。押している間だけうっすら明るくする */
+static void tappable(lv_obj_t *obj, void (*cb)(void))
+{
+    wbutton_t *w = &buttons[button_count < MAX_BUTTONS ? button_count++ : MAX_BUTTONS - 1];
+    *w = (wbutton_t){ obj, NULL, cb };
+}
+
 static void zone(lv_obj_t *obj, void (*cb)(void))
 {
     lv_obj_set_style_radius(obj, 12, 0);
     lv_obj_set_style_bg_color(obj, lv_color_white(), LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(obj, LV_OPA_10, LV_STATE_PRESSED);
-    wbutton_t *w = &buttons[button_count < MAX_BUTTONS ? button_count++ : MAX_BUTTONS - 1];
-    *w = (wbutton_t){ obj, NULL, cb };
+    tappable(obj, cb);
 }
 
 /* ---- 選ぶ画面（Weather の場所、News のジャンル） ----
@@ -655,7 +660,9 @@ static void create_news(lv_obj_t *page)
     news_load();
     lv_timer_create(news_check, NEWS_CHECK_MS, NULL);
     lv_timer_create(news_fast_check, 1000, NULL);
-    zone(page, news_open_picker);   /* 叩くとジャンルを選ぶ画面 */
+    /* 左の札を叩くとジャンルを選ぶ画面（札は地の色が見た目で変わるので、押している間は薄くするだけ） */
+    lv_obj_set_style_opa(badge, LV_OPA_60, LV_STATE_PRESSED);
+    tappable(badge, news_open_picker);
 }
 
 /* Plain：黒地に琥珀色の電光掲示板。Picture：背景の絵の上では強すぎるので、ヘッダーと同じ透けた地に白い字にする

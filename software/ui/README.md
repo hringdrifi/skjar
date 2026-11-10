@@ -129,7 +129,7 @@ Keys タブの、ヘッダーとタッチキーの間の帯（1920 × 80 px）�
 - 最後に出していたウィジェットは `ui.conf` に `widget=weather` のように覚えておき、次の起動でもそれから出す。
 - **News：** 設定のフォルダ（`ui.conf` と同じ所）の `news.txt` の見出し（1 行に 1 つ）を、右から左へ流し続ける。30 秒ごとにファイルが変わったかを見て読み直す。左の札の時刻は、`news.txt` を書いた時刻。
   - 見出しは [tools/fetch_news.py](tools/fetch_news.py) で取ってくる。初期値は NHK の主要ニュースの RSS。NHK の RSS は個人で使う範囲で。
-  - **ジャンル：** 電光掲示板を叩くと、ジャンルの一覧（NHK の Top・Society・Culture・Science・Politics・Business・World・Sports と、BBC World）が出る。いくつでも選べて、Done で決める。選んだものは `ui.conf` に `news_feeds=nhk,nhk-society,bbc` のように覚え、`fetch_news.py` が読む。いくつも選んだときは、各ジャンルから 1 本ずつ順に取り、合わせて 40 本まで。
+  - **ジャンル：** 左の NEWS の札を叩くと、ジャンルの一覧（NHK の Top・Society・Culture・Science・Politics・Business・World・Sports と、BBC World）が出る。いくつでも選べて、Done で決める。選んだものは `ui.conf` に `news_feeds=nhk,nhk-society,bbc` のように覚え、`fetch_news.py` が読む。いくつも選んだときは、各ジャンルから 1 本ずつ順に取り、合わせて 40 本まで。
   - 選んだら、すぐに取り直す（天気の場所と同じ。実機は [skjar-news.path](../os/systemd/skjar-news.path) が `news.request` を見て、Windows は UI が `tools/fetch_news.py` を動かす）。`fetch_news.py --feed` で決めて取ると、ウィジェットで選んだものより優先する（一覧にない RSS / Atom の URL も書ける）。
   - **日本語は、電光掲示板だけ TTF のフォントで描く**（LVGL の Tiny TTF。起動時にフォントのファイルを丸ごと読む）。フォントは `--font` で渡すか、決まった場所を探す：実機（Linux）は IPA ゴシック（`sudo apt install fonts-ipafont-gothic`）か Noto Sans CJK（`fonts-noto-cjk`）、Windows は BIZ UDゴシック・游ゴシック・メイリオ。どれもなければ英数字のフォントで、ASCII の見出しだけを出す（`fetch_news.py --ascii` で、英語の見出しを ASCII にして書ける）。
   - 実機では systemd のタイマーで 15 分ごとに回す（[software/os/systemd/skjar-news.timer](../os/systemd/skjar-news.timer)）。
