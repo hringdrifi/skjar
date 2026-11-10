@@ -380,13 +380,14 @@ static void create_pomodoro(lv_obj_t *page)
 
 #define NEWS_MAX        6000        /* 読む見出しの合計（バイト） */
 #define NEWS_CHECK_MS   30000       /* news.txt が変わったかを見る間隔 */
-/* 流れる速さ：描き直し（LV_DEF_REFR_PERIOD、33 ms）1 回につき 6 px（約 182 px / 秒）。
+/* 流れる速さ：描き直し（LV_DEF_REFR_PERIOD、33 ms）1 回につき 5 px（約 152 px / 秒）。
  * 1 回に進む量を整数にそろえると、5 px と 6 px が混ざらず、ガタつきが減る */
-#define NEWS_PX_PER_REFR 6
-#define NEWS_SEP        "      |      "
+#define NEWS_PX_PER_REFR 5
+#define NEWS_GAP        64          /* 見出しと区切りの | の間（px） */
+#define NEWS_LINES      128         /* 読む見出しの数の上限 */
 
 static struct {
-    lv_obj_t *ticker, *stamp, *title, *badge, *board;
+    lv_obj_t *track, *stamp, *title, *badge, *board;
     char path[600];
     time_t mtime;
     bool loaded;
@@ -451,16 +452,65 @@ static lv_font_t *load_japanese_font(const char *path)
     return NULL;
 }
 
-static void news_set(const char *text, time_t mtime)
+static void news_track_x(void *obj, int32_t v)
 {
-    /* 1 周の時間は、文字の幅から自分で決める。LVGL の速さ指定（lv_anim_speed）は 1 周を 10 秒までに
-     * 抑えるので、見出しを何本もつなぐと、決めた速さよりずっと速く流れてしまう */
-    lv_point_t size;
-    lv_text_get_size(&size, text, lv_obj_get_style_text_font(news.ticker, LV_PART_MAIN), 0, 0, LV_COORD_MAX,
-                     LV_TEXT_FLAG_NONE);
-    uint32_t ms = (uint32_t)((uint64_t)size.x * LV_DEF_REFR_PERIOD / NEWS_PX_PER_REFR);
-    lv_obj_set_style_anim_duration(news.ticker, ms ? ms : 1, 0);
-    lv_label_set_text(news.ticker, text);
+    lv_obj_set_x(obj, v);
+}
+
+/* 等速。LVGL の lv_anim_path_linear は進み具合を 1024 段に丸めるので、1 周が数万 px になると
+ * 1 段が 20〜30 px になり、数回に 1 回大きく跳ぶ（見出しの少ない Top だけが滑らかだった）。
+ * ここでは丸めずに、時間に比例した位置を出す */
+static int32_t news_path(const lv_anim_t *a)
+{
+    if (a->duration == 0)
+        return a->end_value;
+    int64_t span = (int64_t)a->end_value - a->start_value;
+    return a->start_value + (int32_t)(span * a->act_time / a->duration);
+}
+
+/* 見出しを 1 本ずつラベルにして横に並べ（track）、並びごと左へ動かす。1 本の長いラベルにすると、LVGL は
+ * 描き直すたびに見えていない字も含めて全部の字形を調べるので、見出しが多い・長いほど重くなって
+ * コマ落ちする。別々のラベルなら、画面の外のものは描かれない。
+ * 1 周分（見出しと、そのあとの | をすべて）の幅を W として、右に続きを足して画面の幅の分だけ余らせ、
+ * x を 0 から -W まで動かして繰り返す（-W のときの見た目は 0 のときと同じ） */
+static void news_show(const char *const *lines, int count, time_t mtime)
+{
+    lv_anim_delete(news.track, news_track_x);
+    lv_obj_clean(news.track);
+    lv_obj_set_x(news.track, 0);
+
+    for (int i = 0; i < count; i++) {
+        lv_label_set_text(lv_label_create(news.track), lines[i]);
+        lv_label_set_text(lv_label_create(news.track), "|");
+    }
+    lv_obj_update_layout(news.track);
+    int32_t loop_w = lv_obj_get_width(news.track) + NEWS_GAP;   /* 最後の | のあとの間まで */
+    int32_t view_w = lv_obj_get_content_width(news.board);
+    if (loop_w - NEWS_GAP <= view_w) {
+        /* 1 周分が見える幅に収まる：流さない（最後の | は要らない） */
+        lv_obj_delete(lv_obj_get_child(news.track, -1));
+    } else {
+        /* 続き：-W まで動いたときにも、画面の右端まで字があるように */
+        while (lv_obj_get_width(news.track) < loop_w + view_w) {
+            for (int i = 0; i < count; i++) {
+                lv_label_set_text(lv_label_create(news.track), lines[i]);
+                lv_label_set_text(lv_label_create(news.track), "|");
+            }
+            lv_obj_update_layout(news.track);
+        }
+        /* 1 周の時間は、描き直し 1 回につき NEWS_PX_PER_REFR 進むように決める */
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, news.track);
+        lv_anim_set_exec_cb(&a, news_track_x);
+        lv_anim_set_values(&a, 0, -loop_w);
+        lv_anim_set_duration(&a, (uint32_t)((uint64_t)loop_w * LV_DEF_REFR_PERIOD / NEWS_PX_PER_REFR));
+        lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+        lv_anim_set_path_cb(&a, news_path);
+        lv_anim_start(&a);
+        fprintf(stderr, "news: %d headlines, %d px a loop (%.1f s)\n", count, (int)loop_w,
+                (double)a.duration / 1000.0);
+    }
     if (mtime) {
         struct tm tm;
         platform_localtime(mtime, &tm);
@@ -470,7 +520,12 @@ static void news_set(const char *text, time_t mtime)
     }
 }
 
-/* news.txt（UTF-8）を読んで 1 本の文字列にする。日本語のフォントがなければ、ASCII 以外を含む見出しは
+static void news_message(const char *msg, time_t mtime)
+{
+    news_show(&msg, 1, mtime);
+}
+
+/* news.txt（UTF-8）を読んで、見出しの並びにする。日本語のフォントがなければ、ASCII 以外を含む見出しは
  * 飛ばす（Montserrat に字形がなく、一部の字が抜けた見出しになるため） */
 static void news_load(void)
 {
@@ -479,7 +534,7 @@ static void news_load(void)
         if (news.loaded || news.mtime != (time_t)-1) {
             news.mtime = (time_t)-1;
             news.loaded = false;
-            news_set("No news yet.  Run  tools/fetch_news.py  to fetch the headlines (news.txt next to ui.conf)", 0);
+            news_message("No news yet.  Run  tools/fetch_news.py  to fetch the headlines (news.txt next to ui.conf)", 0);
         }
         return;
     }
@@ -489,10 +544,12 @@ static void news_load(void)
     if (!f)
         return;
     static char text[NEWS_MAX + 64];
+    const char *lines[NEWS_LINES];
+    int count = 0;
     size_t n = 0;
     char line[1024];
     int skipped = 0;
-    while (fgets(line, sizeof line, f) && n < NEWS_MAX) {
+    while (fgets(line, sizeof line, f) && n < NEWS_MAX && count < NEWS_LINES) {
         line[strcspn(line, "\r\n")] = '\0';
         char clean[1024];
         size_t c = 0;
@@ -509,24 +566,22 @@ static void news_load(void)
             skipped++;
             continue;
         }
-        if (c == 0)
+        if (c == 0 || n + c + 1 > sizeof text)
             continue;
-        int w = snprintf(text + n, sizeof text - n, "%s%s", n ? NEWS_SEP : "", clean);
-        if (w < 0)
-            break;
-        n += (size_t)w;
-        if (n >= sizeof text)
-            n = sizeof text - 1;
+        memcpy(text + n, clean, c + 1);
+        lines[count++] = text + n;
+        n += c + 1;
     }
     fclose(f);
-    text[n] = '\0';
     news.mtime = st.st_mtime;
     news.loaded = true;
-    fprintf(stderr, "news: read %s (%zu bytes)\n", news.path, n);
-    news_set(n         ? text
-             : skipped ? "No Japanese font: install fonts-ipafont-gothic, or start with --font <ttf>"
-                       : "news.txt is empty",
-             st.st_mtime);
+    fprintf(stderr, "news: read %s (%d headlines, %zu bytes)\n", news.path, count, n);
+    if (count)
+        news_show(lines, count, st.st_mtime);
+    else
+        news_message(skipped ? "No Japanese font: install fonts-ipafont-gothic, or start with --font <ttf>"
+                             : "news.txt is empty",
+                     st.st_mtime);
 }
 
 static void news_check(lv_timer_t *t)
@@ -654,10 +709,16 @@ static void create_news(lv_obj_t *page)
     lv_obj_set_style_pad_hor(board, 12, 0);
     lv_font_t *jp = load_japanese_font(hooks.font_path);
     news.unicode = jp != NULL;
-    news.ticker = label(board, jp ? jp : &lv_font_montserrat_40, amber);
-    lv_obj_set_width(news.ticker, LV_PCT(100));
-    lv_label_set_long_mode(news.ticker, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);
-    lv_obj_align(news.ticker, LV_ALIGN_LEFT_MID, 0, 0);
+    /* 見出しの並び（news_show）。字の色と書体は、並びの中のラベルが受け継ぐ */
+    news.track = box(board);
+    lv_obj_set_size(news.track, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(news.track, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(news.track, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(news.track, NEWS_GAP, 0);
+    lv_obj_set_style_text_font(news.track, jp ? jp : &lv_font_montserrat_40, 0);
+    lv_obj_set_style_text_color(news.track, amber, 0);
+    lv_obj_align(news.track, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_update_layout(page);     /* news_show が掲示板の幅を使うので、先に並べておく */
 
     news_load();
     lv_timer_create(news_check, NEWS_CHECK_MS, NULL);
@@ -683,7 +744,7 @@ void widgets_set_look(bool picture)
     lv_obj_delete(probe);
     lv_obj_set_style_bg_color(news.board, picture ? panel : lv_color_hex(0x0B0B0B), 0);
     lv_obj_set_style_bg_opa(news.board, picture ? NEWS_GLASS_OPA : LV_OPA_COVER, 0);
-    lv_obj_set_style_text_color(news.ticker, text, 0);
+    lv_obj_set_style_text_color(news.track, text, 0);
     lv_obj_set_style_bg_color(news.badge, picture ? panel : amber, 0);
     lv_obj_set_style_bg_opa(news.badge, picture ? NEWS_GLASS_OPA : LV_OPA_COVER, 0);
     lv_obj_set_style_text_color(news.title, picture ? lv_color_white() : lv_color_black(), 0);
