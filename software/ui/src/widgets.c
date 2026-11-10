@@ -380,7 +380,9 @@ static void create_pomodoro(lv_obj_t *page)
 
 #define NEWS_MAX        6000        /* 読む見出しの合計（バイト） */
 #define NEWS_CHECK_MS   30000       /* news.txt が変わったかを見る間隔 */
-#define NEWS_SPEED      160         /* 流れる速さ（px / 秒） */
+/* 流れる速さ：描き直し（LV_DEF_REFR_PERIOD、33 ms）1 回につき 6 px（約 182 px / 秒）。
+ * 1 回に進む量を整数にそろえると、5 px と 6 px が混ざらず、ガタつきが減る */
+#define NEWS_PX_PER_REFR 6
 #define NEWS_SEP        "      |      "
 
 static struct {
@@ -456,7 +458,7 @@ static void news_set(const char *text, time_t mtime)
     lv_point_t size;
     lv_text_get_size(&size, text, lv_obj_get_style_text_font(news.ticker, LV_PART_MAIN), 0, 0, LV_COORD_MAX,
                      LV_TEXT_FLAG_NONE);
-    uint32_t ms = (uint32_t)((uint64_t)size.x * 1000 / NEWS_SPEED);
+    uint32_t ms = (uint32_t)((uint64_t)size.x * LV_DEF_REFR_PERIOD / NEWS_PX_PER_REFR);
     lv_obj_set_style_anim_duration(news.ticker, ms ? ms : 1, 0);
     lv_label_set_text(news.ticker, text);
     if (mtime) {
