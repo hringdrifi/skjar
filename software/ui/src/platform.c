@@ -38,6 +38,38 @@ void platform_localtime(time_t t, struct tm *out)
     localtime_s(out, &t);
 }
 
+bool platform_run_tool(const char *script, const char *args)
+{
+    /* exe（build-windows\skjar-ui.exe）のフォルダの 1 つ上の tools\ */
+    char dir[MAX_PATH];
+    DWORD n = GetModuleFileNameA(NULL, dir, sizeof dir);
+    if (n == 0 || n >= sizeof dir)
+        return false;
+    char *sep = strrchr(dir, '\\');
+    if (!sep)
+        return false;
+    *sep = '\0';
+    char tool[MAX_PATH + 64];
+    snprintf(tool, sizeof tool, "%s\\..\\tools\\%s", dir, script);
+    if (GetFileAttributesA(tool) == INVALID_FILE_ATTRIBUTES) {
+        fprintf(stderr, "tool: no %s\n", tool);
+        return false;
+    }
+    char cmd[2048];
+    snprintf(cmd, sizeof cmd, "python \"%s\" %s", tool, args ? args : "");
+    STARTUPINFOA si = { .cb = sizeof si };
+    PROCESS_INFORMATION pi;
+    /* 端末を受け継ぐ（道具の出力が UI と同じ端末に出る） */
+    if (!CreateProcessA(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) {
+        fprintf(stderr, "tool: cannot run python (error %lu)\n", (unsigned long)GetLastError());
+        return false;
+    }
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    fprintf(stderr, "tool: started %s\n", script);
+    return true;
+}
+
 /* 標準入力は待たずに読めないので、別のスレッドで 1 行ずつ読んで、受け渡しの箱に入れる */
 #define STDIN_SLOTS 16
 #define STDIN_LEN   128
@@ -152,6 +184,13 @@ bool platform_read_stdin_line(char *buf, size_t size)
         if (len < sizeof acc - 1)
             acc[len++] = c;
     }
+    return false;
+}
+
+bool platform_run_tool(const char *script, const char *args)
+{
+    (void)script;
+    (void)args;
     return false;
 }
 

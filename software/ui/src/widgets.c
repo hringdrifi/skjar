@@ -647,6 +647,7 @@ static struct {
     lv_obj_t *icon, *temp, *place, *range, *empty, *row, *now;
     weather_slot_t hours[WEATHER_HOURS], tomorrow;
     lv_obj_t *picker;           /* 場所を選ぶ画面（lv_layer_top。開いているときだけ作る） */
+    int fast_checks;            /* 場所を選んだあと、あと何回 1 秒ごとに見るか */
 } weather;
 
 /* 場所の候補（英語の地名。fetch_weather.py が Open-Meteo の地名検索で引く） */
@@ -776,9 +777,13 @@ static void weather_load(void)
     /* 場所を選び直したあと、まだ前の場所の天気のまま（city= は fetch_weather.py が、引いた地名を書く。
      * --lat / --lon で取ったときは書かないので、選んだ場所とは比べない） */
     if (city[0] && !same_name(city, weather_city())) {
-        static char msg[128];
-        snprintf(msg, sizeof msg, "%s " LV_SYMBOL_DOWN "     Waiting for the weather  (tools/fetch_weather.py)",
-                 weather_city());
+        /* 選んだあとしばらくは待つ。それでも届かなければ（ネットにつながっていないなど）そう出す */
+        char msg[160];
+        if (weather.fast_checks > 0)
+            snprintf(msg, sizeof msg, "%s " LV_SYMBOL_DOWN "     Waiting for the weather", weather_city());
+        else
+            snprintf(msg, sizeof msg, "%s " LV_SYMBOL_DOWN "     Could not get the weather yet  "
+                     "(network?  tools/fetch_weather.py)", weather_city());
         weather_show_empty(msg);
         return;
     }
@@ -814,6 +819,18 @@ static void weather_check(lv_timer_t *t)
     weather_load();
 }
 
+/* 1 秒ごと：場所を選んだあとだけ、ファイルを見る */
+static void weather_fast_check(lv_timer_t *t)
+{
+    (void)t;
+    if (weather.fast_checks > 0) {
+        weather.fast_checks--;
+        if (weather.fast_checks == 0)
+            weather.loaded = false;     /* 待ち終わった：まだ届いていなければ、出す文を替える */
+        weather_load();
+    }
+}
+
 /* ---- 場所を選ぶ画面 ---- */
 
 static const char *picker_map[WEATHER_CITY_COUNT + WEATHER_CITY_COUNT / WEATHER_CITY_COLS + 1];
@@ -844,6 +861,14 @@ static void weather_choose(const char *name)
         fclose(f);
     }
     fprintf(stderr, "weather: place set to %s\n", name);
+    /* Windows では systemd がないので、自分で fetch_weather.py を動かす（Linux では skjar-weather.path が
+     * 動かす）。どちらでも、届いたらすぐ出すよう、しばらく 1 秒ごとにファイルを見る */
+    if (!settings_is_readonly()) {
+        char args[700];
+        snprintf(args, sizeof args, "--city \"%s\" --out \"%s/weather.txt\"", name, settings_dir());
+        platform_run_tool("fetch_weather.py", args);
+        weather.fast_checks = 60;
+    }
     weather.loaded = false;     /* 同じファイルでも、選んだ場所と比べ直す */
     weather_load();
 }
@@ -996,6 +1021,7 @@ static void create_weather(lv_obj_t *page)
     weather.mtime = 0;
     weather_load();
     lv_timer_create(weather_check, WEATHER_CHECK_MS, NULL);
+    lv_timer_create(weather_fast_check, 1000, NULL);
 }
 
 /* ---- 並びと、スワイプでの切り替え ---- */

@@ -18,4 +18,9 @@ bool platform_read_stdin_line(char *buf, size_t size);
 void platform_audio_play(const char *wav_path);
 void platform_audio_stop(void);
 
+/* Windows だけ：tools/ の Python の道具（exe の 1 つ上のフォルダの tools/。build-windows/ から見て）を、
+ * 待たずに動かす（PATH の python。出力は UI と同じ端末へ）。動かせたら true。
+ * Linux（実機）では何もしない（systemd のユニットが動かす）で false */
+bool platform_run_tool(const char *script, const char *args);
+
 #endif /* SKJAR_PLATFORM_H */
