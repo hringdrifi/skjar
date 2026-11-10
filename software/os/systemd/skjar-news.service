@@ -4,12 +4,14 @@
 # Install:
 #   sudo apt install fonts-ipafont-gothic                # Japanese font for the headlines (the UI finds it)
 #   sudo install -D -m 755 ../../ui/tools/fetch_news.py /usr/local/lib/skjar/fetch_news.py
-#   sudo cp skjar-news.service skjar-news.timer /etc/systemd/system/
-#   sudo systemctl enable --now skjar-news.timer
+#   sudo cp skjar-news.service skjar-news.timer skjar-news.path /etc/systemd/system/
+#   sudo systemctl enable --now skjar-news.timer skjar-news.path
 #
 # It runs as root because the UI runs as root for now (news.txt goes to /root/.config/skjar).
-# Default feed: NHK top news. Change it with --feed NAME or --feed URL (more than one is fine;
-# names are listed in fetch_news.py).
+# The genres are chosen by tapping the News widget (news_feeds= in ui.conf; NHK top news if none),
+# and skjar-news.path fetches at once. To fix the feeds instead, put --feed NAME or --feed URL on the
+# ExecStart line (more than one is fine; names are listed in fetch_news.py); the widget's choice is
+# then ignored.
 
 [Unit]
 Description=Fetch news headlines for the SKJAR News widget

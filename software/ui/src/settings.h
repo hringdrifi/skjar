@@ -29,6 +29,7 @@ typedef struct {
     look_t look;
     bool widgets[SETTINGS_WIDGETS];     /* System タブで有効にしたウィジェット。初期値はどれも無効 */
     int shown_widget;                   /* Widget strip に出していたもの（次の起動でも同じものから） */
+    char news_feeds[160];               /* News のジャンル（fetch_news.py の名前をカンマで。空なら主要ニュース） */
     char weather_city[48];              /* Weather の場所（英語の地名。空なら fetch_weather.py の初期値の東京） */
 } settings_t;
 

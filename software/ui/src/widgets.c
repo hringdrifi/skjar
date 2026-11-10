@@ -90,6 +90,110 @@ static void zone(lv_obj_t *obj, void (*cb)(void))
     *w = (wbutton_t){ obj, NULL, cb };
 }
 
+/* ---- 選ぶ画面（Weather の場所、News のジャンル） ----
+ * 画面全体を暗くして、真ん中の板に一覧を出す（lv_layer_top。開いているときだけ作る）。
+ * 帯のボタンと違い、LVGL のクリックで操作する（開いている間、ui.c は指をタッチキーに渡さない） */
+
+static lv_obj_t *picker;
+
+static void picker_close(void)
+{
+    if (picker) {
+        lv_obj_delete(picker);
+        picker = NULL;
+    }
+}
+
+static void picker_close_cb(lv_event_t *e)
+{
+    /* 暗くした背景を叩いたら閉じる（中の板を叩いたときは閉じない） */
+    if (lv_event_get_target(e) == lv_event_get_current_target(e))
+        picker_close();
+}
+
+static void picker_cancel_cb(lv_event_t *e)
+{
+    (void)e;
+    picker_close();
+}
+
+static lv_obj_t *picker_button(lv_obj_t *panel, const char *text, lv_event_cb_t cb)
+{
+    lv_obj_t *b = lv_button_create(panel);
+    lv_obj_set_size(b, 200, 64);
+    lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, NULL);
+    if (hooks.style_button)
+        hooks.style_button(b);
+    lv_obj_t *l = label(b, &lv_font_montserrat_28, lv_color_white());
+    lv_label_set_text(l, text);
+    lv_obj_center(l);
+    return b;
+}
+
+/* 題と Cancel と、選ぶもののボタンの並び（map。離したときに選ぶ、押すと印が付く）を作り、並びを返す。
+ * 板（並びの親）の右上の Cancel の左は空けてある（News の Done） */
+static lv_obj_t *picker_create(const char *title_text, const char *const *map, int32_t matrix_h)
+{
+    lv_obj_t *dim = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(dim);
+    lv_obj_set_size(dim, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_bg_color(dim, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(dim, LV_OPA_70, 0);
+    lv_obj_add_event_cb(dim, picker_close_cb, LV_EVENT_CLICKED, NULL);
+    picker = dim;
+
+    lv_obj_t *panel = lv_obj_create(dim);
+    lv_obj_set_size(panel, 1640, matrix_h + 120);
+    lv_obj_center(panel);
+    lv_obj_set_scrollable(panel, false);
+    lv_obj_set_style_pad_all(panel, 20, 0);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(0x1A1E24), 0);
+    lv_obj_set_style_border_width(panel, 0, 0);
+    lv_obj_set_style_radius(panel, 16, 0);
+
+    lv_obj_t *title = label(panel, &lv_font_montserrat_28, lv_color_white());
+    lv_label_set_text(title, title_text);
+    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 14);
+    lv_obj_align(picker_button(panel, "Cancel", picker_cancel_cb), LV_ALIGN_TOP_RIGHT, 0, 0);
+
+    lv_obj_t *m = lv_buttonmatrix_create(panel);
+    lv_buttonmatrix_set_map(m, map);
+    lv_obj_set_size(m, LV_PCT(100), matrix_h);
+    lv_obj_align(m, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_style_pad_all(m, 0, 0);
+    lv_obj_set_style_pad_row(m, 12, 0);
+    lv_obj_set_style_pad_column(m, 12, 0);
+    lv_obj_set_style_bg_opa(m, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(m, 0, 0);
+    lv_obj_set_style_text_font(m, &lv_font_montserrat_28, 0);
+    /* 離したときに選ぶ（押したときだと、指を滑らせて選び直せない） */
+    lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_CLICK_TRIG | LV_BUTTONMATRIX_CTRL_CHECKABLE);
+    return m;
+}
+
+bool widgets_picker_open(void)
+{
+    return picker != NULL;
+}
+
+/* 選び直したので、取ってくる道具をすぐ動かす。設定のフォルダの <request> に中身を書く（実機では systemd の
+ * path ユニットがそれを見て動かす）。Windows では systemd がないので、自分で tools/<tool> を動かす。
+ * 録画のときは何もしないで false */
+static bool refetch(const char *request, const char *content, const char *tool, const char *args)
+{
+    if (settings_is_readonly())
+        return false;
+    char path[600];
+    snprintf(path, sizeof path, "%s/%s", settings_dir(), request);
+    FILE *f = fopen(path, "w");
+    if (f) {
+        fprintf(f, "%s\n", content);
+        fclose(f);
+    }
+    platform_run_tool(tool, args);
+    return true;
+}
+
 /* ---- Pomodoro ---- */
 
 #define POMO_WORK_MS    (25u * 60u * 1000u)
@@ -280,6 +384,7 @@ static struct {
     time_t mtime;
     bool loaded;
     bool unicode;               /* 日本語のフォントがある：ASCII 以外もそのまま出す */
+    int fast_checks;            /* ジャンルを選んだあと、あと何回 1 秒ごとに見るか */
 } news;
 
 /* ---- 日本語のフォント ---- */
@@ -423,6 +528,90 @@ static void news_check(lv_timer_t *t)
     news_load();
 }
 
+/* 1 秒ごと：ジャンルを選んだあとだけ、ファイルを見る */
+static void news_fast_check(lv_timer_t *t)
+{
+    (void)t;
+    if (news.fast_checks > 0) {
+        news.fast_checks--;
+        news_load();
+    }
+}
+
+/* ---- ジャンルを選ぶ画面（いくつでも選べる） ---- */
+
+/* fetch_news.py の名前（FEEDS）と、画面に出す名前 */
+static const struct { const char *key, *label; } news_genres[] = {
+    { "nhk", "Top" },           { "nhk-society", "Society" }, { "nhk-culture", "Culture" },
+    { "nhk-science", "Science" }, { "nhk-politics", "Politics" }, { "nhk-business", "Business" },
+    { "nhk-world", "World" },   { "nhk-sports", "Sports" },   { "bbc", "BBC World" },
+};
+#define NEWS_GENRES     ((int)(sizeof news_genres / sizeof news_genres[0]))
+#define NEWS_GENRE_COLS 5
+static const char *news_map[NEWS_GENRES + NEWS_GENRES / NEWS_GENRE_COLS + 1];
+static lv_obj_t *news_matrix;
+
+/* 選んでいるジャンル（ui.conf の news_feeds。空なら fetch_news.py の初期値と同じ主要ニュース） */
+static bool news_genre_on(const char *key)
+{
+    const char *list = settings()->news_feeds[0] ? settings()->news_feeds : "nhk";
+    size_t n = strlen(key);
+    for (const char *p = list; *p;) {
+        const char *end = strchr(p, ',');
+        size_t len = end ? (size_t)(end - p) : strlen(p);
+        if (len == n && strncmp(p, key, n) == 0)
+            return true;
+        if (!end)
+            break;
+        p = end + 1;
+    }
+    return false;
+}
+
+static void news_done_cb(lv_event_t *e)
+{
+    (void)e;
+    char list[sizeof settings()->news_feeds] = "";
+    char args[900];
+    int a = snprintf(args, sizeof args, "--out \"%s/news.txt\"", settings_dir());
+    for (int i = 0; i < NEWS_GENRES; i++) {
+        if (!lv_buttonmatrix_has_button_ctrl(news_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_CHECKED))
+            continue;
+        size_t n = strlen(list);
+        snprintf(list + n, sizeof list - n, "%s%s", n ? "," : "", news_genres[i].key);
+        a += snprintf(args + a, sizeof args - (size_t)a, " --feed %s", news_genres[i].key);
+    }
+    picker_close();
+    if (!list[0])
+        return;     /* 1 つも選んでいない：前のまま */
+    if (strcmp(list, settings()->news_feeds[0] ? settings()->news_feeds : "nhk") == 0)
+        return;
+    snprintf(settings()->news_feeds, sizeof settings()->news_feeds, "%s", list);
+    settings_save();
+    fprintf(stderr, "news: genres set to %s\n", list);
+    if (refetch("news.request", list, "fetch_news.py", args))
+        news.fast_checks = 60;
+}
+
+static void news_open_picker(void)
+{
+    if (picker)
+        return;
+    int k = 0;
+    for (int i = 0; i < NEWS_GENRES; i++) {
+        if (i > 0 && i % NEWS_GENRE_COLS == 0)
+            news_map[k++] = "\n";
+        news_map[k++] = news_genres[i].label;
+    }
+    news_map[k] = "";
+    news_matrix = picker_create("News  " "\xE2\x80\xA2" "  Choose the genres", news_map, 200);
+    for (int i = 0; i < NEWS_GENRES; i++)
+        if (news_genre_on(news_genres[i].key))
+            lv_buttonmatrix_set_button_ctrl(news_matrix, (uint32_t)i, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_t *done = picker_button(lv_obj_get_parent(news_matrix), "Done", news_done_cb);
+    lv_obj_align(done, LV_ALIGN_TOP_RIGHT, -220, 0);
+}
+
 static void create_news(lv_obj_t *page)
 {
     snprintf(news.path, sizeof news.path, "%s/news.txt", settings_dir());
@@ -465,6 +654,8 @@ static void create_news(lv_obj_t *page)
 
     news_load();
     lv_timer_create(news_check, NEWS_CHECK_MS, NULL);
+    lv_timer_create(news_fast_check, 1000, NULL);
+    zone(page, news_open_picker);   /* 叩くとジャンルを選ぶ画面 */
 }
 
 /* Plain：黒地に琥珀色の電光掲示板。Picture：背景の絵の上では強すぎるので、ヘッダーと同じ透けた地に白い字にする
@@ -646,7 +837,6 @@ static struct {
     bool loaded;
     lv_obj_t *icon, *temp, *place, *range, *empty, *row, *now;
     weather_slot_t hours[WEATHER_HOURS], tomorrow;
-    lv_obj_t *picker;           /* 場所を選ぶ画面（lv_layer_top。開いているときだけ作る） */
     int fast_checks;            /* 場所を選んだあと、あと何回 1 秒ごとに見るか */
 } weather;
 
@@ -836,16 +1026,7 @@ static void weather_fast_check(lv_timer_t *t)
 static const char *picker_map[WEATHER_CITY_COUNT + WEATHER_CITY_COUNT / WEATHER_CITY_COLS + 1];
 static char picker_custom[48];      /* ui.conf に、候補にない場所が書いてあるとき */
 
-static void picker_close(void)
-{
-    if (weather.picker) {
-        lv_obj_delete(weather.picker);
-        weather.picker = NULL;
-    }
-}
-
-/* 選んだ：ui.conf に覚え、設定のフォルダの weather.request に書く（実機では systemd の
- * skjar-weather.path がそれを見て、すぐに天気を取り直す） */
+/* 選んだ：ui.conf に覚え、取り直す */
 static void weather_choose(const char *name)
 {
     picker_close();
@@ -853,22 +1034,11 @@ static void weather_choose(const char *name)
         return;
     snprintf(settings()->weather_city, sizeof settings()->weather_city, "%s", name);
     settings_save();
-    char req[600];
-    snprintf(req, sizeof req, "%s/weather.request", settings_dir());
-    FILE *f = settings_is_readonly() ? NULL : fopen(req, "w");   /* 録画のときは書かない */
-    if (f) {
-        fprintf(f, "%s\n", name);
-        fclose(f);
-    }
     fprintf(stderr, "weather: place set to %s\n", name);
-    /* Windows では systemd がないので、自分で fetch_weather.py を動かす（Linux では skjar-weather.path が
-     * 動かす）。どちらでも、届いたらすぐ出すよう、しばらく 1 秒ごとにファイルを見る */
-    if (!settings_is_readonly()) {
-        char args[700];
-        snprintf(args, sizeof args, "--city \"%s\" --out \"%s/weather.txt\"", name, settings_dir());
-        platform_run_tool("fetch_weather.py", args);
-        weather.fast_checks = 60;
-    }
+    char args[700];
+    snprintf(args, sizeof args, "--city \"%s\" --out \"%s/weather.txt\"", name, settings_dir());
+    if (refetch("weather.request", name, "fetch_weather.py", args))
+        weather.fast_checks = 60;   /* 届いたらすぐ出すよう、しばらく 1 秒ごとにファイルを見る */
     weather.loaded = false;     /* 同じファイルでも、選んだ場所と比べ直す */
     weather_load();
 }
@@ -881,22 +1051,9 @@ static void picker_city_cb(lv_event_t *e)
         weather_choose(name);
 }
 
-static void picker_close_cb(lv_event_t *e)
-{
-    /* 暗くした背景を叩いたら閉じる（中の板を叩いたときは閉じない） */
-    if (lv_event_get_target(e) == lv_event_get_current_target(e))
-        picker_close();
-}
-
-static void picker_cancel_cb(lv_event_t *e)
-{
-    (void)e;
-    picker_close();
-}
-
 static void weather_open_picker(void)
 {
-    if (weather.picker)
+    if (picker)
         return;
     /* 並べる候補。ui.conf に候補にない場所が書いてあれば、最後の 1 つの代わりに出す */
     const char *cur = weather_city();
@@ -918,58 +1075,11 @@ static void weather_open_picker(void)
     }
     picker_map[k] = "";
 
-    lv_obj_t *dim = lv_obj_create(lv_layer_top());
-    lv_obj_remove_style_all(dim);
-    lv_obj_set_size(dim, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_style_bg_color(dim, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(dim, LV_OPA_70, 0);
-    lv_obj_add_event_cb(dim, picker_close_cb, LV_EVENT_CLICKED, NULL);
-    weather.picker = dim;
-
-    lv_obj_t *panel = lv_obj_create(dim);
-    lv_obj_set_size(panel, 1640, 420);
-    lv_obj_center(panel);
-    lv_obj_set_scrollable(panel, false);
-    lv_obj_set_style_pad_all(panel, 20, 0);
-    lv_obj_set_style_bg_color(panel, lv_color_hex(0x1A1E24), 0);
-    lv_obj_set_style_border_width(panel, 0, 0);
-    lv_obj_set_style_radius(panel, 16, 0);
-
-    lv_obj_t *title = label(panel, &lv_font_montserrat_28, lv_color_white());
-    lv_label_set_text(title, "Weather  " "\xE2\x80\xA2" "  Choose the place");
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 14);
-
-    lv_obj_t *cancel = lv_button_create(panel);
-    lv_obj_set_size(cancel, 200, 64);
-    lv_obj_align(cancel, LV_ALIGN_TOP_RIGHT, 0, 0);
-    lv_obj_add_event_cb(cancel, picker_cancel_cb, LV_EVENT_CLICKED, NULL);
-    if (hooks.style_button)
-        hooks.style_button(cancel);
-    lv_obj_t *cl = label(cancel, &lv_font_montserrat_28, lv_color_white());
-    lv_label_set_text(cl, "Cancel");
-    lv_obj_center(cl);
-
-    lv_obj_t *m = lv_buttonmatrix_create(panel);
-    lv_buttonmatrix_set_map(m, picker_map);
-    lv_obj_set_size(m, LV_PCT(100), 300);
-    lv_obj_align(m, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_pad_all(m, 0, 0);
-    lv_obj_set_style_pad_row(m, 12, 0);
-    lv_obj_set_style_pad_column(m, 12, 0);
-    lv_obj_set_style_bg_opa(m, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(m, 0, 0);
-    lv_obj_set_style_text_font(m, &lv_font_montserrat_28, 0);
-    /* 離したときに選ぶ（押したときだと、指を滑らせて選び直せない） */
-    lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_CLICK_TRIG | LV_BUTTONMATRIX_CTRL_CHECKABLE);
+    lv_obj_t *m = picker_create("Weather  " "\xE2\x80\xA2" "  Choose the place", picker_map, 300);
     lv_buttonmatrix_set_one_checked(m, true);
     if (checked >= 0)
         lv_buttonmatrix_set_button_ctrl(m, (uint32_t)checked, LV_BUTTONMATRIX_CTRL_CHECKED);
     lv_obj_add_event_cb(m, picker_city_cb, LV_EVENT_VALUE_CHANGED, NULL);
-}
-
-bool widgets_picker_open(void)
-{
-    return weather.picker != NULL;
 }
 
 static void create_weather(lv_obj_t *page)

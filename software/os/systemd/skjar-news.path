@@ -1,0 +1,16 @@
+# SKJÁR: fetch the headlines at once when the genres are chosen on the News widget.
+# The UI writes news.request next to ui.conf when the genres change (and news_feeds= in ui.conf,
+# which fetch_news.py reads). Install with skjar-news.service (see there):
+#   sudo cp skjar-news.path /etc/systemd/system/
+#   sudo systemctl enable --now skjar-news.path
+# The UI runs as root for now, so the file is under /root/.config/skjar.
+
+[Unit]
+Description=Fetch the headlines when the genres are chosen on the SKJAR News widget
+
+[Path]
+PathChanged=/root/.config/skjar/news.request
+Unit=skjar-news.service
+
+[Install]
+WantedBy=paths.target

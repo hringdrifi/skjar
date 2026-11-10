@@ -51,7 +51,7 @@ void settings_load(const char *path)
     FILE *f = fopen(file_path, "r");
     if (!f)
         return;     /* まだ保存していない。初期値のまま */
-    char line[128];
+    char line[256];
     while (fgets(line, sizeof line, f)) {
         line[strcspn(line, "\r\n")] = '\0';
         char *eq = strchr(line, '=');
@@ -78,6 +78,8 @@ void settings_load(const char *path)
                 for (int i = 1; i < SETTINGS_WIDGETS; i++)
                     if (strcmp(name, widget_names[i]) == 0)
                         current.widgets[i] = true;
+        } else if (strcmp(key, "news_feeds") == 0) {
+            snprintf(current.news_feeds, sizeof current.news_feeds, "%s", val);
         } else if (strcmp(key, "weather_city") == 0) {
             snprintf(current.weather_city, sizeof current.weather_city, "%s", val);
         }
@@ -130,6 +132,8 @@ void settings_save(void)
     }
     fprintf(f, "\n");
     fprintf(f, "widget=%s\n", widget_names[current.shown_widget]);
+    if (current.news_feeds[0])
+        fprintf(f, "news_feeds=%s\n", current.news_feeds);
     if (current.weather_city[0])
         fprintf(f, "weather_city=%s\n", current.weather_city);
     fclose(f);
