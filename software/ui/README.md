@@ -122,7 +122,10 @@ Keys タブの、ヘッダーとタッチキーの間の帯（1920 × 80 px）�
 - **Pomodoro：** 集中 25 分、休憩 5 分、4 回ごとに長い休憩 15 分。▶ / ⏸、⏭（次の区切りへ飛ばす）、⟳（最初から）。区切りが終わったら止めて待ち、画面に文字を出して、キーのライトを点滅させる（`LEDF`）。ほかのウィジェットやタブにしていても数え続ける。
 - **Typing：** 打鍵の速さ。RP2040 の `ACT`（文字や機能のキーが押された）を数え、直近 15 秒の WPM（5 打鍵を 1 語）、今日の打鍵数と最高の WPM、直近 2 分のグラフ（1 本 5 秒）を出す。修飾キーやレイヤーキーは数えない。PC で試すときは、標準入力に `ACT` を続けて打つ。
 - **Weather：** 設定のフォルダの `weather.txt` を読んで、いまの天気と気温、今日の最高・最低・降水確率、3 時間おきの 4 つ先まで、あしたを出す。30 秒ごとにファイルが変わったかを見る。
-  - 天気は [tools/fetch_weather.py](tools/fetch_weather.py) で取ってくる（Open-Meteo。API キー不要、個人利用は無料）。場所は `--city Sapporo` か `--lat` / `--lon`（初期値は東京）。実機では systemd のタイマーで 30 分ごと（[software/os/systemd/skjar-weather.timer](../os/systemd/skjar-weather.timer)）。
+  - 天気は [tools/fetch_weather.py](tools/fetch_weather.py) で取ってくる（Open-Meteo。API キー不要、個人利用は無料）。実機では systemd のタイマーで 30 分ごと（[software/os/systemd/skjar-weather.timer](../os/systemd/skjar-weather.timer)）。
+  - **場所：** ウィジェットの左（アイコン・気温・地名）を叩くと、都市の一覧（日本の 14 都市と、ソウル・台北・ロンドン・ニューヨーク）が出る。選んだ場所は `ui.conf` に `weather_city=Sapporo` のように覚え、`fetch_weather.py` が読む（選んでいなければ東京）。一覧にない場所は、`ui.conf` に英語の地名で書けば、一覧の最後に出る。
+  - 選んだときは設定のフォルダに `weather.request` も書く。実機では [skjar-weather.path](../os/systemd/skjar-weather.path) がそれを見て、すぐに取り直す。Windows では自分で `fetch_weather.py` を実行する（それまでは「Waiting for the weather」と出す）。
+  - `fetch_weather.py --city` や `--lat` / `--lon` で場所を決めて取ると、ウィジェットで選んだ場所より優先する。
 - 最後に出していたウィジェットは `ui.conf` に `widget=weather` のように覚えておき、次の起動でもそれから出す。
 - **News：** 設定のフォルダ（`ui.conf` と同じ所）の `news.txt` の見出し（1 行に 1 つ）を、右から左へ流し続ける。30 秒ごとにファイルが変わったかを見て読み直す。左の札の時刻は、`news.txt` を書いた時刻。
   - 見出しは [tools/fetch_news.py](tools/fetch_news.py) で取ってくる。初期値は NHK の主要ニュースの RSS。`--feed nhk-business` のような名前（NHK の各ジャンル、`bbc`）か、RSS / Atom の URL で変える（何度でも書ける）。NHK の RSS は個人で使う範囲で。

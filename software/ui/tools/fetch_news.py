@@ -24,13 +24,14 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 FEEDS = {
-    "nhk": "https://www3.nhk.or.jp/rss/news/cat0.xml",           # NHK 主要ニュース
-    "nhk-society": "https://www3.nhk.or.jp/rss/news/cat1.xml",   # 社会
-    "nhk-science": "https://www3.nhk.or.jp/rss/news/cat3.xml",   # 科学・医療
-    "nhk-politics": "https://www3.nhk.or.jp/rss/news/cat4.xml",  # 政治
-    "nhk-business": "https://www3.nhk.or.jp/rss/news/cat5.xml",  # 経済
-    "nhk-world": "https://www3.nhk.or.jp/rss/news/cat6.xml",     # 国際
-    "nhk-sports": "https://www3.nhk.or.jp/rss/news/cat7.xml",    # スポーツ
+    "nhk": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",           # NHK 主要ニュース
+    "nhk-society": "https://news.web.nhk/n-data/conf/na/rss/cat1.xml",   # 社会
+    "nhk-culture": "https://news.web.nhk/n-data/conf/na/rss/cat2.xml",   # 文化・エンタメ
+    "nhk-science": "https://news.web.nhk/n-data/conf/na/rss/cat3.xml",   # 科学・医療
+    "nhk-politics": "https://news.web.nhk/n-data/conf/na/rss/cat4.xml",  # 政治
+    "nhk-business": "https://news.web.nhk/n-data/conf/na/rss/cat5.xml",  # 経済
+    "nhk-world": "https://news.web.nhk/n-data/conf/na/rss/cat6.xml",     # 国際
+    "nhk-sports": "https://news.web.nhk/n-data/conf/na/rss/cat7.xml",    # スポーツ
     "bbc": "https://feeds.bbci.co.uk/news/world/rss.xml",
 }
 DEFAULT_FEEDS = ["nhk"]

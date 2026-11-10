@@ -135,6 +135,8 @@ static void run_event(const event_t *e)
         widgets_demo_swipe(atoi(e->arg));
     } else if (strcmp(e->cmd, "pomodoro") == 0) {
         widgets_demo_pomodoro(atoi(e->arg) != 0);
+    } else if (strcmp(e->cmd, "weather") == 0) {
+        widgets_demo_weather(e->arg);
     } else {
         fprintf(stderr, "record: unknown command %s\n", e->cmd);
     }

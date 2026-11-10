@@ -80,6 +80,16 @@ static wbutton_t *button(lv_obj_t *parent, const char *text, int width, void (*c
     return w;
 }
 
+/* ボタンの形をしていない、叩ける場所（天気の「いま」など）。押している間だけうっすら明るくする */
+static void zone(lv_obj_t *obj, void (*cb)(void))
+{
+    lv_obj_set_style_radius(obj, 12, 0);
+    lv_obj_set_style_bg_color(obj, lv_color_white(), LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_10, LV_STATE_PRESSED);
+    wbutton_t *w = &buttons[button_count < MAX_BUTTONS ? button_count++ : MAX_BUTTONS - 1];
+    *w = (wbutton_t){ obj, NULL, cb };
+}
+
 /* ---- Pomodoro ---- */
 
 #define POMO_WORK_MS    (25u * 60u * 1000u)
@@ -634,9 +644,36 @@ static struct {
     char path[600];
     time_t mtime;
     bool loaded;
-    lv_obj_t *icon, *temp, *place, *range, *empty, *row;
+    lv_obj_t *icon, *temp, *place, *range, *empty, *row, *now;
     weather_slot_t hours[WEATHER_HOURS], tomorrow;
+    lv_obj_t *picker;           /* 場所を選ぶ画面（lv_layer_top。開いているときだけ作る） */
 } weather;
+
+/* 場所の候補（英語の地名。fetch_weather.py が Open-Meteo の地名検索で引く） */
+#define WEATHER_CITY_COLS 6
+static const char *const weather_cities[] = {
+    "Sapporo", "Sendai", "Niigata", "Tokyo", "Yokohama", "Nagoya",
+    "Kanazawa", "Kyoto", "Osaka", "Kobe", "Hiroshima", "Fukuoka",
+    "Kagoshima", "Naha", "Seoul", "Taipei", "London", "New York",
+};
+#define WEATHER_CITY_COUNT ((int)(sizeof weather_cities / sizeof weather_cities[0]))
+
+/* 選んでいる場所。選んでいなければ fetch_weather.py の初期値と同じ東京 */
+static const char *weather_city(void)
+{
+    return settings()->weather_city[0] ? settings()->weather_city : "Tokyo";
+}
+
+static bool same_name(const char *a, const char *b)
+{
+    for (; *a && *b; a++, b++) {
+        char x = (*a >= 'A' && *a <= 'Z') ? (char)(*a + 32) : *a;
+        char y = (*b >= 'A' && *b <= 'Z') ? (char)(*b + 32) : *b;
+        if (x != y)
+            return false;
+    }
+    return *a == *b;
+}
 
 static lv_color_t weather_color(icon_weather_t kind)
 {
@@ -700,7 +737,7 @@ static void weather_load(void)
     weather.loaded = true;
     fprintf(stderr, "weather: read %s\n", weather.path);
 
-    char line[256], place[64] = "";
+    char line[256], place[64] = "", city[48] = "";
     float now_t = 0, hi = 0, lo = 0, thi = 0, tlo = 0;
     int now_code = 3, rain = 0, train = 0, tcode = 3, hours = 0;
     bool have_now = false, have_today = false, have_tomorrow = false;
@@ -716,6 +753,8 @@ static void weather_load(void)
                 if (*p >= 0x20 && *p < 0x7F)
                     place[n++] = *p;
             place[n] = '\0';
+        } else if (strncmp(line, "city=", 5) == 0) {
+            snprintf(city, sizeof city, "%s", line + 5);
         } else if (sscanf(line, "now=%f,%d", &now_t, &now_code) == 2) {
             have_now = true;
         } else if (sscanf(line, "today=%f,%f,%d", &hi, &lo, &rain) == 3) {
@@ -734,6 +773,15 @@ static void weather_load(void)
         weather_show_empty("weather.txt has no current weather");
         return;
     }
+    /* 場所を選び直したあと、まだ前の場所の天気のまま（city= は fetch_weather.py が、引いた地名を書く。
+     * --lat / --lon で取ったときは書かないので、選んだ場所とは比べない） */
+    if (city[0] && !same_name(city, weather_city())) {
+        static char msg[128];
+        snprintf(msg, sizeof msg, "%s " LV_SYMBOL_DOWN "     Waiting for the weather  (tools/fetch_weather.py)",
+                 weather_city());
+        weather_show_empty(msg);
+        return;
+    }
     lv_obj_set_hidden(weather.empty, true);
     lv_obj_set_hidden(weather.row, false);
 
@@ -741,7 +789,7 @@ static void weather_load(void)
     lv_label_set_text_fmt(weather.temp, "%d\xC2\xB0", (int)lroundf(now_t));
     struct tm tm;
     platform_localtime(st.st_mtime, &tm);
-    lv_label_set_text_fmt(weather.place, "%s  " "\xE2\x80\xA2" "  %02d:%02d", place[0] ? place : "Weather",
+    lv_label_set_text_fmt(weather.place, "%s " LV_SYMBOL_DOWN "  " "\xE2\x80\xA2" "  %02d:%02d", place[0] ? place : "Weather",
                           tm.tm_hour, tm.tm_min);
     if (have_today)
         lv_label_set_text_fmt(weather.range, "H %d\xC2\xB0  L %d\xC2\xB0  Rain %d%%", (int)lroundf(hi),
@@ -766,25 +814,169 @@ static void weather_check(lv_timer_t *t)
     weather_load();
 }
 
+/* ---- 場所を選ぶ画面 ---- */
+
+static const char *picker_map[WEATHER_CITY_COUNT + WEATHER_CITY_COUNT / WEATHER_CITY_COLS + 1];
+static char picker_custom[48];      /* ui.conf に、候補にない場所が書いてあるとき */
+
+static void picker_close(void)
+{
+    if (weather.picker) {
+        lv_obj_delete(weather.picker);
+        weather.picker = NULL;
+    }
+}
+
+/* 選んだ：ui.conf に覚え、設定のフォルダの weather.request に書く（実機では systemd の
+ * skjar-weather.path がそれを見て、すぐに天気を取り直す） */
+static void weather_choose(const char *name)
+{
+    picker_close();
+    if (same_name(name, weather_city()))
+        return;
+    snprintf(settings()->weather_city, sizeof settings()->weather_city, "%s", name);
+    settings_save();
+    char req[600];
+    snprintf(req, sizeof req, "%s/weather.request", settings_dir());
+    FILE *f = settings_is_readonly() ? NULL : fopen(req, "w");   /* 録画のときは書かない */
+    if (f) {
+        fprintf(f, "%s\n", name);
+        fclose(f);
+    }
+    fprintf(stderr, "weather: place set to %s\n", name);
+    weather.loaded = false;     /* 同じファイルでも、選んだ場所と比べ直す */
+    weather_load();
+}
+
+static void picker_city_cb(lv_event_t *e)
+{
+    lv_obj_t *m = lv_event_get_target(e);
+    const char *name = lv_buttonmatrix_get_button_text(m, lv_buttonmatrix_get_selected_button(m));
+    if (name)
+        weather_choose(name);
+}
+
+static void picker_close_cb(lv_event_t *e)
+{
+    /* 暗くした背景を叩いたら閉じる（中の板を叩いたときは閉じない） */
+    if (lv_event_get_target(e) == lv_event_get_current_target(e))
+        picker_close();
+}
+
+static void picker_cancel_cb(lv_event_t *e)
+{
+    (void)e;
+    picker_close();
+}
+
+static void weather_open_picker(void)
+{
+    if (weather.picker)
+        return;
+    /* 並べる候補。ui.conf に候補にない場所が書いてあれば、最後の 1 つの代わりに出す */
+    const char *cur = weather_city();
+    bool listed = false;
+    for (int i = 0; i < WEATHER_CITY_COUNT; i++)
+        listed |= same_name(cur, weather_cities[i]);
+    int k = 0, checked = -1;
+    for (int i = 0; i < WEATHER_CITY_COUNT; i++) {
+        if (i > 0 && i % WEATHER_CITY_COLS == 0)
+            picker_map[k++] = "\n";
+        const char *name = weather_cities[i];
+        if (!listed && i == WEATHER_CITY_COUNT - 1) {
+            snprintf(picker_custom, sizeof picker_custom, "%s", cur);
+            name = picker_custom;
+        }
+        if (same_name(name, cur))
+            checked = i;
+        picker_map[k++] = name;
+    }
+    picker_map[k] = "";
+
+    lv_obj_t *dim = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(dim);
+    lv_obj_set_size(dim, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_bg_color(dim, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(dim, LV_OPA_70, 0);
+    lv_obj_add_event_cb(dim, picker_close_cb, LV_EVENT_CLICKED, NULL);
+    weather.picker = dim;
+
+    lv_obj_t *panel = lv_obj_create(dim);
+    lv_obj_set_size(panel, 1640, 420);
+    lv_obj_center(panel);
+    lv_obj_set_scrollable(panel, false);
+    lv_obj_set_style_pad_all(panel, 20, 0);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(0x1A1E24), 0);
+    lv_obj_set_style_border_width(panel, 0, 0);
+    lv_obj_set_style_radius(panel, 16, 0);
+
+    lv_obj_t *title = label(panel, &lv_font_montserrat_28, lv_color_white());
+    lv_label_set_text(title, "Weather  " "\xE2\x80\xA2" "  Choose the place");
+    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 8, 14);
+
+    lv_obj_t *cancel = lv_button_create(panel);
+    lv_obj_set_size(cancel, 200, 64);
+    lv_obj_align(cancel, LV_ALIGN_TOP_RIGHT, 0, 0);
+    lv_obj_add_event_cb(cancel, picker_cancel_cb, LV_EVENT_CLICKED, NULL);
+    if (hooks.style_button)
+        hooks.style_button(cancel);
+    lv_obj_t *cl = label(cancel, &lv_font_montserrat_28, lv_color_white());
+    lv_label_set_text(cl, "Cancel");
+    lv_obj_center(cl);
+
+    lv_obj_t *m = lv_buttonmatrix_create(panel);
+    lv_buttonmatrix_set_map(m, picker_map);
+    lv_obj_set_size(m, LV_PCT(100), 300);
+    lv_obj_align(m, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_style_pad_all(m, 0, 0);
+    lv_obj_set_style_pad_row(m, 12, 0);
+    lv_obj_set_style_pad_column(m, 12, 0);
+    lv_obj_set_style_bg_opa(m, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(m, 0, 0);
+    lv_obj_set_style_text_font(m, &lv_font_montserrat_28, 0);
+    /* 離したときに選ぶ（押したときだと、指を滑らせて選び直せない） */
+    lv_buttonmatrix_set_button_ctrl_all(m, LV_BUTTONMATRIX_CTRL_CLICK_TRIG | LV_BUTTONMATRIX_CTRL_CHECKABLE);
+    lv_buttonmatrix_set_one_checked(m, true);
+    if (checked >= 0)
+        lv_buttonmatrix_set_button_ctrl(m, (uint32_t)checked, LV_BUTTONMATRIX_CTRL_CHECKED);
+    lv_obj_add_event_cb(m, picker_city_cb, LV_EVENT_VALUE_CHANGED, NULL);
+}
+
+bool widgets_picker_open(void)
+{
+    return weather.picker != NULL;
+}
+
 static void create_weather(lv_obj_t *page)
 {
     snprintf(weather.path, sizeof weather.path, "%s/weather.txt", settings_dir());
 
     weather.empty = label(page, &lv_font_montserrat_20, lv_palette_main(LV_PALETTE_GREY));
-    lv_obj_align(weather.empty, LV_ALIGN_LEFT_MID, 24, 0);
+    lv_obj_align(weather.empty, LV_ALIGN_LEFT_MID, 12, 0);
+    lv_obj_set_style_pad_hor(weather.empty, 12, 0);
+    lv_obj_set_style_pad_ver(weather.empty, 22, 0);
+    zone(weather.empty, weather_open_picker);   /* 天気がまだないときも、ここから場所を選べる */
 
     weather.row = box(page);
     lv_obj_set_size(weather.row, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_flow(weather.row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(weather.row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_hor(weather.row, 24, 0);
+    lv_obj_set_style_pad_left(weather.row, 12, 0);
+    lv_obj_set_style_pad_right(weather.row, 24, 0);
     lv_obj_set_style_pad_column(weather.row, 16, 0);
 
-    /* いま：アイコン、気温、場所と今日の最高・最低・降水確率 */
-    weather.icon = icon_create(weather.row, icon_weather(ICON_WEATHER_CLOUDY, 56), lv_color_white());
-    weather.temp = label(weather.row, &lv_font_montserrat_40, lv_color_white());
+    /* いま：アイコン、気温、場所と今日の最高・最低・降水確率。叩くと場所を選ぶ画面 */
+    weather.now = box(weather.row);
+    lv_obj_set_size(weather.now, LV_SIZE_CONTENT, 72);
+    lv_obj_set_flex_flow(weather.now, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(weather.now, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_hor(weather.now, 12, 0);
+    lv_obj_set_style_pad_column(weather.now, 16, 0);
+    zone(weather.now, weather_open_picker);
+    weather.icon = icon_create(weather.now, icon_weather(ICON_WEATHER_CLOUDY, 56), lv_color_white());
+    weather.temp = label(weather.now, &lv_font_montserrat_40, lv_color_white());
     lv_obj_set_width(weather.temp, 100);
-    lv_obj_t *info = box(weather.row);
+    lv_obj_t *info = box(weather.now);
     lv_obj_set_size(info, 380, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(info, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(info, 2, 0);
@@ -932,12 +1124,23 @@ static bool inside(lv_obj_t *obj, const lv_point_t *p)
     return p->x >= a.x1 && p->x <= a.x2 && p->y >= a.y1 && p->y <= a.y2;
 }
 
+/* 出しているウィジェットの中にあって、隠れていないか */
+static bool shown_in_current(lv_obj_t *obj)
+{
+    for (lv_obj_t *o = obj; o; o = lv_obj_get_parent(o)) {
+        if (o == pages[order[current]])
+            return true;
+        if (lv_obj_is_hidden(o))
+            return false;
+    }
+    return false;
+}
+
 static wbutton_t *button_at(const lv_point_t *p)
 {
     for (int i = 0; i < button_count; i++) {
         lv_obj_t *b = buttons[i].obj;
-        /* 出しているウィジェットのボタンだけ */
-        if (lv_obj_get_parent(b) == pages[order[current]] && inside(b, p))
+        if (shown_in_current(b) && inside(b, p))
             return &buttons[i];
     }
     return NULL;
@@ -1028,4 +1231,12 @@ void widgets_demo_pomodoro(bool down)
         lv_obj_remove_state(pomo.start->obj, LV_STATE_PRESSED);
         pomo_start_pause();
     }
+}
+
+void widgets_demo_weather(const char *arg)
+{
+    if (strcmp(arg, "open") == 0)
+        weather_open_picker();
+    else
+        weather_choose(arg);
 }

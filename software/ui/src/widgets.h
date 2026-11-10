@@ -4,7 +4,8 @@
  * 有効にしたものが並ぶ。
  *   Pomodoro ：ポモドーロ・タイマー（集中 25 分、休憩 5 分、4 回ごとに長い休憩 15 分）
  *   Typing   ：打鍵の速さ（WPM）、今日の打鍵数、直近 2 分のグラフ
- *   Weather  ：天気。設定のフォルダの weather.txt（tools/fetch_weather.py が書く）から読む
+ *   Weather  ：天気。設定のフォルダの weather.txt（tools/fetch_weather.py が書く）から読む。
+ *              「いま」を叩くと場所を選べる（ui.conf の weather_city。fetch_weather.py が読む）
  *   News     ：ニュースの電光掲示板。見出しは設定のフォルダの news.txt（1 行に 1 つ）から読む。
  *              取ってくるのは別の道具（tools/fetch_news.py。実機では systemd のタイマーで回す）
  *
@@ -52,6 +53,10 @@ void widgets_input(const touch_contacts_t *contacts);
 /* 指を読まなくなるとき（タブを替えた、動画が始まった）：押しているボタンとスワイプを片付ける */
 void widgets_release(void);
 
+/* Weather の場所を選ぶ画面（lv_layer_top）を開いているか。開いている間、その画面は LVGL のクリックで
+ * 操作するので、ui.c はタッチキーと帯に指を渡さない */
+bool widgets_picker_open(void);
+
 /* 文字や機能のキーが押された（RP2040 の ACT）：Typing が数える */
 void widgets_key_activity(void);
 
@@ -62,6 +67,8 @@ void widgets_set_look(bool picture);
  * ポモドーロの ▶ / ⏸ を押した（down）・離した（離したときに動く） */
 void widgets_demo_swipe(int dir);
 void widgets_demo_pomodoro(bool down);
+/* 録画から：Weather の場所を選ぶ画面を開く（"open"）、その地名を選ぶ（それ以外） */
+void widgets_demo_weather(const char *arg);
 
 /* System タブに出す名前 */
 const char *widgets_name(widget_id_t id);

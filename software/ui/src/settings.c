@@ -78,6 +78,8 @@ void settings_load(const char *path)
                 for (int i = 1; i < SETTINGS_WIDGETS; i++)
                     if (strcmp(name, widget_names[i]) == 0)
                         current.widgets[i] = true;
+        } else if (strcmp(key, "weather_city") == 0) {
+            snprintf(current.weather_city, sizeof current.weather_city, "%s", val);
         }
     }
     fclose(f);
@@ -89,6 +91,11 @@ static bool readonly;
 void settings_set_readonly(bool ro)
 {
     readonly = ro;
+}
+
+bool settings_is_readonly(void)
+{
+    return readonly;
 }
 
 void settings_save(void)
@@ -123,6 +130,8 @@ void settings_save(void)
     }
     fprintf(f, "\n");
     fprintf(f, "widget=%s\n", widget_names[current.shown_widget]);
+    if (current.weather_city[0])
+        fprintf(f, "weather_city=%s\n", current.weather_city);
     fclose(f);
 }
 

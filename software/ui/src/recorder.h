@@ -13,6 +13,7 @@
  *   look <plain|picture>
  *   swipe <1|-1>         Widget strip を右の隣へ・左の隣へ
  *   pomodoro <1|0>       ポモドーロの ▶ / ⏸ を押した・離した
+ *   weather <open|地名>  Weather の場所を選ぶ画面を開く・その地名を選ぶ（ui.conf と weather.request は書かない）
  *   end                  ここで録画を終える
  */
 #ifndef SKJAR_RECORDER_H

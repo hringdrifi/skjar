@@ -3,11 +3,13 @@
 #
 # Install:
 #   sudo install -D -m 755 ../../ui/tools/fetch_weather.py /usr/local/lib/skjar/fetch_weather.py
-#   sudo cp skjar-weather.service skjar-weather.timer /etc/systemd/system/
-#   sudo systemctl enable --now skjar-weather.timer
+#   sudo cp skjar-weather.service skjar-weather.timer skjar-weather.path /etc/systemd/system/
+#   sudo systemctl enable --now skjar-weather.timer skjar-weather.path
 #
-# Set the place with --city NAME, or --lat/--lon (and --name), on the ExecStart line
-# (sudo systemctl edit --full skjar-weather.service). Default: Tokyo.
+# The place is chosen by tapping the Weather widget (weather_city= in ui.conf; Tokyo if none), and
+# skjar-weather.path fetches at once. To fix the place instead, put --city NAME, or --lat/--lon
+# (and --name), on the ExecStart line (sudo systemctl edit --full skjar-weather.service); the
+# widget's choice is then ignored.
 # It runs as root because the UI runs as root for now (weather.txt goes to /root/.config/skjar).
 
 [Unit]

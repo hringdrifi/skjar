@@ -29,6 +29,7 @@ typedef struct {
     look_t look;
     bool widgets[SETTINGS_WIDGETS];     /* System タブで有効にしたウィジェット。初期値はどれも無効 */
     int shown_widget;                   /* Widget strip に出していたもの（次の起動でも同じものから） */
+    char weather_city[48];              /* Weather の場所（英語の地名。空なら fetch_weather.py の初期値の東京） */
 } settings_t;
 
 /* path が NULL なら上の場所を使う */
@@ -36,6 +37,7 @@ void settings_load(const char *path);
 void settings_save(void);
 /* true なら、settings_save で書かない（録画のとき。台本で変えた設定を残さない） */
 void settings_set_readonly(bool readonly);
+bool settings_is_readonly(void);
 settings_t *settings(void);
 
 /* 設定のファイルを置くフォルダ（settings_load のあと。隠し機能の動画もここに置く） */

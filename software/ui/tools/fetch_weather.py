@@ -4,14 +4,19 @@
 Asks Open-Meteo (https://open-meteo.com/, no API key; free for non-commercial use) for the
 current weather, today's and tomorrow's range, and the next few hours, and writes weather.txt
 next to ui.conf. The UI reloads it when it changes (software/ui/src/widgets.c). On the device,
-a systemd timer runs this every 30 minutes (software/os/systemd/skjar-weather.timer).
+a systemd timer runs this every 30 minutes (software/os/systemd/skjar-weather.timer), and
+skjar-weather.path runs it at once when the place is chosen on the widget.
 
-    python3 fetch_weather.py                        # Tokyo
+    python3 fetch_weather.py                        # the place chosen on the widget (Tokyo if none)
     python3 fetch_weather.py --city Sapporo
     python3 fetch_weather.py --lat 35.68 --lon 139.77 --name Home
 
+The place: --lat/--lon, else --city, else weather_city= in ui.conf (chosen by tapping the
+widget), else Tokyo.
+
 weather.txt (one name=value per line; temperatures in degrees C):
     place=Tokyo
+    city=Tokyo          (the name looked up; the UI compares it with the place chosen. Not with --lat/--lon)
     now=<temp>,<WMO code>
     today=<max>,<min>,<precipitation probability %>
     tomorrow=<max>,<min>,<precipitation probability %>,<WMO code>
@@ -42,6 +47,19 @@ def default_out():
     return os.path.join(folder, "weather.txt")
 
 
+def city_from_conf(path):
+    """weather_city= in ui.conf (the place chosen on the widget), or None."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                key, _, val = line.strip().partition("=")
+                if key == "weather_city" and val:
+                    return val
+    except OSError:
+        pass
+    return None
+
+
 def get_json(url, params):
     req = urllib.request.Request(url + "?" + urllib.parse.urlencode(params), headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
@@ -55,25 +73,29 @@ def ascii_name(name):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--city", default="Tokyo", help="place name to look up (default Tokyo)")
+    ap.add_argument("--city", help="place name to look up (default: weather_city= in ui.conf, else Tokyo)")
     ap.add_argument("--lat", type=float, help="latitude (with --lon, instead of --city)")
     ap.add_argument("--lon", type=float, help="longitude")
     ap.add_argument("--name", help="place name to show (default: from the lookup, or the city)")
     ap.add_argument("--step", type=int, default=3, help="hours between the forecast slots (default 3)")
     ap.add_argument("--out", default=default_out(), help="output file (default: weather.txt next to ui.conf)")
+    ap.add_argument("--config", help="ui.conf to read weather_city= from (default: next to --out)")
     args = ap.parse_args()
+    conf = args.config or os.path.join(os.path.dirname(os.path.abspath(args.out)), "ui.conf")
+    city = None
 
     try:
         if args.lat is not None and args.lon is not None:
             lat, lon, place = args.lat, args.lon, args.name or "Weather"
         else:
-            found = get_json(GEOCODE, {"name": args.city, "count": 1, "language": "en", "format": "json"})
+            city = args.city or city_from_conf(conf) or "Tokyo"
+            found = get_json(GEOCODE, {"name": city, "count": 1, "language": "en", "format": "json"})
             if not found.get("results"):
-                print(f"fetch_weather: no place called {args.city!r}", file=sys.stderr)
+                print(f"fetch_weather: no place called {city!r}", file=sys.stderr)
                 return 1
             r = found["results"][0]
             lat, lon = r["latitude"], r["longitude"]
-            place = args.name or ascii_name(r.get("name", "")) or args.city
+            place = args.name or ascii_name(r.get("name", "")) or city
         w = get_json(FORECAST, {
             "latitude": lat, "longitude": lon, "timezone": "auto", "forecast_days": 2,
             "current": "temperature_2m,weather_code",
@@ -87,6 +109,10 @@ def main():
     cur, hourly, daily = w["current"], w["hourly"], w["daily"]
     lines = [
         f"place={ascii_name(place)}",
+    ]
+    if city:
+        lines.append(f"city={ascii_name(city)}")
+    lines += [
         f"now={cur['temperature_2m']},{cur['weather_code']}",
     ]
     pop = daily.get("precipitation_probability_max") or [0, 0]
