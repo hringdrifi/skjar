@@ -1107,9 +1107,14 @@ static void create_weather(lv_obj_t *page)
     lv_obj_set_style_pad_right(weather.row, 24, 0);
     lv_obj_set_style_pad_column(weather.row, 16, 0);
 
-    /* いま：アイコン、気温、場所と今日の最高・最低・降水確率。叩くと場所を選ぶ画面 */
-    weather.now = box(weather.row);
+    /* いま：アイコン、気温、場所と今日の最高・最低・降水確率。叩くと場所を選ぶ画面。
+     * 叩ける所は字の幅だけにして、右の空き（時間ごとの天気との間）は含めない。
+     * 時間ごとの天気が字の長さで動かないよう、決まった幅の枠の左に寄せる */
+    lv_obj_t *holder = box(weather.row);
+    lv_obj_set_size(holder, 592, 72);
+    weather.now = box(holder);
     lv_obj_set_size(weather.now, LV_SIZE_CONTENT, 72);
+    lv_obj_align(weather.now, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_set_flex_flow(weather.now, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(weather.now, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_hor(weather.now, 12, 0);
@@ -1117,9 +1122,9 @@ static void create_weather(lv_obj_t *page)
     zone(weather.now, weather_open_picker);
     weather.icon = icon_create(weather.now, icon_weather(ICON_WEATHER_CLOUDY, 56), lv_color_white());
     weather.temp = label(weather.now, &lv_font_montserrat_40, lv_color_white());
-    lv_obj_set_width(weather.temp, 100);
+    lv_obj_set_style_min_width(weather.temp, 72, 0);   /* 1 桁と 2 桁で、右の字があまり動かないよう */
     lv_obj_t *info = box(weather.now);
-    lv_obj_set_size(info, 380, LV_SIZE_CONTENT);
+    lv_obj_set_size(info, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(info, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(info, 2, 0);
     weather.place = label(info, &lv_font_montserrat_20, lv_color_white());
