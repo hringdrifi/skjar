@@ -829,10 +829,16 @@ static void typing_tick(lv_timer_t *t)
     lv_label_set_text_fmt(typing.today_lbl, "Today  %s keys", num);
     lv_label_set_text_fmt(typing.best_lbl, "Best  %u WPM", (unsigned)typing.best);
 
-    /* 直近 2 分のグラフ（左が古い）。1 本は 5 秒の WPM */
+    /* 直近 2 分のグラフ（左が古い）。1 本は 5 秒の WPM。棒は時計の 5 秒ごとの区切りに揃える：
+     * いちばん右の棒は、いまの 5 秒の始めから今まで（打つほど伸びる）。それより左の棒は区切りが決まって
+     * いて、5 秒ごとに 1 本ずつ左へ流れる。「今から 5 秒ずつ」で区切ると、1 秒ごとにどの棒の中身も
+     * ずれて、打っていなくても高さが変わって見えた */
+    uint32_t into_bar = typing.sec % TYPE_BAR_S;   /* いまの 5 秒の始めから何秒たったか */
     int32_t peak = 60;
     for (int b = 0; b < TYPE_BARS; b++) {
-        uint32_t keys = typing_keys((uint32_t)(TYPE_BARS - 1 - b) * TYPE_BAR_S, TYPE_BAR_S);
+        uint32_t k = (uint32_t)(TYPE_BARS - 1 - b);  /* 右から何本目か（0 がいま） */
+        uint32_t keys = k == 0 ? typing_keys(0, into_bar + 1)
+                               : typing_keys(into_bar + 1 + (k - 1) * TYPE_BAR_S, TYPE_BAR_S);
         int32_t w = (int32_t)(keys * 60 / TYPE_BAR_S / CHARS_PER_WORD);
         if (w > peak)
             peak = w;
