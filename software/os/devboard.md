@@ -82,6 +82,19 @@ sudo sed -i '1 s/$/ video=DSI-1:480x1920-32@60/' /boot/firmware/cmdline.txt
 
 再起動後、`cat /sys/class/graphics/fb0/bits_per_pixel` が `32` になる（2026-11-12、4B で確認。縞が消え、動きも滑らかなまま）。
 
+コンソール（UI を閉じたとき）の文字を、UI と同じ横長の向きにする。これも `cmdline.txt` の行の最後に足す（`rotate:1` だと逆さま。2026-11-12、4B で確認）：
+
+```sh
+sudo sed -i '1 s/$/ fbcon=rotate:3/' /boot/firmware/cmdline.txt
+```
+
+標準の文字（8 × 16）では小さすぎるので、Terminus の 16 × 32 にする（120 文字 × 15 行。2026-11-12、4B でちょうどよかった）：
+
+```sh
+sudo sed -i 's/^FONTFACE=.*/FONTFACE="Terminus"/; s/^FONTSIZE=.*/FONTSIZE="16x32"/' /etc/default/console-setup
+sudo systemctl restart console-setup.service
+```
+
 UART（ログインのシェルは出さず、ハードウェアは有効に）：
 
 ```sh

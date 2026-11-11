@@ -20,6 +20,9 @@ camera_auto_detect=0
 # vc4 makes the console framebuffer 16 bits per pixel, which bands the Picture background's gradients.
 # Add this to cmdline.txt (not here) for 32 bits: video=DSI-1:480x1920-32@60
 # (checked on a Pi 4B, 2026-11-12; the connector name on the CM0 is to be checked: ls /sys/class/drm/)
+# The console (cyberdeck mode) also needs turning to match the UI. In cmdline.txt: fbcon=rotate:3
+# (rotate:1 is upside down; checked on a Pi 4B, 2026-11-12). The console font should be Terminus 16x32
+# (FONTFACE / FONTSIZE in /etc/default/console-setup): the default 8x16 is too small on this panel.
 
 # --- Keyboard: the RP2040 as a HID over I2C keyboard on GPIO23 / 24, interrupt on GPIO25
 dtoverlay=skjar-keyboard
