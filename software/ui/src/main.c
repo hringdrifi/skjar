@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/kd.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #endif
@@ -277,9 +278,34 @@ static void touch_found(lv_indev_t *indev, lv_evdev_type_t type, void *user)
     lv_indev_delete(indev);
 }
 
+/* 同じフレームバッファに UI を 2 つ描かせない。2 つ動くと（たとえば回転ありと --rotate 0）、
+ * Look の切り替えなどで描き直したほうが勝ち、画面の向きが戻ったように見える。フレームバッファの
+ * ファイルに flock を掛け、掛けられなければ終わる。fd は終わるまで開いたまま（閉じると外れる） */
+static bool lock_framebuffer(void)
+{
+    int fd = open(opt.fb_path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0)
+        return true;    /* 開けないなら、このあと lv_linux_fbdev_set_file が知らせる */
+    if (flock(fd, LOCK_EX | LOCK_NB) != 0) {
+        if (errno == EWOULDBLOCK) {
+            fprintf(stderr, "another skjar-ui is already drawing to %s "
+                            "(pgrep -a skjar-ui; systemctl status 'skjar-ui@*'; sudo pkill skjar-ui)\n",
+                    opt.fb_path);
+            close(fd);
+            return false;
+        }
+        /* ほかの理由で掛けられない（flock が使えないなど）：止めずに、ロックなしで続ける */
+        fprintf(stderr, "cannot lock %s (%s), starting anyway\n", opt.fb_path, strerror(errno));
+        close(fd);
+    }
+    return true;
+}
+
 static int create_display(void)
 {
     lv_tick_set_cb(now_ms);
+    if (!lock_framebuffer())
+        return -1;
     lv_display_t *disp = lv_linux_fbdev_create();
     if (!disp)
         return -1;
