@@ -73,6 +73,15 @@ sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.orig
 cat software/os/config-devboard.txt | sudo tee -a /boot/firmware/config.txt
 ```
 
+フレームバッファを 32 ビット色にする（4B のパネル。vc4 は初期値で 16 ビットにするので、Picture の背景のグラデーションに縞が出る）。`cmdline.txt` の行の最後に足す：
+
+```sh
+sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline.txt.orig
+sudo sed -i '1 s/$/ video=DSI-1:480x1920-32@60/' /boot/firmware/cmdline.txt
+```
+
+再起動後、`cat /sys/class/graphics/fb0/bits_per_pixel` が `32` になる（2026-11-12、4B で確認。縞が消え、動きも滑らかなまま）。
+
 UART（ログインのシェルは出さず、ハードウェアは有効に）：
 
 ```sh
