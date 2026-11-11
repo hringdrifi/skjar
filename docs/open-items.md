@@ -75,8 +75,9 @@
   - 待ち時間を感じさせない案：RP2040 がキーの RGB で起動中の光り方を出す（CM0 の `HELLO` まで）。虹色の画面（`disable_splash=1`）とカーネルの文字・ロゴ（`quiet logo.nologo vt.global_cursor_default=0`）を消す。UI をネットワークより先に出す。それでも黒い時間が長ければ、Plymouth で SKJÁR のロゴ（パネルが縦長なので回す設定が要る）
   - `skjar-weather` / `skjar-news` が、タイマー（起動の 1 分後）より前の起動直後に動いている。path ユニットが、起動時に `.request` があると動かしているらしい。起動直後の取得でよいか、やめるかを決める
 - [ ] HID over I²C を確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
-  - 2026-11-12、XIAO RP2040 と Pi 4B（i2c-gpio、約 100 kHz）で、`i2c-hid` が `I2C HID v1.00 Keyboard [hid-over-i2c 1209:0001]` として認識し、`evtest` で物理キー（`KEY_Q`）の押した・離したが届いた
-  - 残り：Caps Lock の LED（出力レポート）、Consumer Control（音量キー）、マウス（トラックパッド）、タッチキーが I²C で戻ってくるか、速度（`delay-us` 2 で約 250 kHz）、CM0（Zero 2 W）でも同じか
+  - 2026-11-12、XIAO RP2040 と Pi 4B（i2c-gpio、約 100 kHz）で、`i2c-hid` が `I2C HID v1.00 Keyboard [hid-over-i2c 1209:0001]` として認識し、`evtest` で物理キー（`KEY_Q`）の押した・離したが届いた。UI のタッチキー（F1、F6）も、UART の `TK` から RMK を通って I²C で届いた
+  - 残り：Caps Lock の LED（出力レポート）、Consumer Control（音量キー）、マウス（トラックパッド）、速度（`delay-us` 2 で約 250 kHz）、CM0（Zero 2 W）でも同じか
+  - RP2040 だけが再起動すると（ファームの書き換えなど）、キーが効かなくなる。RP2040 は `i2c-hid` の `RESET` を受けるまで入力を捨てるが、`i2c-hid` が `RESET` を送るのは見つけたときの 1 回だけ（2026-11-12、XIAO を書き換えたあとに起きた。`/sys/bus/i2c/drivers/i2c_hid_of/` の unbind / bind で戻った）。案：UI が UART で RP2040 の再起動に気づいたら（`ALIVE` の番号が 0 に戻る、`HELLO` を送り直す）、同じ unbind / bind をする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
 - [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）
 - [ ] キーボードモードのトラックパッド：UI の Pad タブ（指の判定、スクロールの帯、L / M / R）、UART の `PTR` / `WHEEL`、RP2040 のマウスのレポート（HID over I²C のレポート ID 3）は試作した。残り：実機のタッチパネルでのマルチタッチの確認と、速さ・加速・スクロールの量の調整、PC への USB HID、オートマウスレイヤーを使うか、トラックパッドを出力先が PC のときだけにするか
@@ -102,6 +103,6 @@
 - [ ] 隠し機能の動画（UI の時計を 5 回叩く）を実機で確かめる：CM0 で 30 fps で描けるか（640 × 480 を回して描く）、音とコマのずれ（aplay が鳴り始めるまでの遅れ）、キーのライトの向きと順番（LED の数珠つなぎの順は基板から求めた）、明るさの上限（いまは 1 色 48/255）
 - [ ] 背景の画像と半透明のボタン（試し。UI の System タブの Look）を続けるか：実機で描き換えの速さを見て決める。続けるなら、画像の選び方（UI から選ぶ、など）
 - [ ] 透過キーの表示：UI には一番上のレイヤーしか届かないので、透過キーは「今のレイヤー → レイヤー 0」の順に見ている。レイヤーを 2 つ以上重ねる使い方をするなら、有効なレイヤーの一覧を送る
-- [ ] CM0 と RP2040 の間の UART の形式は案を書いた（[protocol.md](protocol.md) の 1 章）。CM0 側（UI）と RP2040 側（`cm0_link.rs`）の試作がある。2026-11-12、XIAO RP2040 と Pi 4B で、`HELLO` から状態（`USB`、`OUT`、`LAYER`）のやり取りまで通じた（RP2040 が「PC がない」と言い続ける不具合を直した：USB の接続前に来たサスペンドの記録が残っていた）。タッチキー（`TK`）、`ACT`、`USER`、モードの切り替えも確かめたら、決定にする。`PWR` と `SHUTDOWN` は、CC と電源の判定を作るときに足す
+- [ ] CM0 と RP2040 の間の UART の形式は案を書いた（[protocol.md](protocol.md) の 1 章）。CM0 側（UI）と RP2040 側（`cm0_link.rs`）の試作がある。2026-11-12、XIAO RP2040 と Pi 4B で、`HELLO` から状態（`USB`、`OUT`、`LAYER`）のやり取りまで通じた（RP2040 が「PC がない」と言い続ける不具合を直した：USB の接続前に来たサスペンドの記録が残っていた）。タッチキー（`TK`）も届いた。`ACT`、`USER`、モードの切り替えも確かめたら、決定にする。`PWR` と `SHUTDOWN` は、CC と電源の判定を作るときに足す
 - [ ] CM0 のウォッチドッグ（「動作中」の信号が途絶えたときの扱い）
 - [ ] いきなりの電源断への備えの細部（方針は [design-decisions.md](design-decisions.md) の 1.5）：パーティションの分け方と容量、Overlay File System の設定、データの領域を書き込みにする・戻す仕組み、書き込み中の表示、OS の更新を Port B の給電があるときだけにする仕組み
