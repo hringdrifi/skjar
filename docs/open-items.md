@@ -75,8 +75,10 @@
   - 待ち時間を感じさせない案：RP2040 がキーの RGB で起動中の光り方を出す（CM0 の `HELLO` まで）。虹色の画面（`disable_splash=1`）とカーネルの文字・ロゴ（`quiet logo.nologo vt.global_cursor_default=0`）を消す。UI をネットワークより先に出す。それでも黒い時間が長ければ、Plymouth で SKJÁR のロゴ（パネルが縦長なので回す設定が要る）
   - `skjar-weather` / `skjar-news` が、タイマー（起動の 1 分後）より前の起動直後に動いている。path ユニットが、起動時に `.request` があると動かしているらしい。起動直後の取得でよいか、やめるかを決める
 - [ ] HID over I²C を確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
-  - 2026-11-12、XIAO RP2040 と Pi 4B（i2c-gpio、約 100 kHz）で、`i2c-hid` が `I2C HID v1.00 Keyboard [hid-over-i2c 1209:0001]` として認識し、`evtest` で物理キー（`KEY_Q`）の押した・離したが届いた。UI のタッチキー（F1、F6）も、UART の `TK` から RMK を通って I²C で届いた
-  - 残り：Caps Lock の LED（出力レポート）、Consumer Control（音量キー）、マウス（トラックパッド）、速度（`delay-us` 2 で約 250 kHz）、CM0（Zero 2 W）でも同じか
+  - 2026-11-12、XIAO RP2040 と Pi 4B（i2c-gpio、約 100 kHz）で、`i2c-hid` が `I2C HID v1.00 Keyboard [hid-over-i2c 1209:0001]` として認識し、`evtest` で物理キー（`KEY_Q`）の押した・離したが届いた。UI のタッチキー（F1、F6）も、UART の `TK` から RMK を通って I²C で届いた。UI の Pad（トラックパッド）も、`PTR` からマウス（`hid-over-i2c 1209:0001 Mouse`、`REL_X` / `REL_Y`）として届いた。ただし動きのレポートの間隔が 20〜30 ms（UI は 10 ms ごとに送る）で、I²C の速さで間引かれているらしい
+  - `delay-us` 2（約 250 kHz）も試した（2026-11-12）：認識はされるが、マウスの間隔は 20〜30 ms のままで、動かしている途中でレポートが止まった（dmesg にエラーなし）。100 kHz（`delay-us` 5）のままにする。間隔はパネルのタッチで決まっていた：Goodix（`10-005d Goodix Capacitive TouchScreen`）の報告がちょうど 24 ms ごと（約 42 回 / 秒）で、マウスのレポートはその 1 回に 1〜2 個（1 回の動きが ±127 を超えると分けて送る）。I²C は 1 レポート約 1.5 ms で余裕がある。24 ms ちょうどなので、パネルのドライバが一定の間隔で読む方式かもしれない（速くできるかは未確認）
+  - 止まったとき、RP2040 のログは `hid_i2c: queue full, dropping the oldest report` の繰り返し（Pi が読みに来ない）。Pi を再起動しても `i2c_hid_of` がキーボードを登録できず、RP2040 を抜き差しするまで戻らなかった。I²C の読み出しが 1 回こじれると、RP2040 の I²C のターゲットが固まるらしい。RP2040 側で立ち直る仕組み（読みに来ない・バスが止まったままなら I²C をやり直す、など）が要る
+  - 残り：Caps Lock の LED（出力レポート）、Consumer Control（音量キー）（`delay-us` 2 で約 250 kHz）、CM0（Zero 2 W）でも同じか
   - RP2040 だけが再起動すると（ファームの書き換えなど）、キーが効かなくなる。RP2040 は `i2c-hid` の `RESET` を受けるまで入力を捨てるが、`i2c-hid` が `RESET` を送るのは見つけたときの 1 回だけ（2026-11-12、XIAO を書き換えたあとに起きた。`/sys/bus/i2c/drivers/i2c_hid_of/` の unbind / bind で戻った）。案：UI が UART で RP2040 の再起動に気づいたら（`ALIVE` の番号が 0 に戻る、`HELLO` を送り直す）、同じ unbind / bind をする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
 - [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）
