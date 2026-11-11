@@ -7,22 +7,25 @@ SKJÁR の基板ができる前に、手持ちの Pi と Pico で、ディスプ
 | Pi 4B ＋ Pico（W）＋ 8.8-DSI-TOUCH-A | 表示、タッチ、UI、UART、HID over I²C |
 | Pi Zero 2 W ＋ Pico（W） | CM0 と同じ SoC での UI の重さ（CPU の負荷、電光掲示板の滑らかさ）、UART、HID over I²C。ディスプレイは HDMI のモニター |
 
-Pico W でもよい（無線のチップが使う GPIO23 / 24 / 25 / 29 は、ファームが使うピンと重ならない）。Pico 2 / Pico 2 W（RP2350）は使えない（ファームは RP2040 向けで、SKJÁR の基板も RP2040）。
+Pico W でもよい（無線のチップが使う GPIO23 / 24 / 25 / 29 は、ファームが使うピンと重ならない）。Seeed Studio XIAO RP2040 も使える（`--features xiao`。ピンが少ないので配線が違う。[firmware/rp2040/README.md](../../firmware/rp2040/README.md) の「XIAO RP2040 で試すとき」）。Pico 2 / Pico 2 W（RP2350）は使えない（ファームは RP2040 向けで、SKJÁR の基板も RP2040）。
 
 ## 1. Pico（W）にファームを書く
 
 PC（Windows）で、[firmware/rp2040/](../../firmware/rp2040/) をビルドする（[README](../../firmware/rp2040/README.md) の「ビルドと書き込み」）。
 
 ```sh
-cargo build --release
-elf2uf2-rs target/thumbv6m-none-eabi/release/skjar-rp2040 target/skjar-rp2040-pico.uf2
+cargo build --release                                         # Pico / Pico W
+cargo build --release --no-default-features --features xiao   # XIAO RP2040 のとき（こちらだけ）
+elf2uf2-rs target/thumbv6m-none-eabi/release/skjar-rp2040 target/skjar-rp2040.uf2
 ```
+
+XIAO RP2040 は、B（BOOT）ボタンを押しながら USB-C で PC につなぐ。
 
 BOOTSEL を押しながら Pico を PC の USB につなぎ、出てきたドライブ（RPI-RP2）に UF2 をコピーする。`cargo run --release` でも書ける。書いたあとは、USB の仮想シリアル（COM ポート）にログが出る。
 
 ## 2. Pi と Pico をつなぐ
 
-配線は [firmware/rp2040/README.md](../../firmware/rp2040/README.md) の「Pico と Pi Zero 2 W のつなぎ方」。40 ピンのヘッダの並びは 4B と Zero 2 W で同じなので、4B でも同じ配線。
+配線は [firmware/rp2040/README.md](../../firmware/rp2040/README.md) の「Pico と Pi Zero 2 W のつなぎ方」（XIAO RP2040 は「XIAO RP2040 で試すとき」）。40 ピンのヘッダの並びは 4B と Zero 2 W で同じなので、4B でも同じ配線。
 
 Pico の電源とログは USB から。Pico の USB は PC につなぐ（COM ポートにログが出る）。PC につながっているあいだは、ファームが「PC がつながっている」と UI に知らせる（`USB,1`）ので、UI はキーボードモードとして動く。
 
@@ -37,6 +40,14 @@ Raspberry Pi Imager で、**Raspberry Pi OS Lite (64-bit)** を microSD に書�
 - SSH を有効にする
 
 起動したら、PC から `ssh <ユーザー>@skjar-4b.local` で入る。
+
+カスタマイズは最初の起動で cloud-init が済ませるが、cloud-init はそのあとも毎回の起動で約 5 秒動くので止める（入れた設定は残る。[docs/open-items.md](../../docs/open-items.md) の「起動の速さ」）：
+
+```sh
+sudo touch /etc/cloud/cloud-init.disabled
+```
+
+あとで Wi-Fi を足すときは、作り直さずに `sudo nmcli connection add type wifi con-name <名前> ssid "<SSID>" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "<パスワード>"`。
 
 ## 4. Pi で入れる
 

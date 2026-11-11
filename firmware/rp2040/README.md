@@ -39,7 +39,9 @@ RMK は、USB がつながっているときだけ USB 用のチャンネル（`
 rustup target add thumbv6m-none-eabi
 cargo install elf2uf2-rs
 cargo build --release                                          # Pico 用（初期値）
+cargo build --release --no-default-features --features xiao    # Seeed Studio XIAO RP2040 用
 cargo build --release --no-default-features --features skjar   # SKJÁR の基板用
+elf2uf2-rs target/thumbv6m-none-eabi/release/skjar-rp2040 target/skjar-rp2040.uf2   # ドラッグして書く UF2
 ```
 
 BOOTSEL を押しながら USB につなぎ、`cargo run --release` で書き込む（`elf2uf2-rs -d` が UF2 に変えてコピーする）。書き込んだあとは、USB の仮想シリアル（COM ポート）にログが出る。
@@ -62,6 +64,29 @@ BOOTSEL を押しながら USB につなぎ、`cargo run --release` で書き込
 - Pi 側の設定は [software/os/overlays/README.md](../../software/os/overlays/README.md) の「skjar-keyboard」と、[software/ui/README.md](../../software/ui/README.md) の「実機での設定」（UART）。
 - UART のピンは SKJÁR と同じ（UART0、GPIO16 / 17）。SKJÁR では `RP_TXD` を CM0 の 3.3V で動くバッファに通すが、試作にはないので、Pi の電源を切ったまま Pico を動かすときに流れ込む電流を 1 kΩ で抑える。
 - タッチ UI と組み合わせて試すときは、Pi で `skjar-ui` を動かす（`--link /dev/serial0`）。UI がなくても、Pi で `python3 -c` などから `$SK,KEY,07,1E,1*9B` と `$SK,KEY,07,1E,0*9C` を送れば、「1」が入力される（CRC は [software/ui/tools/fake_rp2040.py](../../software/ui/tools/fake_rp2040.py) の `frame()` で作れる）。
+
+### XIAO RP2040 で試すとき
+
+Seeed Studio XIAO RP2040 は外に出ているピンが 11 本（D0〜D10）だけなので、`--features xiao` でビルドする。I²C は Pico と同じ GPIO26 / 27。割り込みと UART は別のピンに移し、キーマトリクスは 2 行 × 4 列（8 キー）だけを試す。抵抗とプルアップのつなぎ方は、上の Pico と同じ。
+
+| 信号 | XIAO RP2040 | Pi（Zero 2 W / 4B） | 備考 |
+|---|---|---|---|
+| `KB_SDA` | D0（GPIO26） | GPIO23（16 番ピン） | 4.7 kΩ で Pi の 3.3V へ |
+| `KB_SCL` | D1（GPIO27） | GPIO24（18 番ピン） | 4.7 kΩ で Pi の 3.3V へ |
+| `KB_INT` | D2（GPIO28） | GPIO25（22 番ピン） | 10 kΩ で Pi の 3.3V へ |
+| `RP_TXD` | D6（GPIO0、TX） | GPIO15 / RXD（10 番ピン） | 1 kΩ を直列に入れる |
+| `CM0_TXD` | D7（GPIO1、RX） | GPIO14 / TXD（8 番ピン） | |
+| GND | GND | GND | |
+
+キー（列と行をジャンパー線でつなぐと押したことになる。ダイオードを入れるなら、アノードを列、カソードを行に向ける）：
+
+| | COL0：D9（GPIO4） | COL1：D3（GPIO29） | COL2：D10（GPIO3） | COL3：D8（GPIO2） |
+|---|---|---|---|---|
+| **ROW0：D4（GPIO6）** | Esc | Q | W | E |
+| **ROW2：D5（GPIO7）** | Tab | A | S | D |
+
+- 残りの行と列は、外に出ていない GPIO に割り当ててある（押されることはない）。
+- キーの RGB（GPIO14 / 20）も外に出ていないので、XIAO では試せない。基板の RGB LED（GPIO11 / 12）と LED（GPIO16 / 17 / 25）は使わない。
 
 ## CM0 に電流を流し込まないための約束
 

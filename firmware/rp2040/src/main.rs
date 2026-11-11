@@ -8,7 +8,8 @@
 //! - CM0 との UART（タッチキー、状態のやり取り。[`cm0_link`]）
 //! - USB は、いまは HID にせずログ用のシリアル（CDC-ACM）にする
 //!
-//! 基板は cargo の feature で選ぶ：`pico`（Raspberry Pi Pico で試す。初期値）か `skjar`。
+//! 基板は cargo の feature で選ぶ：`pico`（Raspberry Pi Pico で試す。初期値）、`xiao`（Seeed Studio
+//! XIAO RP2040 で試す）、`skjar` のどれか 1 つ。
 
 #![no_std]
 #![no_main]
@@ -44,11 +45,15 @@ use static_cell::StaticCell;
 
 use crate::keymap::{COL, MATRIX_ROW, NUM_LAYER, ROW};
 
-#[cfg(all(feature = "pico", feature = "skjar"))]
-compile_error!("feature の `pico` と `skjar` は、どちらか一方だけを選ぶ");
+#[cfg(any(
+    all(feature = "pico", feature = "skjar"),
+    all(feature = "pico", feature = "xiao"),
+    all(feature = "xiao", feature = "skjar"),
+))]
+compile_error!("feature の `pico`、`xiao`、`skjar` は、どれか 1 つだけを選ぶ（`xiao` と `skjar` は --no-default-features と一緒に）");
 
-// キー入力の I²C。SKJÁR は I2C0（GPIO24 / 25）。Pico では GPIO24 / 25 が外に出ていないので
-// I2C1（GPIO26 / 27）を使う。
+// キー入力の I²C。SKJÁR は I2C0（GPIO24 / 25）。Pico と XIAO では GPIO24 / 25 が外に出ていないので
+// I2C1（GPIO26 / 27。XIAO では D0 / D1）を使う。
 #[cfg(feature = "skjar")]
 type KbI2c = embassy_rp::peripherals::I2C0;
 #[cfg(not(feature = "skjar"))]
@@ -152,8 +157,11 @@ async fn main(spawner: Spawner) {
     // ログ（USB の仮想シリアル）
     spawner.spawn(usb_task(Driver::new(p.USB, Irqs)).unwrap());
 
-    // KB_INT（GPIO13）：Low で CM0 に知らせる。オープンドレインを真似る（hid_i2c 参照）。
+    // KB_INT（GPIO13。XIAO では D2 の GPIO28）：Low で CM0 に知らせる。オープンドレインを真似る（hid_i2c 参照）。
+    #[cfg(not(feature = "xiao"))]
     hid_i2c::init_int_pin(Flex::new(p.PIN_13));
+    #[cfg(feature = "xiao")]
+    hid_i2c::init_int_pin(Flex::new(p.PIN_28));
 
     // キー入力の I²C。内部プルアップは使わない（プルアップは CM0 の 3.3V 側にある）。
     let mut i2c_config = i2c_slave::Config::default();
@@ -167,17 +175,22 @@ async fn main(spawner: Spawner) {
     let i2c = I2cSlave::new(p.I2C1, p.PIN_27, p.PIN_26, Irqs, i2c_config);
     spawner.spawn(hid_i2c_task(i2c).unwrap());
 
-    // CM0 との UART（UART0：GPIO16 TX → CM0 の GPIO15、GPIO17 RX ← CM0 の GPIO14）。
+    // CM0 との UART（UART0：GPIO16 TX → CM0 の GPIO15、GPIO17 RX ← CM0 の GPIO14。
+    // XIAO では GPIO16 / 17 が基板の LED なので、D6 の GPIO0 TX と D7 の GPIO1 RX）。
     // TX は CM0 の 3.3V で動くバッファを通るので、CM0 が OFF でも電流は流れ込まない。
     // RX には内部のプルを付けない（embassy-rp の初期化はプルを有効にしない）。
     static UART_TX_BUF: StaticCell<[u8; 256]> = StaticCell::new();
     static UART_RX_BUF: StaticCell<[u8; 256]> = StaticCell::new();
     let mut uart_config = uart::Config::default();
     uart_config.baudrate = 115_200;
+    #[cfg(not(feature = "xiao"))]
+    let (uart_tx, uart_rx) = (p.PIN_16, p.PIN_17);
+    #[cfg(feature = "xiao")]
+    let (uart_tx, uart_rx) = (p.PIN_0, p.PIN_1);
     let uart = BufferedUart::new(
         p.UART0,
-        p.PIN_16,
-        p.PIN_17,
+        uart_tx,
+        uart_rx,
         Irqs,
         UART_TX_BUF.init([0; 256]),
         UART_RX_BUF.init([0; 256]),
@@ -200,6 +213,7 @@ async fn main(spawner: Spawner) {
 
     // キーマトリクス（7 行 × 6 列、ダイオードは列 → 行）。キーマップは、これにタッチキーの 4 行を足した 11 行（keymap.rs）。
     // RMK の COL2ROW は、列を High に駆動して行を読む（行はプルダウン）。
+    #[cfg(not(feature = "xiao"))]
     let rows = [
         Input::new(p.PIN_10, Pull::Down), // ROW0
         Input::new(p.PIN_6, Pull::Down),  // ROW1
@@ -209,6 +223,7 @@ async fn main(spawner: Spawner) {
         Input::new(p.PIN_8, Pull::Down),  // ROW5
         Input::new(p.PIN_9, Pull::Down),  // ROW6
     ];
+    #[cfg(not(feature = "xiao"))]
     let cols = [
         Output::new(p.PIN_4, Level::Low), // COL0
         Output::new(p.PIN_5, Level::Low), // COL1
@@ -216,6 +231,28 @@ async fn main(spawner: Spawner) {
         Output::new(p.PIN_2, Level::Low), // COL3
         Output::new(p.PIN_1, Level::Low), // COL4
         Output::new(p.PIN_0, Level::Low), // COL5
+    ];
+    // XIAO：外に出ている 6 本で、ROW0（Esc Q W E）と ROW2（Tab A S D）の 0〜3 列目だけを試す。
+    // ほかの行と列は、外に出ていない（何もつながっていない）ピンにする。行はプルダウンなので押されることはない。
+    // GPIO11 / 12（基板の RGB LED の電源とデータ）と 16 / 17 / 25（基板の LED）は避ける
+    #[cfg(feature = "xiao")]
+    let rows = [
+        Input::new(p.PIN_6, Pull::Down),  // ROW0  D4
+        Input::new(p.PIN_10, Pull::Down), // ROW1  （出ていない）
+        Input::new(p.PIN_7, Pull::Down),  // ROW2  D5
+        Input::new(p.PIN_8, Pull::Down),  // ROW3  （出ていない）
+        Input::new(p.PIN_9, Pull::Down),  // ROW4  （出ていない）
+        Input::new(p.PIN_13, Pull::Down), // ROW5  （出ていない）
+        Input::new(p.PIN_15, Pull::Down), // ROW6  （出ていない）
+    ];
+    #[cfg(feature = "xiao")]
+    let cols = [
+        Output::new(p.PIN_4, Level::Low),  // COL0  D9
+        Output::new(p.PIN_29, Level::Low), // COL1  D3
+        Output::new(p.PIN_3, Level::Low),  // COL2  D10
+        Output::new(p.PIN_2, Level::Low),  // COL3  D8
+        Output::new(p.PIN_18, Level::Low), // COL4  （出ていない）
+        Output::new(p.PIN_19, Level::Low), // COL5  （出ていない）
     ];
     let mut matrix = Matrix::<_, _, _, MATRIX_ROW, COL, true>::new(rows, cols, DefaultDebouncer::new());
 

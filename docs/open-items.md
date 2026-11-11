@@ -72,6 +72,7 @@
   - 残りの大半は NetworkManager の約 18 秒。接続の設定（eth0 と Wi-Fi）が netplan（`/etc/netplan/90-NM-*.yaml`）にあり、NetworkManager が起動のたびに書き直す。そのたびに netplan が `systemctl daemon-reload`（1 回約 3 秒）を頼み、4 回で約 17 秒。イメージでは、接続の設定を NetworkManager の keyfile（`/etc/NetworkManager/system-connections/`）だけで持ち、netplan を通さない（試作機では、SSH が切れると困るので試していない）
   - systemd-resolved は入っていない。NetworkManager の `dns-mgr: DNS plugin did not become ready` の警告は、待たされた結果で、原因ではなかった
   - `skjar-ui@.service` は `After=systemd-user-sessions.service` で、これが `network.target` の後なので、UI もネットワークの準備を待つ。UI はネットワークを使わないので、フレームバッファ・タッチ・UART が揃えば出すように並べ直す
+  - 待ち時間を感じさせない案：RP2040 がキーの RGB で起動中の光り方を出す（CM0 の `HELLO` まで）。虹色の画面（`disable_splash=1`）とカーネルの文字・ロゴ（`quiet logo.nologo vt.global_cursor_default=0`）を消す。UI をネットワークより先に出す。それでも黒い時間が長ければ、Plymouth で SKJÁR のロゴ（パネルが縦長なので回す設定が要る）
   - `skjar-weather` / `skjar-news` が、タイマー（起動の 1 分後）より前の起動直後に動いている。path ユニットが、起動時に `.request` があると動かしているらしい。起動直後の取得でよいか、やめるかを決める
 - [ ] HID over I²C を Pico と Pi Zero 2 W で確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
