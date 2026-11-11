@@ -33,7 +33,8 @@
 	fragment@1 {
 		target-path = "/";
 		__overlay__ {
-			skjar_kb_i2c: i2c@0 {
+			// No unit address: this bus has no reg (dtc warns about "i2c@0")
+			skjar_kb_i2c: i2c-skjar-kb {
 				compatible = "i2c-gpio";
 				pinctrl-names = "default";
 				pinctrl-0 = <&skjar_kb_pins>;

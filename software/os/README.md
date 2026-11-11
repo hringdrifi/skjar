@@ -3,6 +3,7 @@
 Raspberry Pi OS Lite をベースにした OS の設定。カーネルとドライバは標準のまま、オーバーレイと `config.txt` の設定だけで、大体の機能が動くようにする。置く予定のもの：
 
 - [config.txt](config.txt)（ディスプレイ、キー入力、RTC、音声、UART、シャットダウンの通知。書いた。実機では未確認）
+- 試作機（Pi 4B / Pi Zero 2 W ＋ Pico）のセットアップ：[devboard.md](devboard.md)。config.txt は [config-devboard.txt](config-devboard.txt) を OS の config.txt に足す
 - 専用のオーバーレイ（[overlays/](overlays/)。音声とキー入力の下書きあり）
 - systemd のユニット（[systemd/skjar-ui@.service](systemd/skjar-ui@.service)：UI の起動。RP2040 との UART も UI が持つ。入れ方はファイルの先頭）と、コンソールから UI に戻るコマンド（[bin/skjar](bin/skjar)）
   - UI（キーボードモード）と tty1 のコンソール（サイバーデックモード）を行き来する。UI の System タブの Open console で UI が終わり、systemd が `getty@tty1` を立ち上げる。コンソールで `skjar` と打つと `skjar-ui@manual` が立ち上がり、tty1 を UI に戻す
