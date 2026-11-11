@@ -129,12 +129,21 @@ cat /sys/class/graphics/fb0/virtual_size           # 480,1920 ならパネル
 dmesg | grep -i -E 'dsi|panel|goodix|touch'
 ```
 
-UI を手で動かす（`Ctrl+C` で止める）：
+UI を手で動かす（`Ctrl+C` で止める）。どちらか 1 つだけを実行する（2 つ動かすと、同じ画面に両方が描き、Look を切り替えたときなどに向きが戻ったように見える）。
+
+4B（パネルは縦長なので、UI が 90° 回して描く）：
 
 ```sh
-sudo skjar-ui --link /dev/serial0                  # 4B（パネルは縦長なので、UI が 90° 回して描く）
-sudo skjar-ui --link /dev/serial0 --rotate 0       # Zero 2 W（HDMI のモニター）
+sudo skjar-ui --link /dev/serial0
 ```
+
+Zero 2 W（HDMI のモニター）：
+
+```sh
+sudo skjar-ui --link /dev/serial0 --rotate 0
+```
+
+動いている UI を確かめる・止める：`pgrep -a skjar-ui`、`sudo pkill skjar-ui`。
 
 UART が通じていれば、UI の右上の `RP2040` の警告が消え、レイヤーが `L0` と出る。Pico の COM ポートのログにも、UI から届いた行が出る。
 
