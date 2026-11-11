@@ -15,7 +15,7 @@
 #endif
 
 static settings_t current = { .return_mode = RETURN_KEY_OPENED, .look = LOOK_PLAIN };
-static char file_path[512];
+static char file_path[544];     /* dir_path ＋ "/ui.conf" が必ず入る長さ */
 static char dir_path[512];
 
 static const char *const return_names[] = { "never", "key", "always" };
@@ -148,7 +148,7 @@ const char *settings_dir(void)
 {
     if (!dir_path[0]) {
         /* --config で渡したファイルのあるフォルダ */
-        snprintf(dir_path, sizeof dir_path, "%s", file_path);
+        snprintf(dir_path, sizeof dir_path, "%.511s", file_path);
         char *sep = strrchr(dir_path, SEP[0]);
 #if defined(_WIN32)
         char *slash = strrchr(dir_path, '/');

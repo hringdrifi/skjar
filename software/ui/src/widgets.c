@@ -1015,7 +1015,7 @@ static void weather_load(void)
                     place[n++] = *p;
             place[n] = '\0';
         } else if (strncmp(line, "city=", 5) == 0) {
-            snprintf(city, sizeof city, "%s", line + 5);
+            snprintf(city, sizeof city, "%.47s", line + 5);     /* 長い地名は切る */
         } else if (sscanf(line, "now=%f,%d", &now_t, &now_code) == 2) {
             have_now = true;
         } else if (sscanf(line, "today=%f,%f,%d", &hi, &lo, &rain) == 3) {
