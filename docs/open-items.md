@@ -67,6 +67,12 @@
 - [ ] キーボードモードとサイバーデックモード（[protocol.md](protocol.md) の 2.6）の残り：PC への USB HID で実際に出力先を分ける、サイバーデックモードのキーマップ（レイヤー 3〜5。いまはレイヤー 0〜2 の写し）を決める、今のモードをキーの RGB でも示すか
 - [ ] USB のリモートウェイクアップ：PC がスリープしているとき（`USB,0`）にキーを押したら PC を起こす。いまはスリープで「PC につないで」の表示になる。RMK と embassy-usb の対応を調べる
 - [ ] コンソールの自動ログイン（`raspi-config` の Boot / Auto Login）にするか。UI を閉じるたびにログインするのは手間。ルートを読み取り専用にするときの扱いと合わせて決める
+- [ ] 起動の速さ（OS のイメージを作るときに直す）。試作機（Pi 4B、Raspberry Pi OS Lite 64-bit、2026-11-11）で `systemd-analyze` は 41 秒（カーネル 4 秒＋ユーザー空間 37 秒）。分かったこと：
+  - cloud-init（Raspberry Pi Imager のカスタマイズ）が毎回の起動で約 5 秒。`/etc/cloud/cloud-init.disabled` で止めて 31 秒になった。イメージには cloud-init を入れない
+  - 残りの大半は NetworkManager の約 18 秒。接続の設定（eth0 と Wi-Fi）が netplan（`/etc/netplan/90-NM-*.yaml`）にあり、NetworkManager が起動のたびに書き直す。そのたびに netplan が `systemctl daemon-reload`（1 回約 3 秒）を頼み、4 回で約 17 秒。イメージでは、接続の設定を NetworkManager の keyfile（`/etc/NetworkManager/system-connections/`）だけで持ち、netplan を通さない（試作機では、SSH が切れると困るので試していない）
+  - systemd-resolved は入っていない。NetworkManager の `dns-mgr: DNS plugin did not become ready` の警告は、待たされた結果で、原因ではなかった
+  - `skjar-ui@.service` は `After=systemd-user-sessions.service` で、これが `network.target` の後なので、UI もネットワークの準備を待つ。UI はネットワークを使わないので、フレームバッファ・タッチ・UART が揃えば出すように並べ直す
+  - `skjar-weather` / `skjar-news` が、タイマー（起動の 1 分後）より前の起動直後に動いている。path ユニットが、起動時に `.request` があると動かしているらしい。起動直後の取得でよいか、やめるかを決める
 - [ ] HID over I²C を Pico と Pi Zero 2 W で確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
 - [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
 - [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）
