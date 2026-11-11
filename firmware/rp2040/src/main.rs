@@ -116,10 +116,15 @@ impl embassy_usb::Handler for UsbStateHandler {
             cm0_link::set_usb_configured(false);
         }
     }
+    // リセットや認識のときは、スリープからも覚めている。embassy-usb はこのとき suspended(false) を
+    // 呼ばないので、つなぐ前（USB の信号がない間）に来た suspended(true) が残り、PC につながって
+    // いても「スリープ中」のままになっていた（XIAO RP2040 で、2026-11-12）
     fn reset(&mut self) {
+        cm0_link::set_usb_suspended(false);
         cm0_link::set_usb_configured(false);
     }
     fn configured(&mut self, configured: bool) {
+        cm0_link::set_usb_suspended(false);
         cm0_link::set_usb_configured(configured);
     }
     fn suspended(&mut self, suspended: bool) {

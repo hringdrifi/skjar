@@ -281,7 +281,8 @@ fn handle_line(line: &[u8]) {
     match cmd {
         "ALIVE" => {}
         "HELLO" => {
-            info!("cm0_link: HELLO");
+            let (configured, suspended) = SHARED.lock(|s| (s.usb_configured.get(), s.usb_suspended.get()));
+            info!("cm0_link: HELLO (USB configured {}, suspended {})", configured, suspended);
             reports::release_touch();
             release_touch_keys();
             send(Msg::State);

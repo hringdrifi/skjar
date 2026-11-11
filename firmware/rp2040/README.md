@@ -20,8 +20,8 @@ HID over I²C を確かめるための試作。基板ができる前に、Raspbe
 | 機能 | 状態 |
 |---|---|
 | キーマトリクスと RMK のキーボード処理（レイヤー、タップ・ホールド） | 実装した。キーマップは仮（[src/keymap.rs](src/keymap.rs)） |
-| HID over I²C のターゲット（[src/hid_i2c.rs](src/hid_i2c.rs)） | 実装した。実機では未確認 |
-| CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。実機では未確認。`PWR` と `SHUTDOWN` はまだ送らない（CC と電源の判定がないため）。`BLMAX` は 255 固定、`LCD` は記録だけ |
+| HID over I²C のターゲット（[src/hid_i2c.rs](src/hid_i2c.rs)） | 実装した。XIAO RP2040 と Pi 4B で、キーボードとして認識され、物理キーが届くのを確かめた（2026-11-12）。出力レポート（LED）、Consumer Control、マウスは未確認 |
+| CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。XIAO RP2040 と Pi 4B で、UI との状態のやり取りを確かめた（2026-11-12）。タッチキーなどは未確認。`PWR` と `SHUTDOWN` はまだ送らない（CC と電源の判定がないため）。`BLMAX` は 255 固定、`LCD` は記録だけ |
 | タッチキー（[src/reports.rs](src/reports.rs)） | 実装した。UART で届いたキーを、RMK の物理キーのレポートと合わせて送る（修飾キーは OR、キーは合わせて 6 個まで） |
 | キーの RGB（[src/rgb.rs](src/rgb.rs)） | 隠し機能の動画に合わせて光らせるところだけ実装した。UART の `LEDF` を受けて、GPIO14 から PIO で SK6812 を駆動し、GPIO20 で LED の電源を入れ切りする。明るさは 1 色あたり 48/255 まで（全部白でも約 0.5 A）。普段の光らせ方と、電流宣言ごとの上限はまだ。Pico で試すときは GP14 / GP20 に WS2812 のテープ LED などをつなぐ。実機では未確認 |
 | トラックパッド（UART の `PTR` / `WHEEL`） | 実装した。HID over I²C にマウスのレポート（ID 3）を足し、RMK のマウスキーと合わせて送る（ボタンは OR、動きはそのまま） |
