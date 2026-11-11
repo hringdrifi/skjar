@@ -313,6 +313,11 @@ static int create_display(void)
         fprintf(stderr, "cannot open %s\n", opt.fb_path);
         return -1;
     }
+    /* DPI は PC（SDL / Windows）と同じ初期値にする。fbdev のドライバはパネルの物理的な幅から DPI を出し
+     * （8.8″ は約 220）、標準のテーマはそれに合わせて余白や角の丸みを大きくするので、ボタンの中身が縮んで
+     * PC と見た目が変わる。UI の寸法は 1920 × 480 のピクセルで決めてある。テーマは回転（解像度の変化）の
+     * ときに作り直されるので、回す前に決める */
+    lv_display_set_dpi(disp, LV_DPI_DEF);
     static const lv_display_rotation_t rot[] = {
         LV_DISPLAY_ROTATION_0, LV_DISPLAY_ROTATION_90, LV_DISPLAY_ROTATION_180, LV_DISPLAY_ROTATION_270,
     };
