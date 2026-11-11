@@ -29,7 +29,9 @@ BOOTSEL を押しながら Pico を PC の USB につなぎ、出てきたドラ
 
 Pico の電源とログは USB から。Pico の USB は PC につなぐ（COM ポートにログが出る）。PC につながっているあいだは、ファームが「PC がつながっている」と UI に知らせる（`USB,1`）ので、UI はキーボードモードとして動く。
 
-4B のディスプレイは、付属の MIPI-DSI-Cable-12cm で、15 ピン側を 4B の DSI に、22 ピン側をパネルに挿す。電源は、付属の MX1.25 2PIN → 2.54 3PIN のケーブルで 4B の 5V と GND から取る。
+4B のディスプレイは、付属の MIPI-DSI-Cable-12cm で、15 ピン側を 4B の DSI に、22 ピン側をパネルに挿す。パネルの電源（付属の MX1.25 2PIN → 2.54 3PIN のケーブル）は、別の 5V の電源から取り、GND は 4B とつなぐ。
+
+**電源に注意：** 4B は公式の 5.1V 3A の電源を使う。足りない電源に、パネルの電源（0.43 A 以上）まで 4B のヘッダの 5V から取ったら、低電圧になって Wi-Fi が落ち、SSH に入れなくなった（2026-11-12。パネルの電源を抜いたらつながり、`vcgencmd get_throttled` は `0x50005`）。電源を確かめるには `vcgencmd get_throttled` が `throttled=0x0` か見る（0 以外なら、低電圧か速度の制限が起きた）。
 
 ## 3. OS を入れる
 
@@ -41,11 +43,7 @@ Raspberry Pi Imager で、**Raspberry Pi OS Lite (64-bit)** を microSD に書�
 
 起動したら、PC から `ssh <ユーザー>@skjar-4b.local` で入る。
 
-カスタマイズは最初の起動で cloud-init が済ませるが、cloud-init はそのあとも毎回の起動で約 5 秒動くので止める（入れた設定は残る。[docs/open-items.md](../../docs/open-items.md) の「起動の速さ」）：
-
-```sh
-sudo touch /etc/cloud/cloud-init.disabled
-```
+カスタマイズ（ユーザー、Wi-Fi、SSH）は cloud-init が行う。cloud-init は毎回の起動で約 5 秒動くが、試作機では止めなくてよい（起動の速さは本番のイメージで直す。[docs/open-items.md](../../docs/open-items.md) の「起動の速さ」）。止めるなら、何度か起動して、Wi-Fi の設定が `/etc/netplan/90-NM-*.yaml` か `/etc/NetworkManager/system-connections/` に書き出されているのを確かめてから。
 
 あとで Wi-Fi を足すときは、作り直さずに `sudo nmcli connection add type wifi con-name <名前> ssid "<SSID>" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "<パスワード>"`。
 
