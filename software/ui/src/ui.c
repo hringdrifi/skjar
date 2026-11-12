@@ -1099,10 +1099,11 @@ static void input_timer_cb(lv_timer_t *t)
         was_playing = false;
         wait_release = true;
     }
-    /* Weather の場所を選ぶ画面を開いている間は、その画面を LVGL のクリックで操作する。
-     * 下のタッチキーが押されないよう、指を渡さない。閉じたあとは、叩いた指が離れるまで待つ */
+    /* 選ぶ画面（Weather の場所、News のジャンル）や「PC につないで」のお知らせが出ている間は、
+     * それを LVGL のクリックで操作する。下に隠れたタッチキーや帯が押されないよう、指を渡さない。
+     * 閉じたあとは、叩いた指が離れるまで待つ */
     static bool was_picking;
-    if (widgets_picker_open()) {
+    if (widgets_picker_open() || (pc_notice && !lv_obj_is_hidden(pc_notice))) {
         if (!was_picking) {
             release_all_keys();
             widgets_release();
