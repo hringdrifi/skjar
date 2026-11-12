@@ -2262,6 +2262,7 @@ dependencies = [
  "rmk",
  "smart-leds",
  "static_cell",
+ "usbd-hid",
 ]
 
 [[package]]

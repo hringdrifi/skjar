@@ -21,6 +21,8 @@ panic-halt = "1"
 portable-atomic = { version = "1", features = ["critical-section"] }
 static_cell = "2"
 smart-leds = "0.4"
+# PC への USB HID のディスクリプタ（RMK の KeyboardReport / CompositeReport のものを使う）。RMK と同じ版
+usbd-hid = "0.10"
 
 [features]
 default = ["pico"]

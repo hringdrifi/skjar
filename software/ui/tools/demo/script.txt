@@ -4,7 +4,7 @@
 # RP2040 とつながっていることにする（ヘッダーの札）
 0.0   link USB,1
 0.0   link PWR,A,3A
-0.0   link OUT,PC,AUTO
+0.0   link OUT,PC
 0.0   link BLMAX,255
 0.0   link LAYER,0
 

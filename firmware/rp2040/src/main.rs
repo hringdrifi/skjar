@@ -6,7 +6,8 @@
 //! - キーマトリクスと RMK のキーボード処理（レイヤー、タップ・ホールドなど）
 //! - RMK が USB 用に出すレポートを受け取り、タッチキーと合わせて HID over I²C に流す（[`reports`]、[`hid_i2c`]）
 //! - CM0 との UART（タッチキー、状態のやり取り。[`cm0_link`]）
-//! - USB は、いまは HID にせずログ用のシリアル（CDC-ACM）にする
+//! - PC への USB（[`usb_hid`]）：キーボード、マウス・メディアキー、ログ用のシリアル（CDC-ACM）。
+//!   キーボードモードでは、キーとトラックパッドを PC に、サイバーデックモードでは CM0 に出す（[`reports`]）
 //!
 //! 基板は cargo の feature で選ぶ：`pico`（Raspberry Pi Pico で試す。初期値）、`xiao`（Seeed Studio
 //! XIAO RP2040 で試す）、`skjar` のどれか 1 つ。
@@ -19,9 +20,9 @@ mod hid_i2c;
 mod keymap;
 mod reports;
 mod rgb;
+mod usb_hid;
 
 use embassy_executor::Spawner;
-use embassy_usb::class::cdc_acm::{CdcAcmClass, State as CdcAcmState};
 use embassy_futures::join::join;
 use embassy_rp::gpio::{Flex, Input, Level, Output, Pull};
 use embassy_rp::i2c_slave::{self, I2cSlave};
@@ -76,60 +77,10 @@ bind_interrupts!(struct Irqs {
     DMA_IRQ_0 => embassy_rp::dma::InterruptHandler<DMA_CH0>;
 });
 
+/// PC への USB（キーボード、マウス・メディアキー、ログ）。usb_hid.rs
 #[embassy_executor::task]
 async fn usb_task(driver: Driver<'static, USB>) {
-    // いまの USB はログ用の仮想シリアルだけ。PC に認識されたか（キーボードモードにするか）を
-    // CM0 に知らせるため、USB の状態の変化を UsbStateHandler で受け取る
-    static CONFIG_DESC: StaticCell<[u8; 256]> = StaticCell::new();
-    static BOS_DESC: StaticCell<[u8; 256]> = StaticCell::new();
-    static MSOS_DESC: StaticCell<[u8; 256]> = StaticCell::new();
-    static CONTROL_BUF: StaticCell<[u8; 64]> = StaticCell::new();
-    static HANDLER: StaticCell<UsbStateHandler> = StaticCell::new();
-    static CDC_STATE: StaticCell<CdcAcmState> = StaticCell::new();
-
-    let mut config = embassy_usb::Config::new(0xc0de, 0xcafe);
-    config.manufacturer = Some("SKJAR");
-    config.product = Some("SKJAR RP2040 (log)");
-    config.max_power = 100;
-    config.max_packet_size_0 = 64;
-    let mut builder = embassy_usb::Builder::new(
-        driver,
-        config,
-        CONFIG_DESC.init([0; 256]),
-        BOS_DESC.init([0; 256]),
-        MSOS_DESC.init([0; 256]),
-        CONTROL_BUF.init([0; 64]),
-    );
-    builder.handler(HANDLER.init(UsbStateHandler));
-    let class = CdcAcmClass::new(&mut builder, CDC_STATE.init(CdcAcmState::new()), 64);
-    let mut usb = builder.build();
-    let log = embassy_usb_logger::with_class!(1024, log::LevelFilter::Debug, class);
-    join(usb.run(), log).await;
-}
-
-/// USB の状態の変化を cm0_link に伝える（PC に認識されたか、スリープしたか、抜かれたか）
-struct UsbStateHandler;
-
-impl embassy_usb::Handler for UsbStateHandler {
-    fn enabled(&mut self, enabled: bool) {
-        if !enabled {
-            cm0_link::set_usb_configured(false);
-        }
-    }
-    // リセットや認識のときは、スリープからも覚めている。embassy-usb はこのとき suspended(false) を
-    // 呼ばないので、つなぐ前（USB の信号がない間）に来た suspended(true) が残り、PC につながって
-    // いても「スリープ中」のままになっていた（XIAO RP2040 で、2026-11-12）
-    fn reset(&mut self) {
-        cm0_link::set_usb_suspended(false);
-        cm0_link::set_usb_configured(false);
-    }
-    fn configured(&mut self, configured: bool) {
-        cm0_link::set_usb_suspended(false);
-        cm0_link::set_usb_configured(configured);
-    }
-    fn suspended(&mut self, suspended: bool) {
-        cm0_link::set_usb_suspended(suspended);
-    }
+    usb_hid::run(driver).await
 }
 
 #[embassy_executor::task]
@@ -203,8 +154,9 @@ async fn main(spawner: Spawner) {
     );
     // CM0 とのやり取りはキーマップを読むので、キーマップを作ったあと、キーボードと並べて動かす（下）
 
-    // RMK は USB がつながったときだけ USB 用のチャンネルにレポートを出す。
-    // いまは USB の HID を使わないので、つながったことにしてチャンネルを横取りする。
+    // RMK は USB がつながったときだけ USB 用のチャンネルにレポートを出す。RMK の USB は使わず
+    // （usb_hid.rs が自分で組む）、いつもつながったことにしてチャンネルを横取りし、タッチキーと
+    // 合わせてモードで PC か CM0 に送り分ける（reports.rs）。
     rmk::state::set_usb_state(UsbState::Configured);
     spawner.spawn(report_bridge_task().unwrap());
 

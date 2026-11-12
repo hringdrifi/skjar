@@ -32,8 +32,7 @@ typedef struct {
     char port;              /* 'A' か 'B'。わからないときは 0 */
     link_current_t current;
     int bl_max;             /* バックライトの上限（0〜255）。初期値は 255（上限なし） */
-    link_out_t out;
-    bool out_manual;
+    link_out_t out;         /* キーの送り先（RP2040 が決める。PC：キーボードモード、CM0：サイバーデックモード） */
     int layer;              /* わからないときは -1 */
     int pc_connected;       /* PC の USB につながっているか（1 / 0）。わからないときは -1 */
 } link_state_t;
@@ -64,7 +63,9 @@ void link_send_key(uint8_t page, uint16_t usage, bool down);
 /* トラックパッド：dx / dy / v / h は −127〜127。buttons はビット 0 左、1 右、2 中 */
 void link_send_pointer(int dx, int dy, uint8_t buttons);
 void link_send_wheel(int v, int h);
-void link_send_out(link_out_t target_or_unknown_for_auto);
+/* UI を閉じる（コンソールへ）。RP2040 は ALIVE の途切れを待たずに、キーを CM0（I²C）に送り始める。
+ * 届かなくても、ALIVE が途切れれば同じことになる（速くするためだけ） */
+void link_send_bye(void);
 /* キーのライトの 1 コマ（隠し機能の動画）。levels は 42 キー × 明るさ 0〜15、RMK のマトリクスの順 */
 void link_send_leds(const uint8_t levels[42]);
 void link_send_lcd(bool on);

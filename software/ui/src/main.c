@@ -26,8 +26,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/kd.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #endif
 
@@ -131,7 +135,9 @@ static int parse_args(int argc, char **argv)
 static void open_console(void)
 {
     fprintf(stderr, "switching to the console (cyberdeck mode)\n");
-    link_send_out(LINK_OUT_CM0);
+    /* RP2040 は、UI がいなくなる（BYE か ALIVE の途切れ）と、キーを CM0 に送る（サイバーデックモード）。
+     * BYE は、途切れを待たずにすぐ切り替えてもらうため */
+    link_send_bye();
     to_console = true;
     quit = 1;
 }
@@ -224,6 +230,7 @@ static int create_display(void)
 }
 
 static void restore_console(void) {}
+static void watchdog_ping(void) {}
 
 #elif defined(SKJAR_UI_WINDOWS)
 
@@ -239,6 +246,7 @@ static int create_display(void)
 }
 
 static void restore_console(void) {}
+static void watchdog_ping(void) {}
 
 #else /* fbdev */
 
@@ -265,6 +273,43 @@ static void restore_console(void)
         close(vt_fd);
         vt_fd = -1;
     }
+}
+
+/* systemd のウォッチドッグ（skjar-ui@.service の WatchdogSec）に「生きている」を知らせる。描き直しの
+ * ループから 1 秒ごとに呼ぶので、UI が固まると止まり、systemd が UI を止めて起動し直す。
+ * libsystemd は使わず、$NOTIFY_SOCKET（unix のデータグラム）に直接書く。systemd の外では何もしない */
+static void watchdog_ping(void)
+{
+    static int fd = -2;
+    static struct sockaddr_un addr;
+    static socklen_t addr_len;
+    static uint32_t last_ms;
+    if (fd == -2) {
+        fd = -1;
+        const char *path = getenv("NOTIFY_SOCKET");
+        size_t n = path ? strlen(path) : 0;
+        if (n == 0 || n >= sizeof addr.sun_path || (path[0] != '/' && path[0] != '@'))
+            return;
+        memset(&addr, 0, sizeof addr);
+        addr.sun_family = AF_UNIX;
+        memcpy(addr.sun_path, path, n);
+        if (path[0] == '@')
+            addr.sun_path[0] = '\0';    /* 抽象名前空間 */
+        addr_len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + n);
+        fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+        if (fd >= 0) {
+            static const char ready[] = "READY=1";
+            sendto(fd, ready, sizeof ready - 1, 0, (struct sockaddr *)&addr, addr_len);
+        }
+    }
+    if (fd < 0)
+        return;
+    uint32_t now = now_ms();
+    if (now - last_ms < 1000)
+        return;
+    last_ms = now;
+    static const char msg[] = "WATCHDOG=1";
+    sendto(fd, msg, sizeof msg - 1, 0, (struct sockaddr *)&addr, addr_len);
 }
 
 static void touch_found(lv_indev_t *indev, lv_evdev_type_t type, void *user)
@@ -398,14 +443,15 @@ int main(int argc, char **argv)
         return r;
     }
 
-    /* キーボードモードで始まる（物理キーは PC へ、キーボードモードのキーマップへ） */
-    link_send_out(LINK_OUT_PC);
+    /* UI が出ている間は、RP2040 がキーを PC に送る（キーボードモード。PC がなければ CM0 へ）。
+     * 起動時の HELLO（link_open）と、そのあとの ALIVE で RP2040 が知る */
     if (opt.boot)
         lv_timer_create(boot_check_cb, 100, NULL);
 
     /* 窓を閉じると表示がなくなる（Windows のドライバ） */
     while (!quit && lv_display_get_default() != NULL) {
         uint32_t idle = lv_timer_handler();
+        watchdog_ping();
         if (idle > 10)
             idle = 10;
         platform_sleep_ms(idle);

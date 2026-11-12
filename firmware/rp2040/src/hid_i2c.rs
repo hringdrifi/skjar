@@ -17,6 +17,7 @@ use embassy_rp::i2c::Instance;
 use embassy_rp::i2c_slave::{Command, I2cSlave, ReadStatus};
 use embassy_sync::blocking_mutex::Mutex;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_time::Instant;
 use log::{debug, info, warn};
 use rmk::heapless::Deque;
 
@@ -220,9 +221,13 @@ const EMPTY_INPUT: [u8; 2] = [0, 0];
 const QUEUE_LEN: usize = 32;
 
 struct State {
-    /// CM0 の `RESET` を受けてから、`SET_POWER`（SLEEP）を受けるまでの間だけ true。
-    /// それ以外のときのキー入力は捨てる。
+    /// 入力を積むか。初めから true（`RESET` を待たない）：RP2040 だけが再起動したとき、i2c-hid は
+    /// `RESET` を送り直さないので、待つとキーが効かなくなる（2026-11-12）。Linux の起動時は、
+    /// i2c-hid が `RESET` で積んだものを捨てさせるので困らない。`SET_POWER`（SLEEP）のあとは
+    /// false（CM0 は止まる途中）で、`RESET` か `SET_POWER`（ON）で true に戻る
     ready: bool,
+    /// CM0 のカーネル（i2c-hid）が入力を最後に読み切った時刻。生きているかの目安（cm0_link.rs）
+    last_read: Option<Instant>,
     /// `RESET` を受けて、長さ 0 の入力をまだ読まれていない。
     reset_pending: bool,
     /// いま CM0 に読ませようとしているレポート。読み切られるまで残す。
@@ -235,7 +240,8 @@ struct State {
 impl State {
     const fn new() -> Self {
         Self {
-            ready: false,
+            ready: true,
+            last_read: None,
             reset_pending: false,
             current: None,
             queue: Deque::new(),
@@ -275,7 +281,7 @@ pub fn init_int_pin(mut pin: Flex<'static>) {
     });
 }
 
-/// 入力レポートを積む。CM0 がまだ準備できていないときは捨てる。
+/// 入力レポートを積む。CM0 が止まる途中（`SET_POWER` SLEEP のあと）は捨てる。
 pub fn push_input(report: InputReport) {
     with_state(|s| {
         if !s.ready {
@@ -290,6 +296,33 @@ pub fn push_input(report: InputReport) {
         let _ = s.queue.push_back(report);
         s.update_int();
     });
+}
+
+/// CM0 のカーネルが入力を最後に読み切った時刻（まだなら None）
+pub fn last_read() -> Option<Instant> {
+    with_state(|s| s.last_read)
+}
+
+/// まだ読まれていない入力があるか
+pub fn pending() -> bool {
+    with_state(|s| s.current.is_some() || !s.queue.is_empty())
+}
+
+/// CM0 が止まる途中か（i2c-hid が `SET_POWER`（SLEEP）を送ってきて、まだ `RESET` などが来ていない）。
+/// シャットダウンや再起動のとき、カーネルが送ってくる
+pub fn sleeping() -> bool {
+    with_state(|s| !s.ready)
+}
+
+/// Consumer の Power（0x30）。Linux では `KEY_POWER` になり、systemd-logind が `poweroff` する
+const CONSUMER_POWER: u16 = 0x30;
+
+/// 電源キーを押して離したことにする（CM0 にシャットダウンを頼む）。UI が動いていなくても、
+/// カーネルが動いていれば効く
+pub fn press_power_key() {
+    info!("hid_i2c: power key");
+    push_input(InputReport::consumer(CONSUMER_POWER));
+    push_input(InputReport::consumer(0));
 }
 
 /// CM0 から最後に受け取ったキーボードの LED（bit0 Num、bit1 Caps、bit2 Scroll …）。
@@ -338,6 +371,7 @@ async fn respond_input<T: Instance>(i2c: &mut I2cSlave<'static, T>) {
             // 1 バイトだけの読み出し（Linux が起動時にデバイスの有無を見るもの）などでは片付けない。
             if sent >= bytes.len() {
                 with_state(|s| {
+                    s.last_read = Some(Instant::now());
                     if was_reset {
                         s.reset_pending = false;
                         debug!("hid_i2c: reset acknowledged");

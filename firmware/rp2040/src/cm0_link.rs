@@ -4,13 +4,21 @@
 //! CM0 の起動中のログ（コンソール）も同じ線に流れてくるので、この形でない行は捨てる。
 //!
 //! いまできること：
-//! - CM0 → RP2040：`HELLO`、`ALIVE`、`TK`（画面のタッチキー。キーマップの 7〜10 行目として RMK に渡す）、
+//! - CM0 → RP2040：`HELLO`、`ALIVE`、`BYE`、`TK`（画面のタッチキー。キーマップの 7〜10 行目として RMK に渡す）、
 //!   `KEY`（Media タブなどの固定のキー）、`PTR` / `WHEEL`（トラックパッド）、`LEDF`（キーのライトの 1 コマ）、
-//!   `OUT`、`LCD`（記録だけ）、`UF2`
+//!   `LCD`（記録だけ）、`UF2`
 //! - RP2040 → CM0：`ALIVE`、`BLMAX`（いまは 255 固定）、`USB`（PC につながっているか）、`OUT`、`LAYER`、
 //!   `TKL`（タッチキーの割り当て）、
 //!   `USER`（Vial の USER キー。UI がタブを開く）、`ACT`（文字や機能のキーが押された）
-//! - `PWR` は CC の判定を作るまで送らない。`SHUTDOWN` を出すきっかけもまだない（[`request_shutdown`]）
+//! - `PWR` は CC の判定を作るまで送らない。シャットダウンの依頼は、UART ではなく I²C の電源キー
+//!   （[`request_shutdown`]。UI がいなくても効く）
+//!
+//! キーとトラックパッドの送り先（docs/protocol.md の 2.6）：
+//! - UI が出ている（`HELLO` か `ALIVE` が来ていて、`BYE` も途切れもない）：PC があれば USB、なければ I²C
+//! - UI がいない（`BYE` を受けた、`ALIVE` が [`UI_TIMEOUT`] 途切れた）：CM0 のカーネルが生きていれば
+//!   I²C（コンソール）。生きていなければ（電源 OFF・起動中・止まる途中・固まった）、PC があれば USB
+//! - カーネルが生きているかは、UI がいない間だけ、I²C に今と同じ内容のレポートを置いて、読みに来るかで見る
+//! - キーマップの既定のレイヤーは、送り先に合わせる（USB ならキーボードモードの 0、I²C ならサイバーデックの 3）
 
 use core::cell::Cell;
 use core::fmt::Write as _;
@@ -31,19 +39,22 @@ use rmk::types::action::{Action, KeyAction};
 use rmk::types::keycode::KeyCode;
 
 use crate::keymap::{MODE_CYBERDECK_COL, MODE_KEYBOARD_COL, MODE_ROW, NUM_LAYER, TOUCH_KEYS, touch_key_pos};
-use crate::{reports, rgb};
+use crate::{hid_i2c, reports, rgb};
 
 const LINE_MAX: usize = 64;
+/// RP2040 が `ALIVE` を送る間隔
 const ALIVE_PERIOD: Duration = Duration::from_secs(1);
-const LINK_TIMEOUT: Duration = Duration::from_secs(3);
-
-/// 物理キーの出力先の選び方（CM0 の `OUT` で変わる）。
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum OutMode {
-    Auto,
-    Pc,
-    Cm0,
-}
+/// 送り先を見直す間隔（`ALIVE` の途切れ、カーネルの確かめ）
+const SUPERVISE_PERIOD: Duration = Duration::from_millis(100);
+/// CM0 から何も届かなくなって、押されたままのタッチキーとボタンを離すまで
+const TOUCH_TIMEOUT: Duration = Duration::from_secs(3);
+/// UI の `ALIVE` が途切れて、UI がいないとみなすまで。UI が落ちて systemd が起動し直す
+/// （`RestartSec=1` ＋ UI の起動）より長くする。CM0（Zero 2 W）で測って決め直す
+const UI_TIMEOUT: Duration = Duration::from_secs(5);
+/// UI がいない間に、カーネルの確かめのレポートを置く間隔
+const PROBE_PERIOD: Duration = Duration::from_secs(2);
+/// これだけ読みに来なければ、カーネルは生きていないとみなす
+const KERNEL_TIMEOUT: Duration = Duration::from_secs(6);
 
 /// CM0 に送るもの。
 #[derive(Clone, Copy)]
@@ -51,7 +62,6 @@ enum Msg {
     State,
     Out,
     Layer,
-    Shutdown,
     /// USER キーを押した（true）・離した（false）
     User(u8, bool),
     /// 文字や機能のキーが押された
@@ -63,12 +73,19 @@ enum Msg {
 static TX_QUEUE: Channel<CriticalSectionRawMutex, Msg, 16> = Channel::new();
 
 struct Shared {
-    out_mode: Cell<OutMode>,
     /// PC の USB に認識されている（configured）、スリープしている（suspended）
     usb_configured: Cell<bool>,
-    /// いまのモード（true：キーボードモード、false：サイバーデックモード）
-    keyboard_mode: Cell<bool>,
     usb_suspended: Cell<bool>,
+    /// いまの送り先（true：PC の USB、false：CM0 の I²C）。キーマップのレイヤーもこれに合わせる
+    to_pc: Cell<bool>,
+    /// UI が出ている（`HELLO` か `ALIVE` を受けて、まだ `BYE` も途切れもない）
+    ui_active: Cell<bool>,
+    /// UI の `HELLO` / `ALIVE` を最後に受けた時刻
+    last_alive: Cell<Option<Instant>>,
+    /// UI がいなくなって、カーネルを確かめ始めた時刻（UI がいる間は None）
+    probing_since: Cell<Option<Instant>>,
+    /// カーネルが固まったと、もう知らせた
+    hung_reported: Cell<bool>,
     layer: Cell<u8>,
     /// CM0 から最後に正しい行を受けた時刻。まだなら None
     last_rx: Cell<Option<Instant>>,
@@ -79,15 +96,139 @@ struct Shared {
 }
 
 static SHARED: Mutex<CriticalSectionRawMutex, Shared> = Mutex::new(Shared {
-    out_mode: Cell::new(OutMode::Auto),
     usb_configured: Cell::new(false),
-    keyboard_mode: Cell::new(true),
     usb_suspended: Cell::new(false),
+    // 初めは PC（キーボードモード）。すぐ update_output が今の状態に合わせる
+    to_pc: Cell::new(true),
+    ui_active: Cell::new(false),
+    last_alive: Cell::new(None),
+    probing_since: Cell::new(None),
+    hung_reported: Cell::new(false),
     layer: Cell::new(0),
     last_rx: Cell::new(None),
     touch_pressed: Cell::new(0),
     act_pending: Cell::new(false),
 });
+
+/// キーとトラックパッドを PC（USB）に出すか（reports.rs）
+pub fn output_to_pc() -> bool {
+    SHARED.lock(|s| s.to_pc.get())
+}
+
+/// CM0 のカーネルが生きているか：止まる途中ではなく、最近 I²C を読みに来た
+fn kernel_alive() -> bool {
+    if hid_i2c::sleeping() {
+        return false;
+    }
+    matches!(hid_i2c::last_read(), Some(t) if t.elapsed() < KERNEL_TIMEOUT)
+}
+
+/// 今あるべき送り先（モジュールの先頭の決まり）
+fn desired_to_pc() -> bool {
+    let pc = pc_connected();
+    if SHARED.lock(|s| s.ui_active.get()) {
+        pc
+    } else if kernel_alive() {
+        false
+    } else {
+        pc
+    }
+}
+
+/// 送り先を、あるべき送り先に合わせる。変わったら、キーマップのレイヤーと出力先を切り替え、UI に知らせる
+fn update_output() {
+    let to_pc = desired_to_pc();
+    let changed = SHARED.lock(|s| s.to_pc.replace(to_pc) != to_pc);
+    if !changed {
+        return;
+    }
+    info!("cm0_link: output to {}", if to_pc { "the PC (USB, keyboard mode)" } else { "CM0 (I2C, cyberdeck mode)" });
+    // キーマップの「既定のレイヤー」を、キーボードモードは 0、サイバーデックモードは 3 にする。
+    // キーマップの 11 行目にある df!(0) / df!(3) のキーを押したことにする（keymap.rs）
+    let col = if to_pc { MODE_KEYBOARD_COL } else { MODE_CYBERDECK_COL };
+    publish_event(KeyboardEvent::key(MODE_ROW, col, true));
+    publish_event(KeyboardEvent::key(MODE_ROW, col, false));
+    // キーとトラックパッドの出力先も切り替える（押したままのものは、元の出力先で離す）
+    reports::retarget();
+    send(Msg::Out);
+}
+
+/// UI が出た（`HELLO` / `ALIVE`）
+fn ui_seen() {
+    SHARED.lock(|s| {
+        s.ui_active.set(true);
+        s.last_alive.set(Some(Instant::now()));
+        s.probing_since.set(None);
+        s.hung_reported.set(false);
+    });
+    update_output();
+}
+
+/// UI がいなくなった（`BYE`、`ALIVE` の途切れ）。カーネルを確かめ始める
+fn ui_gone(why: &str) {
+    let was = SHARED.lock(|s| {
+        let was = s.ui_active.replace(false);
+        s.probing_since.set(Some(Instant::now()));
+        was
+    });
+    if was {
+        info!("cm0_link: UI gone ({})", why);
+    }
+    reports::release_touch();
+    release_touch_keys();
+    // すぐ確かめる。読みに来たら（数 ms）、次の見直しで I²C に切り替わる
+    reports::probe_i2c();
+    update_output();
+}
+
+/// 定期の見直し：UI の `ALIVE` の途切れ、タッチキーの離し忘れ、カーネルの確かめ
+fn supervise() {
+    let now = Instant::now();
+    let (ui_active, last_alive, last_rx) = SHARED.lock(|s| (s.ui_active.get(), s.last_alive.get(), s.last_rx.get()));
+
+    // CM0 から何も届かない：押されたままのタッチキーとボタンを離す
+    if matches!(last_rx, Some(t) if now - t >= TOUCH_TIMEOUT) {
+        SHARED.lock(|s| s.last_rx.set(None));
+        reports::release_touch();
+        release_touch_keys();
+    }
+
+    if ui_active {
+        if matches!(last_alive, Some(t) if now - t >= UI_TIMEOUT) {
+            ui_gone("no ALIVE");
+        }
+        return;
+    }
+
+    // UI がいない：カーネルが生きているかを確かめる
+    static LAST_PROBE: Mutex<CriticalSectionRawMutex, Cell<Option<Instant>>> = Mutex::new(Cell::new(None));
+    let due = LAST_PROBE.lock(|c| match c.get() {
+        Some(t) if now - t < PROBE_PERIOD => false,
+        _ => {
+            c.set(Some(now));
+            true
+        }
+    });
+    if due {
+        reports::probe_i2c();
+    }
+
+    // 固まった：確かめ始めてから KERNEL_TIMEOUT の間、一度も読みに来ない（止まる途中ではない）。
+    // 本番では CM0 の電源を入れ直す（電源の判定と一緒に作る）。試作はログに出すだけ
+    let (since, reported) = SHARED.lock(|s| (s.probing_since.get(), s.hung_reported.get()));
+    if let Some(since) = since
+        && !reported
+        && !hid_i2c::sleeping()
+        && now - since >= KERNEL_TIMEOUT
+        && !matches!(hid_i2c::last_read(), Some(t) if t >= since)
+        && hid_i2c::last_read().is_some()
+    {
+        SHARED.lock(|s| s.hung_reported.set(true));
+        warn!("cm0_link: CM0 does not read I2C, it seems hung (power cycle not wired on this board)");
+    }
+
+    update_output();
+}
 
 fn send(msg: Msg) {
     if TX_QUEUE.try_send(msg).is_err() {
@@ -106,6 +247,8 @@ fn update_usb(f: impl FnOnce(&Shared)) {
     if pc_connected() != before {
         info!("cm0_link: PC {}", if pc_connected() { "connected" } else { "gone" });
         send(Msg::Usb);
+        // PC のあるなしで送り先が変わることがある（UI が出ているとき、CM0 が動いていないとき）
+        update_output();
     }
 }
 
@@ -118,23 +261,12 @@ pub fn set_usb_suspended(suspended: bool) {
     update_usb(|s| s.usb_suspended.set(suspended));
 }
 
-/// モードを切り替える：キーマップの「既定のレイヤー」を、キーボードモードは 0、サイバーデックモードは 3 に
-/// する。キーマップの 11 行目にある df!(0) / df!(3) のキーを押したことにする（keymap.rs）
-fn set_mode(keyboard: bool) {
-    let changed = SHARED.lock(|s| s.keyboard_mode.replace(keyboard) != keyboard);
-    if !changed {
-        return;
-    }
-    info!("cm0_link: {} mode", if keyboard { "keyboard" } else { "cyberdeck" });
-    let col = if keyboard { MODE_KEYBOARD_COL } else { MODE_CYBERDECK_COL };
-    publish_event(KeyboardEvent::key(MODE_ROW, col, true));
-    publish_event(KeyboardEvent::key(MODE_ROW, col, false));
-}
-
-/// CM0 にシャットダウンを求める（電源の判定から呼ぶ予定）。
+/// CM0 にシャットダウンを求める（電源の判定から呼ぶ予定）。I²C の電源キーで頼むので、UI がいなくても、
+/// カーネルが動いていれば systemd-logind が `poweroff` する。止まり始めると i2c-hid が `SET_POWER`
+/// （SLEEP）を送ってくる（[`hid_i2c::sleeping`]）
 #[allow(dead_code)]
 pub fn request_shutdown() {
-    send(Msg::Shutdown);
+    hid_i2c::press_power_key();
 }
 
 /// CRC-8（多項式 0x07、初期値 0x00、反転なし）。
@@ -279,13 +411,19 @@ fn handle_line(line: &[u8]) {
     let cmd = f.next().unwrap_or("");
     let args: [&str; 3] = [f.next().unwrap_or(""), f.next().unwrap_or(""), f.next().unwrap_or("")];
     match cmd {
-        "ALIVE" => {}
+        "ALIVE" => ui_seen(),
         "HELLO" => {
             let (configured, suspended) = SHARED.lock(|s| (s.usb_configured.get(), s.usb_suspended.get()));
             info!("cm0_link: HELLO (USB configured {}, suspended {})", configured, suspended);
             reports::release_touch();
             release_touch_keys();
+            // UI が出た：PC があればすぐ USB に。返事の OUT で、UI は残るか閉じるかを決める
+            ui_seen();
             send(Msg::State);
+        }
+        "BYE" => {
+            // UI が自分で閉じる（Open console）。ALIVE の途切れを待たずに、すぐ I²C へ
+            ui_gone("BYE");
         }
         "TK" => {
             let (Ok(index), Some(pressed)) = (args[0].parse::<usize>(), parse_bool(args[1])) else {
@@ -330,24 +468,6 @@ fn handle_line(line: &[u8]) {
                 return;
             };
             reports::touch_wheel(v, h);
-        }
-        "OUT" => {
-            let mode = match args[0] {
-                "AUTO" => OutMode::Auto,
-                "PC" => OutMode::Pc,
-                "CM0" => OutMode::Cm0,
-                _ => return,
-            };
-            // PC：キーボードモード（UI を出している）、CM0：サイバーデックモード（コンソール）、
-            // AUTO：PC につながっていればキーボードモード
-            let keyboard = match mode {
-                OutMode::Pc => true,
-                OutMode::Cm0 => false,
-                OutMode::Auto => pc_connected(),
-            };
-            SHARED.lock(|s| s.out_mode.set(mode));
-            set_mode(keyboard);
-            send(Msg::Out);
         }
         "LCD" => info!("cm0_link: LCD {} requested (not wired yet)", args[0]),
         "UF2" => {
@@ -395,9 +515,6 @@ async fn write_msg(tx: &mut BufferedUartTx, keymap: &KeyMap<'_>, msg: Msg) {
             write_msg_layer(tx).await;
             return;
         }
-        Msg::Shutdown => {
-            let _ = body.push_str("SHUTDOWN");
-        }
         Msg::User(id, pressed) => {
             let _ = write!(body, "USER,{},{}", id, pressed as u8);
         }
@@ -412,17 +529,10 @@ async fn write_msg(tx: &mut BufferedUartTx, keymap: &KeyMap<'_>, msg: Msg) {
     write_body(tx, &body).await;
 }
 
+/// 今の送り先（PC：キーボードモード、CM0：サイバーデックモード）。`HELLO` への返事でもあり、
+/// UI は `CM0` なら（PC がないので）閉じるか、「PC につないで」を出す
 async fn write_msg_out(tx: &mut BufferedUartTx) {
-    let (mode, keyboard) = SHARED.lock(|s| (s.out_mode.get(), s.keyboard_mode.get()));
-    // 出力先はモードで決まる（キーボードモードは PC、サイバーデックモードは CM0）。
-    // ただし PC への USB HID はまだないので、いまは実際にはどちらも CM0 に出す
-    let body = match (keyboard, mode == OutMode::Auto) {
-        (true, true) => "OUT,PC,AUTO",
-        (true, false) => "OUT,PC,MAN",
-        (false, true) => "OUT,CM0,AUTO",
-        (false, false) => "OUT,CM0,MAN",
-    };
-    write_body(tx, body).await;
+    write_body(tx, if output_to_pc() { "OUT,PC" } else { "OUT,CM0" }).await;
 }
 
 async fn write_msg_layer(tx: &mut BufferedUartTx) {
@@ -488,37 +598,27 @@ fn push_action<const N: usize>(s: &mut String<N>, a: Action) {
 }
 
 async fn tx_loop(mut tx: BufferedUartTx, keymap: &KeyMap<'_>) {
-    let mut ticker = Ticker::every(ALIVE_PERIOD);
+    let mut ticker = Ticker::every(SUPERVISE_PERIOD);
+    let ticks_per_alive = (ALIVE_PERIOD.as_millis() / SUPERVISE_PERIOD.as_millis()) as u32;
+    let mut tick: u32 = 0;
     let mut seq: u8 = 0;
+    // 起動したら、まず今の状態（PC のあるなし、CM0 のカーネル）に送り先を合わせる
+    update_output();
     loop {
         match select(ticker.next(), TX_QUEUE.receive()).await {
             Either::First(()) => {
-                let mut body: String<16> = String::new();
-                let _ = write!(body, "ALIVE,{}", seq);
-                seq = seq.wrapping_add(1);
-                write_body(&mut tx, &body).await;
-                check_timeout();
+                supervise();
+                tick += 1;
+                if tick >= ticks_per_alive {
+                    tick = 0;
+                    let mut body: String<16> = String::new();
+                    let _ = write!(body, "ALIVE,{}", seq);
+                    seq = seq.wrapping_add(1);
+                    write_body(&mut tx, &body).await;
+                }
             }
             Either::Second(msg) => write_msg(&mut tx, keymap, msg).await,
         }
-    }
-}
-
-/// CM0 から 3 秒届かなければ、押されたままのタッチキーとトラックパッドのボタンを離す。
-fn check_timeout() {
-    let expired = SHARED.lock(|s| match s.last_rx.get() {
-        Some(t) if t.elapsed() >= LINK_TIMEOUT => {
-            s.last_rx.set(None);
-            true
-        }
-        _ => false,
-    });
-    if expired {
-        info!("cm0_link: CM0 went quiet");
-        reports::release_touch();
-        release_touch_keys();
-        // CM0 が止まったら、キーボードとしてだけ使えるよう、キーボードモードに戻す
-        set_mode(true);
     }
 }
 

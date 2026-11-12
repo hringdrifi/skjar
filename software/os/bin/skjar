@@ -3,4 +3,6 @@
 # Install as /usr/local/bin/skjar (see software/os/systemd/skjar-ui@.service).
 #
 # The UI takes over tty1, so this login session on tty1 ends when it starts.
+# After the UI kept crashing, systemd stops trying (StartLimitBurst) and would refuse a plain start
+sudo systemctl reset-failed skjar-ui@manual.service skjar-ui@boot.service 2>/dev/null
 exec sudo systemctl start skjar-ui@manual.service

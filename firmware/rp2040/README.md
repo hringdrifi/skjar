@@ -21,15 +21,16 @@ HID over I²C を確かめるための試作。基板ができる前に、Raspbe
 |---|---|
 | キーマトリクスと RMK のキーボード処理（レイヤー、タップ・ホールド） | 実装した。キーマップは仮（[src/keymap.rs](src/keymap.rs)） |
 | HID over I²C のターゲット（[src/hid_i2c.rs](src/hid_i2c.rs)） | 実装した。XIAO RP2040 と Pi 4B で、キーボードとして認識され、物理キーが届くのを確かめた（2026-11-12）。出力レポート（LED）、Consumer Control、マウスは未確認 |
-| CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。XIAO RP2040 と Pi 4B で、UI との状態のやり取りを確かめた（2026-11-12）。タッチキーなどは未確認。`PWR` と `SHUTDOWN` はまだ送らない（CC と電源の判定がないため）。`BLMAX` は 255 固定、`LCD` は記録だけ |
+| CM0 との UART（[src/cm0_link.rs](src/cm0_link.rs)、[docs/protocol.md](../../docs/protocol.md) の 1 章） | 実装した。XIAO RP2040 と Pi 4B で、UI との状態のやり取りを確かめた（2026-11-12）。`PWR` はまだ送らない（CC と電源の判定がないため）。シャットダウンの依頼は I²C の電源キー（`hid_i2c::press_power_key`）で、呼ぶきっかけ（電源の判定）はまだ。`BLMAX` は 255 固定、`LCD` は記録だけ |
 | タッチキー（[src/reports.rs](src/reports.rs)） | 実装した。UART で届いたキーを、RMK の物理キーのレポートと合わせて送る（修飾キーは OR、キーは合わせて 6 個まで） |
 | キーの RGB（[src/rgb.rs](src/rgb.rs)） | 隠し機能の動画に合わせて光らせるところだけ実装した。UART の `LEDF` を受けて、GPIO14 から PIO で SK6812 を駆動し、GPIO20 で LED の電源を入れ切りする。明るさは 1 色あたり 48/255 まで（全部白でも約 0.5 A）。普段の光らせ方と、電流宣言ごとの上限はまだ。Pico で試すときは GP14 / GP20 に WS2812 のテープ LED などをつなぐ。実機では未確認 |
 | トラックパッド（UART の `PTR` / `WHEEL`） | 実装した。HID over I²C にマウスのレポート（ID 3）を足し、RMK のマウスキーと合わせて送る（ボタンは OR、動きはそのまま） |
 | 画面のタッチキー（Keys タブの 2 段 × 12 キー） | 実装した。キーマップを 11 行にして、7〜10 行目をタッチキーにした（[src/keymap.rs](src/keymap.rs)）。UART の `TK` を RMK にキーの出来事として渡すので、レイヤーと Vial が効く。割り当てを `TKL` で CM0 に送る |
 | タブを開くキーと、元のタブに戻すきっかけ | 実装した。RMK の `ActionEvent` を受け、USER キー（Vial の USER0〜3）で `USER`、文字や機能のキーで `ACT` を送る。受け取り口の数は [keyboard.toml](keyboard.toml) で増やしてある |
 | モードの切り替え（[docs/protocol.md](../../docs/protocol.md) の 2.6） | 実装した。UART の `OUT,PC` / `OUT,CM0` で、RMK の既定のレイヤーを 0 / 3 にする（キーマップの 11 行目の `DF(0)` / `DF(3)` を押したことにする）。キーマップは 6 レイヤー：0〜2 がキーボードモード、3〜5 がサイバーデックモード（いまは 0〜2 の物理キーの写しで、タッチキーはなし）。CM0 が 3 秒黙ったらキーボードモードに戻す |
-| USB | HID にせず、ログ用の仮想シリアルにしている。USB の状態（認識された・スリープした・リセット）を見て、PC がつながっているかを `USB` で CM0 に送る |
-| PC への USB HID、電源、普段の RGB、CC | まだ。出力先は CM0 だけで、キーボードモード（`OUT,PC`）でも実際には CM0 に出す |
+| USB（[src/usb_hid.rs](src/usb_hid.rs)） | キーボード（ブート対応）、マウス・メディアキー（RMK と同じディスクリプタ）、ログ用の仮想シリアルの複合機器（VID / PID は pid.codes の試験用 1209:0001）。USB の状態（認識された・スリープした・リセット）を見て、PC がつながっているかを `USB` で CM0 に送る。PC からの LED の状態はログに出すだけ |
+| 送り先の切り替え（[src/cm0_link.rs](src/cm0_link.rs)、[src/reports.rs](src/reports.rs)） | 実装した（[docs/protocol.md](../../docs/protocol.md) の 2.6）。RP2040 が決める：UI が出ている（`HELLO` / `ALIVE`）なら PC があれば USB、UI がいない（`BYE`、`ALIVE` が 5 秒途切れた）なら CM0 のカーネルが I²C を読みに来るかで I²C か USB。切り替わるときに、元の送り先で全部離す。I²C は `RESET` を待たずに送る。CM0 が固まったと分かっても、電源を入れ直す線は試作にないのでログに出すだけ |
+| Vial、電源、普段の RGB、CC | まだ |
 
 RMK は、USB がつながっているときだけ USB 用のチャンネル（`USB_REPORT_CHANNEL`）にレポートを出す。試作では USB の HID を使わないので、つながったことにして（`set_usb_state(Configured)`）、そのチャンネルを横取りして I²C に流している。USB の HID と並べるときは、レポートの行き先を切り替える仕組みが別に要る（RMK の改造か、上流への提案）。
 

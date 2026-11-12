@@ -26,13 +26,24 @@ After=systemd-user-sessions.service
 # The UI takes tty1 from the login console while it runs
 Conflicts=getty@tty1.service
 Before=getty@tty1.service
+# Give up after 5 starts in 60 s (the default 5 in 10 s is never reached: a restart plus the UI's own
+# start-up take 2-3 s), so a UI that keeps crashing leaves tty1 to the login console. The RP2040 then
+# sends the keys to the console, because the UI's ALIVE stops (docs/protocol.md, 2.6).
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 ExecStart=/usr/local/bin/skjar-ui --start %i
-# A normal exit is a switch to the console: give tty1 back to the login console
+# Whenever the UI stops, tty1 goes back to the login console. After a crash the UI is started again a
+# second later and takes tty1 back; the RP2040 keeps the keys on the PC as long as the UI's ALIVE stops
+# for less than its timeout (5 s), so the console only flickers.
 ExecStopPost=/bin/systemctl --no-block start getty@tty1.service
 Restart=on-failure
-RestartSec=2
+RestartSec=1
+# The UI tells systemd it is alive every second from its drawing loop (WATCHDOG=1 on $NOTIFY_SOCKET).
+# If it hangs, systemd stops it and starts it again.
+WatchdogSec=5
+NotifyAccess=main
 
 [Install]
 WantedBy=multi-user.target

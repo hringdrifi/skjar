@@ -43,3 +43,6 @@ enable_uart=1
 
 # --- Tell the RP2040 that the shutdown has finished: GPIO26 (CM0_HALT) goes high at power-off
 dtoverlay=gpio-poweroff,gpiopin=26
+
+# --- Hardware watchdog: systemd feeds it (software/os/systemd/skjar-watchdog.conf), so a hung CM0 reboots
+dtparam=watchdog=on

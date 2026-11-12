@@ -114,12 +114,12 @@ static void handle_message(char **f, int n)
             state.bl_max = v;
             changed = true;
         }
-    } else if (strcmp(cmd, "OUT") == 0 && n == 3) {
+    } else if (strcmp(cmd, "OUT") == 0 && n >= 2) {
+        /* キーの送り先（PC：キーボードモード、CM0：サイバーデックモード）。決めるのは RP2040 */
         state.out = strcmp(f[1], "PC") == 0    ? LINK_OUT_PC
                   : strcmp(f[1], "CM0") == 0   ? LINK_OUT_CM0
                   : strcmp(f[1], "NONE") == 0  ? LINK_OUT_NONE
                                                : LINK_OUT_UNKNOWN;
-        state.out_manual = strcmp(f[2], "MAN") == 0;
         changed = true;
     } else if (strcmp(cmd, "USB") == 0 && n == 2) {
         int v;
@@ -383,12 +383,9 @@ void link_send_leds(const uint8_t levels[42])
         send_body(body);
 }
 
-void link_send_out(link_out_t target)
+void link_send_bye(void)
 {
-    const char *s = target == LINK_OUT_PC ? "PC" : target == LINK_OUT_CM0 ? "CM0" : "AUTO";
-    char body[16];
-    snprintf(body, sizeof body, "OUT,%s", s);
-    send_body(body);
+    send_body("BYE");
 }
 
 void link_send_lcd(bool on)

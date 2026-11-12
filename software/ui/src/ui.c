@@ -1207,11 +1207,10 @@ void ui_show_link_state(const link_state_t *s)
     chip_set(&chip_layer, s->layer > 0 ? COLOR_ACCENT : COLOR_MUTED, buf);
     labels_dirty = true;    /* レイヤーが変わるとタッチキーの表示も変わる */
 
-    /* 物理キーの出力先：A は自動、M は手動 */
+    /* キーの送り先（RP2040 が決める） */
     const char *out = s->out == LINK_OUT_PC ? "PC" : s->out == LINK_OUT_CM0 ? "CM0"
                     : s->out == LINK_OUT_NONE ? "none" : "?";
-    snprintf(buf, sizeof buf, LV_SYMBOL_KEYBOARD "  %s%s", out,
-             s->out == LINK_OUT_UNKNOWN ? "" : s->out_manual ? "  M" : "  A");
+    snprintf(buf, sizeof buf, LV_SYMBOL_KEYBOARD "  %s", out);
     chip_set(&chip_out, s->out == LINK_OUT_NONE ? COLOR_WARN : COLOR_MUTED, buf);
 
     /* 電源：使っているポートと電流宣言。色は気づいてほしいときだけ：3A と 1.5A は普段の色

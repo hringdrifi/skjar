@@ -37,11 +37,11 @@ int main(void)
 
     /* 前にカーネルのログが付いていても読める */
     char mixed[128];
-    link_format(line, sizeof line, "OUT,CM0,MAN");
+    link_format(line, sizeof line, "OUT,CM0");
     line[strlen(line) - 1] = '\0';
     snprintf(mixed, sizeof mixed, "[   12.345] usb 1-1: new device$SK,garbage%s", line);
     CHECK(link_handle_line(mixed, 200));
-    CHECK(link_state()->out == LINK_OUT_CM0 && link_state()->out_manual);
+    CHECK(link_state()->out == LINK_OUT_CM0);
 
     /* CRC が合わない行は捨てる */
     link_format(line, sizeof line, "LAYER,2");

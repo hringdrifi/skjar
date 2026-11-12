@@ -4,16 +4,67 @@
 //! Consumer は、どちらか押されている方（両方なら物理キーを優先）。
 //! マウス（RMK のマウスキーと、CM0 のトラックパッド）は、動きはそのまま送り、ボタンは両方の OR。
 //!
-//! 出力先は、いまは CM0（HID over I²C）だけ。PC への USB HID を足すときは、[`emit`] で
-//! 出力先を選ぶ（docs/protocol.md の 2.6）。
+//! 出力先はモードで決まる（docs/protocol.md の 2.6）：キーボードモードは PC（USB HID、[`usb_hid`]）、
+//! サイバーデックモードは CM0（HID over I²C、[`hid_i2c`]）。出力先が変わったら、元の出力先に
+//! 「全部離した」を送ってから、新しい出力先に今の状態を送り直す（押したままで残らないように）。
 
 use core::cell::RefCell;
 
 use embassy_sync::blocking_mutex::Mutex;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use log::{debug, warn};
+use log::{debug, info, warn};
 
+use crate::cm0_link;
 use crate::hid_i2c::{self, InputReport};
+use crate::usb_hid::{self, UsbReport};
+
+/// 出力先に送る。to_pc なら PC（USB）、そうでなければ CM0（I²C）
+fn send_keyboard(to_pc: bool, modifier: u8, keys: [u8; MAX_KEYS]) {
+    if to_pc {
+        usb_hid::push(UsbReport::Keyboard { modifier, keys });
+    } else {
+        hid_i2c::push_input(InputReport::keyboard(modifier, keys));
+    }
+}
+
+fn send_consumer(to_pc: bool, usage: u16) {
+    if to_pc {
+        usb_hid::push(UsbReport::Consumer(usage));
+    } else {
+        hid_i2c::push_input(InputReport::consumer(usage));
+    }
+}
+
+fn send_mouse(to_pc: bool, buttons: u8, x: i8, y: i8, wheel: i8, pan: i8) {
+    if to_pc {
+        usb_hid::push(UsbReport::Mouse { buttons, x, y, wheel, pan });
+    } else {
+        hid_i2c::push_input(InputReport::mouse(buttons, x, y, wheel, pan));
+    }
+}
+
+/// 出力先がモードと合っているか確かめ、変わっていたら、元の出力先で全部離し、送ったものを忘れる
+/// （このあと emit が新しい出力先に今の状態を送る）
+fn sync_target(s: &mut State) {
+    let to_pc = cm0_link::output_to_pc();
+    if to_pc == s.to_pc {
+        return;
+    }
+    info!("reports: output to {}", if to_pc { "the PC (USB)" } else { "CM0 (I2C)" });
+    if s.sent.modifier != 0 || s.sent.keys.iter().any(|k| *k != 0) {
+        send_keyboard(s.to_pc, 0, [0; MAX_KEYS]);
+    }
+    if s.sent_consumer != 0 {
+        send_consumer(s.to_pc, 0);
+    }
+    if s.sent_mouse_buttons != 0 {
+        send_mouse(s.to_pc, 0, 0, 0, 0, 0);
+    }
+    s.sent = KeyState::default();
+    s.sent_consumer = 0;
+    s.sent_mouse_buttons = 0;
+    s.to_pc = to_pc;
+}
 
 const MAX_KEYS: usize = 6;
 
@@ -61,6 +112,8 @@ struct State {
     rmk_mouse_buttons: u8,
     touch_mouse_buttons: u8,
     sent_mouse_buttons: u8,
+    /// 送り先（true：PC、false：CM0）。sent の中身は、この送り先に送ったもの
+    to_pc: bool,
 }
 
 static STATE: Mutex<CriticalSectionRawMutex, RefCell<State>> = Mutex::new(RefCell::new(State {
@@ -73,6 +126,7 @@ static STATE: Mutex<CriticalSectionRawMutex, RefCell<State>> = Mutex::new(RefCel
     rmk_mouse_buttons: 0,
     touch_mouse_buttons: 0,
     sent_mouse_buttons: 0,
+    to_pc: false,
 }));
 
 fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
@@ -81,6 +135,7 @@ fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
 
 /// 両方を合わせて、変わっていれば出力先に送る。
 fn emit(s: &mut State) {
+    sync_target(s);
     let mut merged = KeyState {
         modifier: s.rmk.modifier | s.touch.modifier,
         keys: s.rmk.keys,
@@ -94,14 +149,35 @@ fn emit(s: &mut State) {
     }
     if merged.modifier != s.sent.modifier || merged.keys != s.sent.keys {
         s.sent = merged;
-        hid_i2c::push_input(InputReport::keyboard(merged.modifier, merged.keys));
+        send_keyboard(s.to_pc, merged.modifier, merged.keys);
     }
 
     let consumer = if s.rmk_consumer != 0 { s.rmk_consumer } else { s.touch_consumer };
     if consumer != s.sent_consumer {
         s.sent_consumer = consumer;
-        hid_i2c::push_input(InputReport::consumer(consumer));
+        send_consumer(s.to_pc, consumer);
     }
+}
+
+/// CM0 のカーネルが生きているかを確かめるため、I²C に今と同じ内容のキーボードのレポートを置く
+/// （cm0_link.rs）。キーの状態は変わらないので、Linux では何も起きない。読みに来るかだけを見る。
+/// まだ読まれていないものがあれば置かない（読みに来ない間に積み上がらないように）
+pub fn probe_i2c() {
+    if hid_i2c::pending() {
+        return;
+    }
+    with_state(|s| {
+        let (modifier, keys) = if s.to_pc { (0, [0; MAX_KEYS]) } else { (s.sent.modifier, s.sent.keys) };
+        hid_i2c::push_input(InputReport::keyboard(modifier, keys));
+    });
+}
+
+/// モードが変わった（cm0_link）：出力先を切り替え、今の状態を新しい出力先に送り直す
+pub fn retarget() {
+    with_state(|s| {
+        emit(s);
+        emit_mouse(s, 0, 0, 0, 0);
+    });
 }
 
 /// RMK のキーボードのレポート（その時点の全部の状態）。
@@ -122,12 +198,13 @@ pub fn rmk_consumer(usage: u16) {
 
 /// マウスのレポートを出す。動きがなくても、ボタンが変わったときは出す。
 fn emit_mouse(s: &mut State, x: i8, y: i8, wheel: i8, pan: i8) {
+    sync_target(s);
     let buttons = s.rmk_mouse_buttons | s.touch_mouse_buttons;
     if x == 0 && y == 0 && wheel == 0 && pan == 0 && buttons == s.sent_mouse_buttons {
         return;
     }
     s.sent_mouse_buttons = buttons;
-    hid_i2c::push_input(InputReport::mouse(buttons, x, y, wheel, pan));
+    send_mouse(s.to_pc, buttons, x, y, wheel, pan);
 }
 
 /// RMK のマウスのレポート（マウスキー）。
