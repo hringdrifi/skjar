@@ -69,6 +69,7 @@
 - [ ] USB のリモートウェイクアップ：PC がスリープしているとき（`USB,0`）にキーを押したら PC を起こす。いまはスリープで「PC につないで」の表示になる。RMK と embassy-usb の対応を調べる
 - [ ] コンソールの自動ログイン（`raspi-config` の Boot / Auto Login）にするか。UI を閉じるたびにログインするのは手間。ルートを読み取り専用にするときの扱いと合わせて決める
 - [ ] 起動の速さ（OS のイメージを作るときに直す）。試作機（Pi 4B、Raspberry Pi OS Lite 64-bit、2026-11-11）で `systemd-analyze` は 41 秒（カーネル 4 秒＋ユーザー空間 37 秒）。分かったこと：
+  - Zero 2 W（CM0 と同じ SoC、2026-11-12）では 48.5 秒（カーネル 5.8 秒＋ユーザー空間 42.7 秒、cloud-init は止めていない）。`systemd-analyze blame` で NetworkManager 20.4 秒、cloud-init 4.9 秒、rpi-resize-swap-file 3.5 秒、skjar-weather 3.0 秒と、下の 4B と同じ原因で、CPU が遅い分だけ長い。UI 自体の起動は約 0.9 秒（うち背景の絵が 0.7 秒）、電光掲示板が流れている間の CPU は 1 コアの 13〜15%
   - cloud-init（Raspberry Pi Imager のカスタマイズ）が毎回の起動で約 5 秒。`/etc/cloud/cloud-init.disabled` で止めて 31 秒になった。イメージには cloud-init を入れない
   - 残りの大半は NetworkManager の約 18 秒。接続の設定（eth0 と Wi-Fi）が netplan（`/etc/netplan/90-NM-*.yaml`）にあり、NetworkManager が起動のたびに書き直す。そのたびに netplan が `systemctl daemon-reload`（1 回約 3 秒）を頼み、4 回で約 17 秒。イメージでは、接続の設定を NetworkManager の keyfile（`/etc/NetworkManager/system-connections/`）だけで持ち、netplan を通さない（試作機では、SSH が切れると困るので試していない）
   - systemd-resolved は入っていない。NetworkManager の `dns-mgr: DNS plugin did not become ready` の警告は、待たされた結果で、原因ではなかった
