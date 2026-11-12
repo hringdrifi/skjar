@@ -49,8 +49,9 @@ const SUPERVISE_PERIOD: Duration = Duration::from_millis(100);
 /// CM0 から何も届かなくなって、押されたままのタッチキーとボタンを離すまで
 const TOUCH_TIMEOUT: Duration = Duration::from_secs(3);
 /// UI の `ALIVE` が途切れて、UI がいないとみなすまで。UI が落ちて systemd が起動し直す
-/// （`RestartSec=1` ＋ UI の起動）より長くする。CM0（Zero 2 W）で測って決め直す
-const UI_TIMEOUT: Duration = Duration::from_secs(5);
+/// （`RestartSec=1` ＋ UI の起動）より長くする。Zero 2 W（CM0 と同じ SoC）で、UI の起動は約 0.9 秒
+/// （うち背景の絵が 0.7 秒）、落ちてから戻るまで約 2 秒だった（2026-11-12）
+const UI_TIMEOUT: Duration = Duration::from_secs(3);
 /// UI がいない間に、カーネルの確かめのレポートを置く間隔
 const PROBE_PERIOD: Duration = Duration::from_secs(2);
 /// これだけ読みに来なければ、カーネルは生きていないとみなす

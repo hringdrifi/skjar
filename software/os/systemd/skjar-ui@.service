@@ -36,7 +36,7 @@ StartLimitBurst=5
 ExecStart=/usr/local/bin/skjar-ui --start %i
 # Whenever the UI stops, tty1 goes back to the login console. After a crash the UI is started again a
 # second later and takes tty1 back; the RP2040 keeps the keys on the PC as long as the UI's ALIVE stops
-# for less than its timeout (5 s), so the console only flickers.
+# for less than its timeout (3 s; the UI starts in about 0.9 s on a Zero 2 W), so the console only flickers.
 ExecStopPost=/bin/systemctl --no-block start getty@tty1.service
 Restart=on-failure
 RestartSec=1
