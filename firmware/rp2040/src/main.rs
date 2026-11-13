@@ -189,27 +189,29 @@ async fn main(spawner: Spawner) {
         Output::new(p.PIN_1, Level::Low), // COL4
         Output::new(p.PIN_0, Level::Low), // COL5
     ];
-    // XIAO：外に出ている 6 本で、ROW0（Esc Q W E）と ROW2（Tab A S D）の 0〜3 列目だけを試す。
-    // ほかの行と列は、外に出ていない（何もつながっていない）ピンにする。行はプルダウンなので押されることはない。
-    // GPIO11 / 12（基板の RGB LED の電源とデータ）と 16 / 17 / 25（基板の LED）は避ける
+    // XIAO：外に出ている 6 本を 3 行 × 3 列にして、ROW2・ROW4・ROW6 の 1・2・5 列目（9 キー）を試す。
+    // 親指の段（ROW6）の 5 列目がレイヤー 2（押し続ける）なので、レイヤー 2 の音量キー（ROW2）と
+    // USER キー（ROW4）も試せる。ほかの行と列は、外に出ていない（何もつながっていない）ピンにする。
+    // 行はプルダウンなので押されることはない。GPIO11 / 12（基板の RGB LED の電源とデータ）と
+    // 16 / 17 / 25（基板の LED）は避ける
     #[cfg(feature = "xiao")]
     let rows = [
-        Input::new(p.PIN_6, Pull::Down),  // ROW0  D4
-        Input::new(p.PIN_10, Pull::Down), // ROW1  （出ていない）
-        Input::new(p.PIN_7, Pull::Down),  // ROW2  D5
-        Input::new(p.PIN_8, Pull::Down),  // ROW3  （出ていない）
-        Input::new(p.PIN_9, Pull::Down),  // ROW4  （出ていない）
+        Input::new(p.PIN_10, Pull::Down), // ROW0  （出ていない）
+        Input::new(p.PIN_8, Pull::Down),  // ROW1  （出ていない）
+        Input::new(p.PIN_6, Pull::Down),  // ROW2  D4：A S G（レイヤー 2 で Mute、音量 −）
+        Input::new(p.PIN_9, Pull::Down),  // ROW3  （出ていない）
+        Input::new(p.PIN_7, Pull::Down),  // ROW4  D5：Z X B（レイヤー 2 で USER0、USER1）
         Input::new(p.PIN_13, Pull::Down), // ROW5  （出ていない）
-        Input::new(p.PIN_15, Pull::Down), // ROW6  （出ていない）
+        Input::new(p.PIN_29, Pull::Down), // ROW6  D3：LGui LAlt Space（押し続けるとレイヤー 2）
     ];
     #[cfg(feature = "xiao")]
     let cols = [
-        Output::new(p.PIN_4, Level::Low),  // COL0  D9
-        Output::new(p.PIN_29, Level::Low), // COL1  D3
+        Output::new(p.PIN_15, Level::Low), // COL0  （出ていない）
+        Output::new(p.PIN_4, Level::Low),  // COL1  D9
         Output::new(p.PIN_3, Level::Low),  // COL2  D10
-        Output::new(p.PIN_2, Level::Low),  // COL3  D8
-        Output::new(p.PIN_18, Level::Low), // COL4  （出ていない）
-        Output::new(p.PIN_19, Level::Low), // COL5  （出ていない）
+        Output::new(p.PIN_18, Level::Low), // COL3  （出ていない）
+        Output::new(p.PIN_19, Level::Low), // COL4  （出ていない）
+        Output::new(p.PIN_2, Level::Low),  // COL5  D8
     ];
     let mut matrix = Matrix::<_, _, _, MATRIX_ROW, COL, true>::new(rows, cols, DefaultDebouncer::new());
 

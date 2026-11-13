@@ -29,7 +29,7 @@ default = ["pico"]
 # Raspberry Pi Pico で試す（キー入力の I²C は I2C1：GPIO26 SDA / GPIO27 SCL）
 pico = []
 # Seeed Studio XIAO RP2040 で試す（外に出ているピンが 11 本だけなので、割り込みと UART とキーマトリクスの
-# ピンを置き換える。キーは 2 行 × 4 列だけ。firmware/rp2040/README.md の「XIAO RP2040 で試すとき」）
+# ピンを置き換える。キーは 3 行 × 3 列だけ。firmware/rp2040/README.md の「XIAO RP2040 で試すとき」）
 xiao = []
 # SKJÁR の基板（キー入力の I²C は I2C0：GPIO24 SDA / GPIO25 SCL）
 skjar = []
