@@ -50,3 +50,4 @@ software/ui/.deps/
 # 隠し機能の動画（作品の著作権のため、リポジトリに入れない）
 *.skm
 movie.wav
+*.mp4
