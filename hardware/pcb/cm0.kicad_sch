@@ -5624,10 +5624,6 @@
 		(uuid "f422fdf4-a006-4f58-b288-ce5895a3de32")
 	)
 	(no_connect
-		(at 232.41 154.94)
-		(uuid "00bfa9a7-7751-4102-9666-20f16ba7de60")
-	)
-	(no_connect
 		(at 91.44 203.2)
 		(uuid "00fcbb52-e674-4f92-a9d7-0fce03302252")
 	)
@@ -5646,10 +5642,6 @@
 	(no_connect
 		(at 261.62 87.63)
 		(uuid "2b71a9bd-d9fa-4f60-a567-2ef4b9c3c820")
-	)
-	(no_connect
-		(at 231.14 87.63)
-		(uuid "2d1f1f44-60fc-4376-9a47-4d15670b1a8d")
 	)
 	(no_connect
 		(at 91.44 180.34)
@@ -6137,6 +6129,16 @@
 	)
 	(wire
 		(pts
+			(xy 232.41 154.94) (xy 219.71 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6e64d2ec-ea59-448d-ad83-0418f22374c6")
+	)
+	(wire
+		(pts
 			(xy 279.4 95.25) (xy 261.62 95.25)
 		)
 		(stroke
@@ -6454,6 +6456,16 @@
 			(type default)
 		)
 		(uuid "ec0e07ff-918b-4cc7-922b-097b44c6a614")
+	)
+	(wire
+		(pts
+			(xy 231.14 87.63) (xy 223.52 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f3a2f90d-564e-4ae8-ad1e-79ff7099eb24")
 	)
 	(wire
 		(pts
@@ -6870,6 +6882,30 @@
 			)
 		)
 	)
+	(global_label "TUSB_INT"
+		(shape input)
+		(at 223.52 87.63 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "18a35c3f-ebe5-4dc1-a55c-a0a62577a16b")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 223.52 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
 	(global_label "CODEC_RST"
 		(shape output)
 		(at 261.62 92.71 0)
@@ -7071,6 +7107,30 @@
 		(uuid "5b59f0b8-5643-4619-8e69-879e481e13f6")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 45.1916 177.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
+	(global_label "USB_OTG"
+		(shape input)
+		(at 219.71 154.94 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "5e51c295-a007-423c-ab5f-ddc6496315cf")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 219.71 154.94 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

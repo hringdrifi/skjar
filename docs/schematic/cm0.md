@@ -23,8 +23,8 @@
 |---|---|
 | Power | 5V（67, 68）→ `+5V`（10 µF ＋ 100 nF）。CM0_3.3V（41, 119）→ `+3V3_CM0`。GPIO_VREF（120）・SD_VREF（122）→ `+3V3_CM0`。CM0_1.8V（64, 65）→ `+1V8_CM0`（テストパッドのみ）。GND（43本）→ GND |
 | Display/Camera | DSI の 4 レーンとクロック → `DSI_*`（display へ）。SDA0 / SCL0 → `I2C_DSI_SDA` / `I2C_DSI_SCL`。CSI、HDMI、CVBS、CAM_GPIO は未接続 |
-| GPIO | GPIO2 / 3 → `I2C1_SDA` / `I2C1_SCL`。GPIO14 → `CM0_TXD`。GPIO15 ← `CM0_RXD`（バッファの出力）。GPIO18 / 19 ← `I2S_BCLK` / `I2S_LRCLK`（コーデックがクロックを出す）。GPIO21 → `I2S_DOUT`。GPIO17 ← `HP_DET`。GPIO22 → `CODEC_RST`。GPIO26 → `CM0_HALT`。GPIO27 ← `RTC_INT`。GPIO23 / 24 ↔ `KB_SDA` / `KB_SCL`（`i2c-gpio`。R208 / R209 で `+3V3_CM0` にプルアップ）。GPIO25 ← `KB_INT`（R210 で `+3V3_CM0` にプルアップ）。ほかは未接続 |
-| System | USB_P / USB_N ← `USB_B_D+` / `USB_B_D-`。GLOBAL_EN ← Q201。RUN_PG → `CM0_RUN_PG`。nRPI_BOOT ← Q202。WiFi_ON / BT_ON / LED_nACT → テストパッドのみ。SD_CLK / SD_CMD / SD_DAT0〜3 → microSD スロット（J201）。USB_OTG、NC は未接続 |
+| GPIO | GPIO2 / 3 → `I2C1_SDA` / `I2C1_SCL`。GPIO14 → `CM0_TXD`。GPIO15 ← `CM0_RXD`（バッファの出力）。GPIO18 / 19 ← `I2S_BCLK` / `I2S_LRCLK`（コーデックがクロックを出す）。GPIO21 → `I2S_DOUT`。GPIO17 ← `HP_DET`。GPIO22 → `CODEC_RST`。GPIO26 → `CM0_HALT`。GPIO27 ← `RTC_INT`。GPIO23 / 24 ↔ `KB_SDA` / `KB_SCL`（`i2c-gpio`。R208 / R209 で `+3V3_CM0` にプルアップ）。GPIO25 ← `KB_INT`（R210 で `+3V3_CM0` にプルアップ）。GPIO6 ← `TUSB_INT`（Port B の TUSB320 の割り込み。power シートの R18 でプルアップ）。ほかは未接続 |
+| System | USB_P / USB_N ← `USB_B_D+` / `USB_B_D-`。GLOBAL_EN ← Q201。RUN_PG → `CM0_RUN_PG`。nRPI_BOOT ← Q202。WiFi_ON / BT_ON / LED_nACT → テストパッドのみ。SD_CLK / SD_CMD / SD_DAT0〜3 → microSD スロット（J201）。USB_OTG ← `USB_OTG`（power シートの Q3。Port B に機器が挿さると GND に引かれてホストになる）。NC は未接続 |
 
 ## 3. 電源の制御（GLOBAL_EN）
 
@@ -85,7 +85,7 @@
 - **起動の順番：** 電源を入れてから U204 が U203 を ON にするまで 240 ms 以上かかる。RP2040 のファームは、電源投入から 0.5 秒以上たってから CM0 を ON にする。
 - **CM0 との関係：** CM0 の SD の信号は 3.3 V 固定（SD_VREF は `+3V3_CM0`）。カードの電源を CM0 と分けても問題ない（1.8 V で通信するモードは使わない）。CM0 が OFF でカードに電源が入っているときは、カードの DAT3 の内部プルアップ（約 50 kΩ）から CM0 のピンに数十 µA 流れるだけ。外付けのプルアップはないので、ほかに流れ込む道はない。
 - **外してもよい部品：** C206・R211・D202 を外しても、持たないだけで普通に動く。U203 も外すときは JP201 を閉じて、`+3V3_SD` を `+3V3_CM0` につなぐ（今までと同じ）。U203 を載せたまま JP201 を閉じてはいけない。
-- **C206 の付け方：** 足を根元で 90° 曲げて寝かせ、缶の下をシリコーン接着剤か両面テープで基板に貼る（高さ約 5 mm）。フットプリントは缶を寝かせた外形（10 × 13.5 mm）で、1 番が ＋。足の太さ（穴 1.0 mm）と極性は、部品が届いたら確かめる。
+- **C206 の付け方：** 足を根元で 90° 曲げて寝かせ、缶の下をシリコーン接着剤か両面テープで基板に貼る（高さ約 5 mm）。フットプリントは缶を寝かせた外形（10 × 13.5 mm）で、1 番が ＋。足は φ0.5 mm で、穴（1.0 mm）に余裕で入る。－側の端に黒い帯がある（CDA の CHP シリーズのデータシート、`docs/references/sd/CHP_Datasheet.pdf`）。
 
 ## 6. テストパッド
 
@@ -99,6 +99,7 @@
 | `CM0_TXD`、`CM0_RUN_PG`、`CM0_HALT`、`DSI_*`（10 本）、`I2S_DOUT`、`CODEC_RST` | 出力 |
 | `HP_DET` | 入力 |
 | `I2C_DSI_SDA` / `I2C_DSI_SCL`、`I2C1_SDA` / `I2C1_SCL`、`KB_SDA` / `KB_SCL` | 双方向 |
+| `TUSB_INT`、`USB_OTG` | 入力（← power） |
 
 `+3V3_SD` はこのシートの中だけの電源で、`power:+3V3` の値を書き換えた電源記号で扱う。
 
