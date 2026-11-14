@@ -37,17 +37,20 @@ V = App.Vector
 BOARD = (34.131, 15.725, 262.731, 161.925)      # Edge.Cuts, x0 y0 x1 y1 (replaced by the board file's)
 BOARD_TOP = 1.2
 DISPLAY_FRAME = (-120.325, -34.075, 120.325, 34.075)   # glass pocket (the User.Drawings frame), relative to the display
-GLASS_TOP = 12.16               # top of the cover glass (DISP1 model, Z set by hand)
-GLASS_BOTTOM = 11.46
+DISPLAY_RAISE = 0.035 - 0.2     # the display sits this much higher than before (2026-11-10: +0.035, then -0.2), before it leans back
+GLASS_TOP = 12.16 + DISPLAY_RAISE   # top of the cover glass (DISP1 model, Z set by hand), with the display flat
+GLASS_BOTTOM = 11.46 + DISPLAY_RAISE
+GLASS_HALF_DEPTH = 34.0         # glass, front edge to the centre (both display models)
 DISPLAY_CENTRE = (148.43125, 51.725)   # DISP1 (replaced by the board file's)
 COVER = (-114.35, -33.05, 118.15, 33.05)       # back cover of the TOUCH-A, relative to the glass centre (DISP1 at 0 deg)
-STUD_TIP = BOARD_TOP - 2.5      # bottom of the display studs (model offset -2.5 from the board top)
+STUD_TIP = BOARD_TOP - 2.5 + DISPLAY_RAISE   # bottom of the display studs (model offset -2.5 from the board top)
 STUDS = [(-106.8, -28.5), (-106.8, 28.5), (111.2, -28.5), (111.2, 28.5),     # relative to the glass centre (0 deg)
          (-36.8, -24.5), (-36.8, 24.5), (21.2, -24.5), (21.2, 24.5)]
 LOWEST_PART = -1.9              # bottom of the key sockets (the parts at the front edge)
 
 # ---- Case ------------------------------------------------------------------------------------------
-ANGLE = 3.5                     # typing angle, degrees
+ANGLE = 3.0                     # typing angle, degrees
+DISPLAY_TILT = 5.0              # the display leans back this much more than the keys (front edge of the glass stays)
 DECK_DROP = 4.0                 # the key area is this much lower than the glass
 DECK_START = 1.2                # the step starts this far in front of the glass pocket
 RAMP_ANGLE = 15.0               # slope of the step, degrees
@@ -64,11 +67,17 @@ FLOOR_GAP = 0.6                 # lowest part to the inside of the floor (at the
 GLASS_LEDGE = 0.2               # the case steps in under the overhanging glass, this far below it
 COVER_GAP = 0.5                 # around the back cover of the display
 
-# Display studs: bosses up from the floor, screwed from below (M2.5)
-STUD_BOSS_D = 6.0               # under the board: the studs reach down through the board holes to STUD_TIP
+# Display studs: bosses up from the floor along the (tilted) stud, screwed from below (M2.5). The display leans
+# back, so the back studs end above the board: their bosses go up through the board holes to the stud tips
+STUD_BOSS_D = 8.0               # under the board (6.0 until 2026-11-10: 0.5 mm wall round the screw head)
+STUD_BOSS_THRU_D = 6.0          # through the board holes (back holes 7.0 wide since 2026-11-10; 4.6 before)
+STUD_BOSS_STEP = -0.4           # the wide part of the boss stays this far under the board (z 0), at its highest edge
+STUD_BOSS_NECK_D = 5.0          # front studs end under the board: a neck this wide carries the stud tip (fits the hole)
 STUD_SCREW_D = 2.7
 STUD_HEAD_D = 5.0
-STUD_SCREW_LEN = 6.0            # screw length from the boss top; the rest is counterbore
+STUD_HEAD_RECESS = 2.0          # the screw head sits this far up from the bottom of the case (counterbore depth)
+STUD_THREAD_MIN = 2.5           # thread in the stud at least this long (picks the screw length)
+SCREW_LENGTHS = (6, 8, 10, 12, 14, 16, 18, 20, 25)
 
 # Board (tray mount): bosses up to the bottom of the board, screwed from the top (M2 into heat-set inserts)
 PCB_BOSS_D = 5.0
@@ -224,6 +233,23 @@ def bottom(y):
 
 TOP = GLASS_TOP
 DEEP = bottom(Y0) - 5.0          # below everything
+# The display leans back about the front edge of its glass (top)
+PIVOT_Y = DISPLAY_CENTRE[1] + GLASS_HALF_DEPTH   # front edge of the glass
+TILT_TAN = math.tan(math.radians(DISPLAY_TILT))
+TOP_MAX = TOP + (PIVOT_Y - Y0 + 5) * TILT_TAN + 2   # above the top everywhere
+
+
+def tilt_point(x, y, z):
+    """A point of the flat display (KiCad x, y, z) where it is once the display leans back."""
+    a = math.radians(DISPLAY_TILT)
+    u, w = PIVOT_Y - y, z - TOP            # u: towards the back
+    return (x, PIVOT_Y - (u * math.cos(a) - w * math.sin(a)), TOP + u * math.sin(a) + w * math.cos(a))
+
+
+def tilted(shape):
+    s = shape.copy()
+    s.rotate(V(0, -PIVOT_Y, TOP), V(1, 0, 0), DISPLAY_TILT)
+    return s
 
 
 def rrect(x0, y0, x1, y1, r, z0, z1):
@@ -265,10 +291,10 @@ if OUTLINE_EDGES:
     if not _wire.isClosed():
         print("the outline on %s is not closed" % CASE_LAYER)      # freecadcmd does not print the exit message
         raise SystemExit(1)
-    outer = Part.Face(_wire).extrude(V(0, 0, TOP - DEEP))
+    outer = Part.Face(_wire).extrude(V(0, 0, TOP_MAX - DEEP))
     outer.translate(V(0, 0, DEEP))
 else:
-    outer = rrect(X0, Y0, X1, Y1, CORNER_R, DEEP, TOP)
+    outer = rrect(X0, Y0, X1, Y1, CORNER_R, DEEP, TOP_MAX)
 board_well = (BOARD[0] - GAP, BOARD[1] - GAP, BOARD[2] + GAP, BOARD[3] + GAP)
 cover_well = [cx + COVER[0] - COVER_GAP, cy + COVER[1] - COVER_GAP, cx + COVER[2] + COVER_GAP, cy + COVER[3] + COVER_GAP]
 # where the cover well pokes past the board well by a hair, leave the wall straight instead of a thin notch
@@ -279,8 +305,8 @@ for i, sign in ((0, -1), (1, -1), (2, 1), (3, 1)):
 
 
 def deck():
-    """Solid under the top surface: at the glass height over the display, then a rounded slope down to the key
-    area (DECK_DROP lower), seen from the side (KiCad y, z) and extruded across the case."""
+    """Solid under the top surface: in the plane of the (leaning) glass over the display, then a rounded slope down
+    to the key area (DECK_DROP lower), seen from the side (KiCad y, z) and extruded across the case."""
     a, r, d = math.radians(RAMP_ANGLE), RAMP_R, DECK_DROP
     y1 = DISPLAY_FRAME[3] + DECK_START
     run = (d - 2 * r * (1 - math.cos(a))) / math.sin(a)          # straight part of the slope
@@ -293,14 +319,16 @@ def deck():
 
     def q(y, z):
         return V(-10, -y, z)
-    edges = [Part.LineSegment(q(ya, TOP), q(y1, TOP)).toShape(),
+    za = TOP + (PIVOT_Y - ya) * TILT_TAN
+    edges = [Part.LineSegment(q(ya, za), q(PIVOT_Y, TOP)).toShape(),
+             Part.LineSegment(q(PIVOT_Y, TOP), q(y1, TOP)).toShape(),
              Part.Arc(q(y1, TOP), q(*m1), q(y2, z2)).toShape(),
              Part.LineSegment(q(y2, z2), q(y3, z3)).toShape(),
              Part.Arc(q(y3, z3), q(*m2), q(y4, TOP - d)).toShape(),
              Part.LineSegment(q(y4, TOP - d), q(yb, TOP - d)).toShape(),
              Part.LineSegment(q(yb, TOP - d), q(yb, zb)).toShape(),
              Part.LineSegment(q(yb, zb), q(ya, zb)).toShape(),
-             Part.LineSegment(q(ya, zb), q(ya, TOP)).toShape()]
+             Part.LineSegment(q(ya, zb), q(ya, za)).toShape()]
     return Part.Face(Part.Wire(edges)).extrude(V(330, 0, 0))
 
 
@@ -329,22 +357,61 @@ def round_over(shape, edges, radius, name):
 
 
 # ---- One-piece case --------------------------------------------------------------------------------
-case = outer.common(wedge(bottom, TOP)).common(deck())
+case = outer.common(wedge(bottom, TOP_MAX)).common(deck())
 ledge = GLASS_BOTTOM - GLASS_LEDGE
 cut = rrect(*board_well, 2.3, DEEP, ledge).common(wedge(floor_in, ledge))   # board, plate and keys, above the floor
-cut = cut.fuse(rrect(*cover_well, 1.0, BOARD_TOP - 0.2, ledge))      # the display's back cover hangs past the board edge
-cut = cut.fuse(rrect(*DISPLAY_FRAME, 2.0, ledge, TOP + 1))            # glass pocket
+# the display's back cover hangs past the board edge; leaning back, it lifts off the board towards the back
+cover_space = rrect(*cover_well, 1.0, BOARD_TOP - 0.2, ledge)
+cut = cut.fuse(cover_space).fuse(tilted(cover_space))
+cut = cut.fuse(tilted(rrect(*DISPLAY_FRAME, 2.0, ledge, TOP_MAX + 10)))   # glass pocket
 cut = cut.fuse(rrect(board_well[0], DISPLAY_FRAME[3] - 1.0, board_well[2], board_well[3], 2.3, ledge, TOP + 1))   # key well
 case = case.cut(cut)
-solid_outline = outer.common(wedge(bottom, TOP))
+solid_outline = outer.common(wedge(bottom, TOP_MAX))
+STUD_AXIS = V(0, -math.sin(math.radians(DISPLAY_TILT)), math.cos(math.radians(DISPLAY_TILT)))   # up the stud
+
+
+def stud_tip(sx, sy):
+    x, y, z = tilt_point(cx + sx, cy + sy, STUD_TIP)
+    return V(x, -y, z)
+
+
+def along(tip, z):
+    """The point on the stud axis through tip at height z."""
+    return tip + STUD_AXIS * ((z - tip.z) / STUD_AXIS.z)
+
+
+def stud_cyl(tip, d, z0, z1):
+    """Cylinder on the stud axis from height z0 up to height z1."""
+    base = along(tip, z0)
+    return Part.makeCylinder(d / 2, (z1 - z0) / STUD_AXIS.z, base, STUD_AXIS)
+
+
 for sx, sy in STUDS:
-    case = case.fuse(cyl(cx + sx, cy + sy, STUD_BOSS_D, DEEP, STUD_TIP).common(solid_outline))
+    tip = stud_tip(sx, sy)
+    # the end faces are square to the leaning stud, so their back edge is higher than the centre
+    step = min(tip.z, STUD_BOSS_STEP - STUD_BOSS_D / 2 * math.sin(math.radians(DISPLAY_TILT)))
+    boss = stud_cyl(tip, STUD_BOSS_D, DEEP, step)
+    if tip.z > step:
+        upper = STUD_BOSS_THRU_D if tip.z > 0 else STUD_BOSS_NECK_D   # through the board, or a neck under it
+        boss = boss.fuse(stud_cyl(tip, upper, step - 0.5, tip.z))
+    case = case.fuse(boss.common(solid_outline))
 for x, y in PCB_SCREWS:
     case = case.fuse(cyl(x, y, PCB_BOSS_D, DEEP, 0.0).common(solid_outline))
+print("display studs (leaning %g deg): tip height; boss centre at the board (z 0.6) vs the hole" % DISPLAY_TILT)
 for sx, sy in STUDS:
-    x, y = cx + sx, cy + sy
-    case = case.cut(cyl(x, y, STUD_SCREW_D, DEEP, STUD_TIP + 1))
-    case = case.cut(cyl(x, y, STUD_HEAD_D, DEEP, STUD_TIP - STUD_SCREW_LEN))
+    tip = stud_tip(sx, sy)
+    case = case.cut(stud_cyl(tip, STUD_SCREW_D, DEEP, tip.z + 1))
+    z = bottom(-tip.y)
+    for _ in range(5):                      # where the stud axis meets the bottom of the case
+        z = bottom(-along(tip, z).y)
+    seat = z + STUD_HEAD_RECESS
+    case = case.cut(stud_cyl(tip, STUD_HEAD_D, DEEP, seat))
+    reach = (tip.z - seat) / STUD_AXIS.z    # screw head to the stud tip, along the screw
+    screw = next(n for n in SCREW_LENGTHS if n >= reach + STUD_THREAD_MIN)
+    mid = along(tip, BOARD_TOP / 2)
+    print("  stud %7.2f %6.2f: tip z %5.2f, at the board %7.2f %6.2f (moved %.2f towards the back); head at z %.2f,"
+          " M2.5 x %d (%.1f mm into the stud)"
+          % (cx + sx, cy + sy, tip.z, mid.x, -mid.y, (cy + sy) + mid.y, seat, screw, screw - reach))
 for x, y in PCB_SCREWS:
     case = case.cut(cyl(x, y, PCB_INSERT_D, -PCB_INSERT_DEPTH, 1.0))
 for ref, dx, z, w, h, r in BACK_PORTS:
@@ -364,4 +431,4 @@ for shape, name in ((case, "skjar-case-onepiece.step"),):
     bb = shape.BoundBox
     print("%s: valid=%s, %.1f x %.1f x %.1f mm, z %.2f..%.2f" % (name, shape.isValid(), bb.XLength, bb.YLength,
                                                                 bb.ZLength, bb.ZMin, bb.ZMax))
-print("thickness: front %.2f mm, back %.2f mm" % (TOP - bottom(Y1), TOP - bottom(Y0)))
+print("thickness: front %.2f mm, back %.2f mm" % (TOP - bottom(Y1), TOP + (PIVOT_Y - Y0) * TILT_TAN - bottom(Y0)))

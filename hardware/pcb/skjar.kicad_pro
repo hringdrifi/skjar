@@ -39,9 +39,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.8,
-          "height": 1.27,
-          "width": 1.27
+          "drill": 0.0,
+          "height": 0.875,
+          "width": 0.25
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -60,7 +60,7 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.5,
+          "min_clearance": 0.0,
           "min_island_area": 10.0,
           "min_thickness": 0.25,
           "pad_connection": 1,
@@ -76,16 +76,7 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [
-        [
-          "copper_edge_clearance|118250000|156650000|fe04fa2c-a7f9-4b49-8e95-f33a3812fd42|10e5b36d-0ab2-4961-bf74-271513da7583",
-          ""
-        ],
-        [
-          "copper_edge_clearance|165875000|156650000|d382832a-df54-4f94-8e9a-6ba63d18b425|2b8a3c25-055a-4623-a29c-5f52349e9d20",
-          ""
-        ]
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -226,7 +217,9 @@
         0.2,
         0.25,
         0.3,
-        0.5
+        0.5,
+        1.5,
+        2.0
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -611,10 +604,6 @@
     "netclass_assignments": {},
     "netclass_patterns": [
       {
-        "netclass": "Power",
-        "pattern": "+5V_LED"
-      },
-      {
         "netclass": "DSI",
         "pattern": "DSI_*"
       },
@@ -628,7 +617,15 @@
       },
       {
         "netclass": "Power",
-        "pattern": "+3V3"
+        "pattern": "+3V3*"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "/RP2040 Sheet/USB_D?"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "+5V*"
       }
     ]
   },

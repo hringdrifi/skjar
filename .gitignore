@@ -17,6 +17,11 @@ hardware/pcb/lib/3dmodels/*
 !hardware/pcb/lib/3dmodels/SW_Push_1P1T_XKB_TS-1187A.step
 !hardware/pcb/lib/3dmodels/USB_C_Receptacle_HRO_TYPE-C-31-M-12.step
 !hardware/pcb/lib/3dmodels/microSD_HRO_TF-01A.step
+!hardware/pcb/lib/3dmodels/Jack_3.5mm_KoreanHropartsElec_PJ-320D-4A_Horizontal.step
+!hardware/pcb/lib/3dmodels/CP_EDLC_10x5mm_P7.50mm_Horizontal.step
+!hardware/pcb/lib/3dmodels/BatteryHolder_MYOUNG_MY-2032-08.step
+!hardware/pcb/lib/3dmodels/Texas_RUX_VQFN-HR-12_2.5x2mm_P0.5mm.step
+!hardware/pcb/lib/3dmodels/Oscillator_SMD_Abracon_ASE-4Pin_3.2x2.5mm.step
 
 # KiCad の一時ファイルと個人の表示設定
 *-backups/
