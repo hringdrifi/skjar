@@ -60,6 +60,7 @@ IPEX-1 のアンテナ端子は、右の辺の上寄り（下の辺から 17.225
 | ファイル | 内容 |
 |---|---|
 | `TF-01A&01C.pdf` | Korean Hroparts Elec の TF-01A（1 ページ目、2023-08-20）と TF-01C（2 ページ目、2022-11-19）の図面。[HRO の公式サイト](https://en.krhro.com/) の PDF ビューアから保存した。J201（TF-01A）のフットプリントと 3D モデルはこの図面から作った |
+| `CHP_Datasheet.pdf` | CDA（智烽维）の CHP シリーズ（5.0 / 5.5 V のスーパーキャパシタ）のデータシート（2023-08-01、6 ページ、[DigiKey](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/6823/CHP_Datasheet.pdf) から。取得日 2026-11-14）。C206（CHP5R5L104R-TW）は 3 ページ目の表で W 10 × D 5 × L 12 mm、ESR 900 mΩ（1 kHz）/ 1800 mΩ（DC）。2 ページ目の DA 型の図では、断面は両端半円（D 5 mm）、足は φ0.5 mm・ピッチ 7.5 mm・15 mm 以上で、－側に黒い帯がある |
 
 ## giteki-020-260249/ — CM0 の技適（工事設計認証）
 
@@ -162,6 +163,7 @@ IPEX-1 のアンテナ端子は、右の辺の上寄り（下の辺から 17.225
 |---|---|
 | `pcf8563.pdf` | PCF8563 データシート（NXP、Rev. 11.1）。出典: [NXP](https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf) |
 | `rv-8263-c7.pdf` | RV-8263-C7 データシート（概要版）。出典: [Micro Crystal](https://www.microcrystal.com/fileadmin/Media/Products/RTC/Datasheet/RV-8263-C7.pdf)。**不採用**（PCF8563T に変更） |
+| `MY-2032-08.pdf` | CR2032 ホルダー MYOUNG MY-2032-08（BT401、LCSC C964831）の図面（MY-CP-0154、2017-07-20）。出典: [LCSC](https://www.lcsc.com/datasheet/C964831.pdf)（取得日 2026-11-14）。リン青銅 0.25 mm を打ち抜いたクリップで、上板 21.1 × 15.2 mm、高さ 4.40 mm、足先 22.80 mm。フットプリントのシルクと 3D モデルはこの図面から作った |
 
 **PCF8563T（SO-8）の要点**
 - ピン配置：1 OSCI、2 OSCO、3 INT、4 VSS、5 SDA、6 SCL、7 CLKOUT、8 VDD。

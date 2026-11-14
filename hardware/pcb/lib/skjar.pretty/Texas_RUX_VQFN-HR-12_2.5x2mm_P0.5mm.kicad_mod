@@ -287,4 +287,15 @@
 		(uuid "6b2b85ed-523d-4a6d-9ad8-9dffb0617a6f")
 	)
 	(embedded_fonts no)
+	(model "${KIPRJMOD}/lib/3dmodels/Texas_RUX_VQFN-HR-12_2.5x2mm_P0.5mm.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
 )
