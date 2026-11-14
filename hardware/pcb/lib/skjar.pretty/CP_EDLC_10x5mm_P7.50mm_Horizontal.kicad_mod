@@ -191,4 +191,15 @@
 		(uuid "fef394e0-4e01-4510-9627-dc5777c9ded1")
 	)
 	(embedded_fonts no)
+	(model "${KIPRJMOD}/lib/3dmodels/CP_EDLC_10x5mm_P7.50mm_Horizontal.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
 )
