@@ -1,0 +1,465 @@
+/*
+ * SKJÁR のタッチ UI（試作）。
+ *
+ * 実機（fbdev）：/dev/fb0 に描き、タッチは evdev から読む。パネルは 480 × 1920 の縦長なので、
+ *   LVGL の中で 90° 回して 1920 × 480 の横長として使う。
+ * PC（sdl）：Linux / WSL で 1920 × 480 の窓を開き、マウスでタッチの代わりをする。
+ * PC（windows）：Windows で同じ窓を開く（Win32）。
+ *
+ * 使い方：skjar-ui [--link <tty か COMn か ->] [--rotate 0|90|180|270] [--fb <path>]
+ *                  [--touch <path>] [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>]
+ *                  [--start boot|manual] [--no-poweroff]
+ *
+ * キーボードモードとサイバーデックモード：このタッチ UI を出している間がキーボードモード（物理キーは PC へ）。
+ * System タブの Console で UI を閉じるとサイバーデックモード（コンソール。物理キーは CM0 へ）。コンソールで
+ * skjar と打つと UI が立ち上がり、キーボードモードに戻る。どちらのモードかは RP2040 に OUT で知らせ、
+ * RP2040 はモードごとのキーマップに切り替える。
+ *   --start boot   ：電源を入れたとき。PC につながっていなければ、UI を出さずにコンソールへ
+ *   --start manual ：コンソールで skjar と打ったとき（初期値）。PC がなければ「PC につないで」を出す
+ */
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(SKJAR_UI_FBDEV)
+#include <errno.h>
+#include <fcntl.h>
+#include <linux/kd.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#endif
+
+#include "lvgl.h"
+
+#include "backlight.h"
+#include "link.h"
+#include "platform.h"
+#include "recorder.h"
+#include "settings.h"
+#include "ui.h"
+
+typedef struct {
+    const char *link_path;
+    int rotate;
+    const char *fb_path;
+    const char *touch_path;     /* NULL なら /dev/input を探す */
+    const char *vt_path;        /* グラフィックモードにする仮想端末。NULL なら触らない */
+    int zoom;                   /* 窓の大きさ（%）。PC の窓だけ */
+    const char *config_path;    /* 設定のファイル。NULL なら settings.h の場所 */
+    const char *background;     /* 背景の画像（PNG）。NULL なら描いた絵 */
+    const char *movie;          /* 隠し機能の動画（.skm）。NULL なら設定のフォルダの movie.skm */
+    const char *font;           /* 日本語のフォント（TTF / OTF / TTC）。NULL なら決まった場所を探す */
+    const char *record;         /* 録画の出力（.mp4）。--demo の台本どおりに動かして撮る（recorder.h） */
+    const char *demo;           /* 録画の台本 */
+    int boot;                   /* --start boot：電源を入れたときの起動 */
+    int no_poweroff;
+} options_t;
+
+static volatile sig_atomic_t quit;
+static bool to_console;          /* コンソールへ移るために終わる */
+static options_t opt;
+
+static void on_signal(int sig)
+{
+    (void)sig;
+    quit = 1;
+}
+
+static uint32_t now_ms(void)
+{
+    return platform_now_ms();
+}
+
+static void usage(const char *argv0)
+{
+    fprintf(stderr,
+            "usage: %s [--link <tty|COMn|->] [--rotate 0|90|180|270] [--fb <path>] [--touch <path>]\n"
+            "          [--vt <path>] [--zoom <percent>] [--config <path>] [--background <png>] [--movie <skm>]\n"
+            "          [--font <ttf>] [--start boot|manual] [--no-poweroff]\n"
+            "          [--record <mp4> --demo <script>]\n", argv0);
+}
+
+static int parse_args(int argc, char **argv)
+{
+#if defined(SKJAR_UI_FBDEV)
+    opt.link_path = "/dev/serial0";
+    opt.rotate = 90;            /* TODO（実機）：パネルの向きと付け方で 90 か 270 かを決める */
+    opt.fb_path = "/dev/fb0";
+    opt.vt_path = "/dev/tty1";
+#else
+    opt.link_path = "-";
+    opt.rotate = 0;
+    opt.no_poweroff = 1;        /* PC で試すときに PC の電源を切らない */
+#endif
+    opt.zoom = 100;
+    for (int i = 1; i < argc; i++) {
+        const char *a = argv[i];
+        const char *v = (i + 1 < argc) ? argv[i + 1] : NULL;
+        if (strcmp(a, "--link") == 0 && v) { opt.link_path = v; i++; }
+        else if (strcmp(a, "--rotate") == 0 && v) { opt.rotate = atoi(v); i++; }
+        else if (strcmp(a, "--fb") == 0 && v) { opt.fb_path = v; i++; }
+        else if (strcmp(a, "--touch") == 0 && v) { opt.touch_path = v; i++; }
+        else if (strcmp(a, "--vt") == 0 && v) { opt.vt_path = strcmp(v, "-") == 0 ? NULL : v; i++; }
+        else if (strcmp(a, "--zoom") == 0 && v) { opt.zoom = atoi(v); i++; }
+        else if (strcmp(a, "--config") == 0 && v) { opt.config_path = v; i++; }
+        else if (strcmp(a, "--background") == 0 && v) { opt.background = v; i++; }
+        else if (strcmp(a, "--movie") == 0 && v) { opt.movie = v; i++; }
+        else if (strcmp(a, "--font") == 0 && v) { opt.font = v; i++; }
+        else if (strcmp(a, "--record") == 0 && v) { opt.record = v; i++; }
+        else if (strcmp(a, "--demo") == 0 && v) { opt.demo = v; i++; }
+        else if (strcmp(a, "--start") == 0 && v) { opt.boot = strcmp(v, "boot") == 0; i++; }
+        else if (strcmp(a, "--no-poweroff") == 0) { opt.no_poweroff = 1; }
+        else { usage(argv[0]); return -1; }
+    }
+    if (opt.rotate != 0 && opt.rotate != 90 && opt.rotate != 180 && opt.rotate != 270) {
+        fprintf(stderr, "--rotate must be 0, 90, 180 or 270\n");
+        return -1;
+    }
+    if (opt.zoom < 25 || opt.zoom > 400) {
+        fprintf(stderr, "--zoom must be between 25 and 400\n");
+        return -1;
+    }
+    return 0;
+}
+
+/* ---- 電源を切る ---- */
+
+/* サイバーデックモードへ：RP2040 に知らせて（物理キーを CM0 へ、サイバーデックのキーマップへ）、UI を閉じる。
+ * UI が終わると、systemd が tty1 のログイン（コンソール）を立ち上げる（skjar-ui@.service） */
+static void open_console(void)
+{
+    fprintf(stderr, "switching to the console (cyberdeck mode)\n");
+    /* RP2040 は、UI がいなくなる（BYE か ALIVE の途切れ）と、キーを CM0 に送る（サイバーデックモード）。
+     * BYE は、途切れを待たずにすぐ切り替えてもらうため */
+    link_send_bye();
+    to_console = true;
+    quit = 1;
+}
+
+/* --start boot：電源を入れたとき。RP2040 から PC につながっているかが届くのを 3 秒まで待ち、
+ * つながっていれば UI のまま（キーボードモード）、そうでなければコンソールへ */
+#define BOOT_WAIT_MS 3000
+
+static void boot_check_cb(lv_timer_t *t)
+{
+    static uint32_t started;
+    if (!started)
+        started = lv_tick_get();
+    const link_state_t *s = link_state();
+    if (s->connected && s->pc_connected == 1) {
+        lv_timer_delete(t);             /* PC がある：キーボードモードのまま */
+        return;
+    }
+    if ((s->connected && s->pc_connected == 0) || lv_tick_elaps(started) >= BOOT_WAIT_MS) {
+        lv_timer_delete(t);
+        open_console();
+    }
+}
+
+static void do_poweroff(void)
+{
+    if (opt.no_poweroff) {
+        fprintf(stderr, "poweroff requested (ignored)\n");
+        return;
+    }
+    fprintf(stderr, "poweroff\n");
+    if (system("systemctl poweroff") != 0)
+        fprintf(stderr, "systemctl poweroff failed\n");
+}
+
+/* ---- RP2040 とのやり取り ---- */
+
+static void link_changed(const link_state_t *s, void *user)
+{
+    (void)user;
+    ui_show_link_state(s);
+}
+
+static void link_shutdown(void *user)
+{
+    (void)user;
+    fprintf(stderr, "link: shutdown requested by the RP2040\n");
+    do_poweroff();
+}
+
+static void link_touch_label(int layer, int index, const char *code, void *user)
+{
+    (void)user;
+    ui_set_touch_label(layer, index, code);
+}
+
+static void link_user_key(int id, bool pressed, void *user)
+{
+    (void)user;
+    ui_user_key(id, pressed);
+}
+
+static void link_activity(void *user)
+{
+    (void)user;
+    ui_activity();
+}
+
+static void link_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+    link_poll(now_ms());
+}
+
+/* ---- 描画先 ---- */
+
+#if defined(SKJAR_UI_SDL)
+
+static int create_display(void)
+{
+    lv_tick_set_cb(now_ms);
+    lv_display_t *disp = lv_sdl_window_create(1920, 480);
+    if (!disp)
+        return -1;
+    lv_sdl_window_set_title(disp, "SKJAR UI");
+    if (opt.zoom != 100)
+        lv_sdl_window_set_zoom(disp, opt.zoom / 100.0f);
+    lv_sdl_mouse_create();
+    return 0;
+}
+
+static void restore_console(void) {}
+static void watchdog_ping(void) {}
+
+#elif defined(SKJAR_UI_WINDOWS)
+
+static int create_display(void)
+{
+    /* 時刻の関数は、LVGL の Windows のドライバが登録する。
+     * 画面の拡大率（DPI）には従わず、--zoom の大きさにする */
+    lv_display_t *disp = lv_windows_create_display(L"SKJAR UI", 1920, 480, opt.zoom, true, true);
+    if (!disp)
+        return -1;
+    lv_windows_acquire_pointer_indev(disp);
+    return 0;
+}
+
+static void restore_console(void) {}
+static void watchdog_ping(void) {}
+
+#else /* fbdev */
+
+static int vt_fd = -1;
+
+/* 仮想端末をグラフィックモードにして、コンソールの文字やカーソルが UI の上に描かれないようにする */
+static void take_console(void)
+{
+    if (!opt.vt_path)
+        return;
+    vt_fd = open(opt.vt_path, O_RDWR | O_NOCTTY);
+    if (vt_fd < 0 || ioctl(vt_fd, KDSETMODE, KD_GRAPHICS) != 0) {
+        fprintf(stderr, "cannot switch %s to graphics mode: %s\n", opt.vt_path, strerror(errno));
+        if (vt_fd >= 0)
+            close(vt_fd);
+        vt_fd = -1;
+    }
+}
+
+static void restore_console(void)
+{
+    if (vt_fd >= 0) {
+        ioctl(vt_fd, KDSETMODE, KD_TEXT);
+        close(vt_fd);
+        vt_fd = -1;
+    }
+}
+
+/* systemd のウォッチドッグ（skjar-ui@.service の WatchdogSec）に「生きている」を知らせる。描き直しの
+ * ループから 1 秒ごとに呼ぶので、UI が固まると止まり、systemd が UI を止めて起動し直す。
+ * libsystemd は使わず、$NOTIFY_SOCKET（unix のデータグラム）に直接書く。systemd の外では何もしない */
+static void watchdog_ping(void)
+{
+    static int fd = -2;
+    static struct sockaddr_un addr;
+    static socklen_t addr_len;
+    static uint32_t last_ms;
+    if (fd == -2) {
+        fd = -1;
+        const char *path = getenv("NOTIFY_SOCKET");
+        size_t n = path ? strlen(path) : 0;
+        if (n == 0 || n >= sizeof addr.sun_path || (path[0] != '/' && path[0] != '@'))
+            return;
+        memset(&addr, 0, sizeof addr);
+        addr.sun_family = AF_UNIX;
+        memcpy(addr.sun_path, path, n);
+        if (path[0] == '@')
+            addr.sun_path[0] = '\0';    /* 抽象名前空間 */
+        addr_len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + n);
+        fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+        if (fd >= 0) {
+            static const char ready[] = "READY=1";
+            sendto(fd, ready, sizeof ready - 1, 0, (struct sockaddr *)&addr, addr_len);
+        }
+    }
+    if (fd < 0)
+        return;
+    uint32_t now = now_ms();
+    if (now - last_ms < 1000)
+        return;
+    last_ms = now;
+    static const char msg[] = "WATCHDOG=1";
+    sendto(fd, msg, sizeof msg - 1, 0, (struct sockaddr *)&addr, addr_len);
+}
+
+static void touch_found(lv_indev_t *indev, lv_evdev_type_t type, void *user)
+{
+    (void)user;
+    if (type == LV_EVDEV_TYPE_ABS) {
+        fprintf(stderr, "touch: found a touch device\n");
+        return;
+    }
+    /* キーボード（HID over I2C の物理キー）やマウスは、UI では使わない */
+    lv_indev_delete(indev);
+}
+
+/* 同じフレームバッファに UI を 2 つ描かせない。2 つ動くと（たとえば回転ありと --rotate 0）、
+ * Look の切り替えなどで描き直したほうが勝ち、画面の向きが戻ったように見える。フレームバッファの
+ * ファイルに flock を掛け、掛けられなければ終わる。fd は終わるまで開いたまま（閉じると外れる） */
+static bool lock_framebuffer(void)
+{
+    int fd = open(opt.fb_path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0)
+        return true;    /* 開けないなら、このあと lv_linux_fbdev_set_file が知らせる */
+    if (flock(fd, LOCK_EX | LOCK_NB) != 0) {
+        if (errno == EWOULDBLOCK) {
+            fprintf(stderr, "another skjar-ui is already drawing to %s "
+                            "(pgrep -a skjar-ui; systemctl status 'skjar-ui@*'; sudo pkill skjar-ui)\n",
+                    opt.fb_path);
+            close(fd);
+            return false;
+        }
+        /* ほかの理由で掛けられない（flock が使えないなど）：止めずに、ロックなしで続ける */
+        fprintf(stderr, "cannot lock %s (%s), starting anyway\n", opt.fb_path, strerror(errno));
+        close(fd);
+    }
+    return true;
+}
+
+static int create_display(void)
+{
+    lv_tick_set_cb(now_ms);
+    if (!lock_framebuffer())
+        return -1;
+    lv_display_t *disp = lv_linux_fbdev_create();
+    if (!disp)
+        return -1;
+    if (lv_linux_fbdev_set_file(disp, opt.fb_path) != LV_RESULT_OK) {
+        fprintf(stderr, "cannot open %s\n", opt.fb_path);
+        return -1;
+    }
+    /* DPI は PC（SDL / Windows）と同じ初期値にする。fbdev のドライバはパネルの物理的な幅から DPI を出し
+     * （8.8″ は約 220）、標準のテーマはそれに合わせて余白や角の丸みを大きくするので、ボタンの中身が縮んで
+     * PC と見た目が変わる。UI の寸法は 1920 × 480 のピクセルで決めてある。テーマは回転（解像度の変化）の
+     * ときに作り直されるので、回す前に決める */
+    lv_display_set_dpi(disp, LV_DPI_DEF);
+    static const lv_display_rotation_t rot[] = {
+        LV_DISPLAY_ROTATION_0, LV_DISPLAY_ROTATION_90, LV_DISPLAY_ROTATION_180, LV_DISPLAY_ROTATION_270,
+    };
+    lv_display_set_rotation(disp, rot[opt.rotate / 90]);
+    fprintf(stderr, "display: %dx%d after rotation\n",
+            (int)lv_display_get_horizontal_resolution(disp), (int)lv_display_get_vertical_resolution(disp));
+
+    /* タッチの座標は、パネルの向きのまま読む。LVGL が画面の回転に合わせて回す */
+    if (opt.touch_path) {
+        if (!lv_evdev_create(LV_INDEV_TYPE_POINTER, opt.touch_path))
+            fprintf(stderr, "cannot open touch device %s\n", opt.touch_path);
+    } else if (lv_evdev_discovery_start(touch_found, NULL) != LV_RESULT_OK) {
+        fprintf(stderr, "touch device discovery failed\n");
+    }
+    take_console();
+    return 0;
+}
+
+#endif
+
+int main(int argc, char **argv)
+{
+    if (parse_args(argc, argv) != 0)
+        return 2;
+
+    signal(SIGINT, on_signal);
+    signal(SIGTERM, on_signal);
+
+    lv_init();
+
+    if (create_display() != 0) {
+        fprintf(stderr, "cannot create the display\n");
+        return 1;
+    }
+
+    backlight_open();
+
+    settings_load(opt.config_path);
+
+    const link_callbacks_t cb = {
+        .changed = link_changed,
+        .shutdown = link_shutdown,
+        .touch_label = link_touch_label,
+        .user_key = link_user_key,
+        .activity = link_activity,
+    };
+    if (!link_open(opt.link_path, &cb))
+        fprintf(stderr, "running without the RP2040 link\n");
+    lv_timer_create(link_timer_cb, 10, NULL);
+
+    /* 隠し機能の動画：渡されなければ、設定のフォルダの movie.skm（音は movie.wav） */
+    static char movie_path[600];
+    if (opt.movie)
+        snprintf(movie_path, sizeof movie_path, "%s", opt.movie);
+    else
+#if defined(_WIN32)
+        snprintf(movie_path, sizeof movie_path, "%s\\movie.skm", settings_dir());
+#else
+        snprintf(movie_path, sizeof movie_path, "%s/movie.skm", settings_dir());
+#endif
+
+    const ui_actions_t actions = {
+        .poweroff = do_poweroff,
+        .background_png = opt.background,
+        .movie_path = movie_path,
+        .font_path = opt.font,
+        .open_console = open_console,
+    };
+    /* 録画：時計を録画の時計にしてから画面を作る（タイマーや動きが、録画の時計で進むように） */
+    if (opt.record && (!opt.demo || !recorder_open(opt.demo, opt.record, 30))) {
+        fprintf(stderr, "--record needs a readable --demo script\n");
+        return 2;
+    }
+    ui_create(&actions);
+    if (opt.record) {
+        int r = recorder_run();
+        link_close();
+        return r;
+    }
+
+    /* UI が出ている間は、RP2040 がキーを PC に送る（キーボードモード。PC がなければ CM0 へ）。
+     * 起動時の HELLO（link_open）と、そのあとの ALIVE で RP2040 が知る */
+    if (opt.boot)
+        lv_timer_create(boot_check_cb, 100, NULL);
+
+    /* 窓を閉じると表示がなくなる（Windows のドライバ） */
+    while (!quit && lv_display_get_default() != NULL) {
+        uint32_t idle = lv_timer_handler();
+        watchdog_ping();
+        if (idle > 10)
+            idle = 10;
+        platform_sleep_ms(idle);
+    }
+
+    if (to_console)
+        fprintf(stderr, "closed for the console\n");
+    link_close();
+    restore_console();
+    return 0;
+}

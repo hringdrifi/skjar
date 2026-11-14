@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Fetch news headlines for the SKJÁR News widget (the electric sign in the Widget strip).
+
+Reads RSS or Atom feeds and writes their headlines to news.txt (UTF-8), one per line. The UI
+reloads news.txt when it changes (software/ui/src/widgets.c). On the device, a systemd timer runs
+this every 15 minutes (software/os/systemd/skjar-news.timer).
+
+The UI draws the headlines with a Japanese font when it finds one (IPA Gothic, Noto Sans CJK,
+BIZ UDGothic, or --font). Without one it shows ASCII headlines only; --ascii then folds Latin
+text to ASCII here (accents dropped, curly quotes made straight) and drops the rest.
+
+    python3 fetch_news.py                               # the genres chosen on the widget (NHK top news if none)
+    python3 fetch_news.py --feed nhk-business --feed bbc
+    python3 fetch_news.py --feed https://example.com/rss.xml --max 30 --out ./news.txt
+
+Feeds: --feed, else news_feeds= in ui.conf (chosen by tapping the widget), else nhk. With several
+feeds, the headlines are taken from each in turn, so every genre shows up.
+Named feeds: see FEEDS below. NHK's RSS is for personal use; check each site's terms.
+Only the Python standard library is used.
+"""
+import argparse
+import os
+import sys
+import unicodedata
+import urllib.request
+import xml.etree.ElementTree as ET
+
+FEEDS = {
+    "nhk": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",           # NHK 主要ニュース
+    "nhk-society": "https://news.web.nhk/n-data/conf/na/rss/cat1.xml",   # 社会
+    "nhk-culture": "https://news.web.nhk/n-data/conf/na/rss/cat2.xml",   # 文化・エンタメ
+    "nhk-science": "https://news.web.nhk/n-data/conf/na/rss/cat3.xml",   # 科学・医療
+    "nhk-politics": "https://news.web.nhk/n-data/conf/na/rss/cat4.xml",  # 政治
+    "nhk-business": "https://news.web.nhk/n-data/conf/na/rss/cat5.xml",  # 経済
+    "nhk-world": "https://news.web.nhk/n-data/conf/na/rss/cat6.xml",     # 国際
+    "nhk-sports": "https://news.web.nhk/n-data/conf/na/rss/cat7.xml",    # スポーツ
+    "bbc": "https://feeds.bbci.co.uk/news/world/rss.xml",
+}
+DEFAULT_FEEDS = ["nhk"]
+USER_AGENT = "skjar-news/1.0"
+TIMEOUT = 20
+
+# For --ascii: characters that NFKD does not turn into ASCII
+REPLACE = {
+    "‘": "'", "’": "'", "‚": "'", "‛": "'",
+    "“": '"', "”": '"', "„": '"',
+    "–": "-", "—": " - ", "−": "-",
+    "…": "...", " ": " ", "£": "GBP ", "€": "EUR ",
+}
+
+
+def default_out():
+    """The folder of ui.conf (software/ui/src/settings.c)."""
+    if os.name == "nt":
+        base = os.environ.get("APPDATA", ".")
+        folder = os.path.join(base, "skjar")
+    else:
+        xdg = os.environ.get("XDG_CONFIG_HOME")
+        folder = os.path.join(xdg, "skjar") if xdg else os.path.expanduser("~/.config/skjar")
+    return os.path.join(folder, "news.txt")
+
+
+def feeds_from_conf(path):
+    """news_feeds= in ui.conf (the genres chosen on the widget), or None."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                key, _, val = line.strip().partition("=")
+                if key == "news_feeds" and val:
+                    return [v for v in val.split(",") if v]
+    except OSError:
+        pass
+    return None
+
+
+def to_ascii(text):
+    text = "".join(REPLACE.get(c, c) for c in text)
+    text = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in text if " " <= c <= "~")
+
+
+def tidy(text):
+    """One line, no control characters, single spaces."""
+    text = "".join(c for c in text if unicodedata.category(c)[0] != "C" or c in " \t")
+    return " ".join(text.split())
+
+
+def headlines(url):
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        root = ET.fromstring(r.read())
+    titles = []
+    for el in root.iter():
+        tag = el.tag.rsplit("}", 1)[-1]
+        # RSS: <item><title>, Atom: <entry><title>
+        if tag in ("item", "entry"):
+            for child in el:
+                if child.tag.rsplit("}", 1)[-1] == "title" and child.text:
+                    titles.append(child.text.strip())
+                    break
+    return titles
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--feed", action="append",
+                    help="feed name (" + ", ".join(FEEDS) + ") or RSS/Atom URL; repeat for more. Default: nhk")
+    ap.add_argument("--max", type=int, default=40, help="headlines to keep (default 40)")
+    ap.add_argument("--ascii", action="store_true", help="fold to ASCII and drop the rest (UI without a Japanese font)")
+    ap.add_argument("--out", default=default_out(), help="output file (default: news.txt next to ui.conf)")
+    ap.add_argument("--config", help="ui.conf to read news_feeds= from (default: next to --out)")
+    args = ap.parse_args()
+    conf = args.config or os.path.join(os.path.dirname(os.path.abspath(args.out)), "ui.conf")
+    feeds = args.feed or feeds_from_conf(conf) or DEFAULT_FEEDS
+
+    per_feed = []
+    for feed in feeds:
+        url = FEEDS.get(feed, feed)
+        try:
+            per_feed.append(headlines(url))
+        except Exception as e:  # network down, bad XML: keep the old news.txt
+            print(f"fetch_news: {url}: {e}", file=sys.stderr)
+    # One from each feed in turn, so --max does not cut off the later genres
+    ordered = []
+    for i in range(max((len(t) for t in per_feed), default=0)):
+        ordered += [t[i] for t in per_feed if i < len(t)]
+
+    lines, seen = [], set()
+    for title in ordered:
+        line = tidy(title)
+        if args.ascii:
+            folded = tidy(to_ascii(line))
+            # Skip headlines that lost most of their letters (non-Latin scripts)
+            if len(folded) < max(8, len(line) // 2):
+                continue
+            line = folded
+        if not line or line in seen:
+            continue
+        seen.add(line)
+        lines.append(line)
+
+    if not lines:
+        print("fetch_news: no headlines; news.txt left as it was", file=sys.stderr)
+        return 1
+    lines = lines[: args.max]
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+    tmp = args.out + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lines) + "\n")
+    os.replace(tmp, args.out)   # the UI never sees a half-written file
+    print(f"fetch_news: {len(lines)} headlines -> {args.out}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

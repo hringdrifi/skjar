@@ -1,0 +1,12 @@
+# SKJÁR: fetch news headlines every 15 minutes (skjar-news.service)
+
+[Unit]
+Description=Fetch news headlines for the SKJAR News widget every 15 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=15min
+RandomizedDelaySec=1min
+
+[Install]
+WantedBy=timers.target

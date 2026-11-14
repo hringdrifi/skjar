@@ -1,0 +1,33 @@
+# SKJÁR: settings for the test boards (Raspberry Pi 4B or Pi Zero 2 W + a Pico / Pico W), before the
+# SKJÁR board exists. Raspberry Pi OS Lite (64-bit), Bookworm or later.
+#
+# Append this to the OS's own /boot/firmware/config.txt (it already loads vc4-kms-v3d):
+#   sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.orig
+#   cat software/os/config-devboard.txt | sudo tee -a /boot/firmware/config.txt
+#
+# Unlike config.txt (the CM0 on the SKJÁR board), there is no RTC, audio codec or CM0_HALT here,
+# so only the display, the keyboard (HID over I2C) and the UART to the Pico are set up.
+# The [pi4] / [pi02] sections let the same lines work on both boards.
+# Wiring: firmware/rp2040/README.md. Steps: software/os/devboard.md.
+
+[all]
+camera_auto_detect=0
+
+# --- Keyboard: the Pico as a HID over I2C keyboard on GPIO23 / 24, interrupt on GPIO25
+#     (the skjar-keyboard overlay, built from software/os/overlays/)
+dtoverlay=skjar-keyboard
+
+# --- UART to the Pico (GPIO14 TX / GPIO15 RX). The PL011 stays with Bluetooth, so this is the
+#     mini UART (/dev/serial0 -> ttyS0); enable_uart=1 also fixes the core clock it depends on.
+enable_uart=1
+
+[pi4]
+# --- Display: the 8.8-DSI-TOUCH-A on the 4B's 15-pin DSI connector (the 12 cm 15 <-> 22 pin cable
+#     that comes with it). The panel uses 2 lanes, which the 4B's DSI has. Touch is I2C inside the cable.
+dtoverlay=vc4-kms-dsi-waveshare-panel-v2,8_8_inch_a
+display_auto_detect=0
+
+# [pi02]: no DSI on the Zero 2 W. The UI goes to an HDMI monitor (mini HDMI); start it with --rotate 0.
+# This board is for the CPU load (same SoC as the CM0), the UART and the keyboard.
+
+[all]

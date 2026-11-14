@@ -1,0 +1,16 @@
+# SKJÁR: fetch the weather at once when the place is chosen on the Weather widget.
+# The UI writes weather.request next to ui.conf when the place changes (and weather_city= in ui.conf,
+# which fetch_weather.py reads). Install with skjar-weather.service (see there):
+#   sudo cp skjar-weather.path /etc/systemd/system/
+#   sudo systemctl enable --now skjar-weather.path
+# The UI runs as root for now, so the file is under /root/.config/skjar.
+
+[Unit]
+Description=Fetch the weather when the place is chosen on the SKJAR Weather widget
+
+[Path]
+PathChanged=/root/.config/skjar/weather.request
+Unit=skjar-weather.service
+
+[Install]
+WantedBy=paths.target

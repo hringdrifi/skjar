@@ -49,6 +49,7 @@
 - [ ] 自作フットプリントの寸法の確認（LCSC / EasyEDA から作ったもの）：U3 TPS2121（`Skjar:Texas_RUX_VQFN-HR-12_2.5x2mm_P0.5mm`。TI の推奨ランドパターンと照合する）、U201 CM0（`Skjar:RaspberryPi_CM0_Castellated`。データシートの推奨と同じ 0.6 × 2.4 mm・1 mm ピッチ）、J301、BT401
 - [ ] J402（PJ-320D-4A）の S 端子が、プラグのスリーブに触れる端子かを図面で確かめる（イヤホンの検出はスリーブで R2 と S がつながることを使う）
 - [ ] 12 MHz 発振器（Y402）の部品：仮に YXC OT2EL89CJI-111YLC-12M（C5280582、3225 4 ピン、1.8〜3.3 V）。手持ちがあればそれにする
+- [ ] **RP2040 がリセットされると、CM0 の電源がいきなり切れる**（2026-11-12、死活の整理で気づいた）。`GLOBAL_EN` を引く N-MOSFET のゲートはプルアップで、RP2040 が何もしなければ CM0 は OFF（[design-decisions.md](design-decisions.md) の 2.5）。RP2040 のリセット中（ウォッチドッグでの再起動、UF2 での書き換え、BOOTSEL）はピンが手放しになるので、Linux が書き込み中でも電源が落ちる。案：ゲートの抵抗の向きを変えて手放しのときは ON にする（電源を入れた瞬間、電流の判定より前に CM0 が起動する）、リセットをまたいで状態を保つ部品を足す、ファームの書き換えは CM0 を止めてからに限る（運用で避ける）
 
 ## 実物で確認すること
 - [ ] LCD の最大電流と突入電流（バックライト 0〜100%）
@@ -69,13 +70,49 @@
 - [ ] Port B の DRP：TUSB320 のデバイスツリー（I2C1 の 0x47、割り込みは GPIO6。カーネルの `extcon-usbc-tusb320`）、サイバーデックモードで DRP（Try.SNK）にする仕組み、`dwc2` を `dr_mode=otg` にする設定
 - [ ] RP2040 のファーム：Port B の CC の電流の判定の境目を、USB-C の規格の値（0.2 / 0.66 / 1.23 V）にする（TUSB320 の Rd は ±10〜20%）
 - [ ] TLV320DAC3100 のデバイスツリーのオーバーレイ。下書きは [software/os/overlays/](../software/os/overlays/)。MCLK（12 MHz の発振器）を使い、コーデックをクロックを出す側にしたので、標準の `simple-audio-card` だけで動く見込み。実機で確かめる
-- [ ] 物理キーの出力先の切り替えの細部（方針は USB のマウントの状態を見て自動、キーの組み合わせかタッチ UI で手動、で決めた。[protocol.md](protocol.md) の 2.6）：手動のキーの組み合わせ、PC がスリープのときの扱い
-- [ ] HID over I²C の I²C のアドレスとレジスタの番地、レポートの構成（[protocol.md](protocol.md) の 2 章）
-- [ ] キー入力のオーバーレイ（`i2c-gpio` のバスに `hid-over-i2c` のデバイスを定義する。I²C のアドレス、HID ディスクリプタのレジスタ、割り込みは CM0 の GPIO25）
+- [ ] キーボードモードとサイバーデックモード（[protocol.md](protocol.md) の 2.6）の残り：PC への USB HID で実際に出力先を分ける、サイバーデックモードのキーマップ（レイヤー 3〜5。いまはレイヤー 0〜2 の写し）を決める、今のモードをキーの RGB でも示すか
+- [ ] USB のリモートウェイクアップ：PC がスリープしているとき（`USB,0`）にキーを押したら PC を起こす。いまはスリープで「PC につないで」の表示になる。RMK と embassy-usb の対応を調べる
+- [ ] コンソールの自動ログイン（`raspi-config` の Boot / Auto Login）にするか。UI を閉じるたびにログインするのは手間。ルートを読み取り専用にするときの扱いと合わせて決める
+- [ ] 起動の速さ（OS のイメージを作るときに直す）。試作機（Pi 4B、Raspberry Pi OS Lite 64-bit、2026-11-11）で `systemd-analyze` は 41 秒（カーネル 4 秒＋ユーザー空間 37 秒）。分かったこと：
+  - Zero 2 W（CM0 と同じ SoC、2026-11-12）では 48.5 秒（カーネル 5.8 秒＋ユーザー空間 42.7 秒、cloud-init は止めていない）。`systemd-analyze blame` で NetworkManager 20.4 秒、cloud-init 4.9 秒、rpi-resize-swap-file 3.5 秒、skjar-weather 3.0 秒と、下の 4B と同じ原因で、CPU が遅い分だけ長い。UI 自体の起動は約 0.9 秒（うち背景の絵が 0.7 秒）、電光掲示板が流れている間の CPU は 1 コアの 13〜15%
+  - cloud-init（Raspberry Pi Imager のカスタマイズ）が毎回の起動で約 5 秒。`/etc/cloud/cloud-init.disabled` で止めて 31 秒になった。イメージには cloud-init を入れない
+  - 残りの大半は NetworkManager の約 18 秒。接続の設定（eth0 と Wi-Fi）が netplan（`/etc/netplan/90-NM-*.yaml`）にあり、NetworkManager が起動のたびに書き直す。そのたびに netplan が `systemctl daemon-reload`（1 回約 3 秒）を頼み、4 回で約 17 秒。イメージでは、接続の設定を NetworkManager の keyfile（`/etc/NetworkManager/system-connections/`）だけで持ち、netplan を通さない（試作機では、SSH が切れると困るので試していない）
+  - systemd-resolved は入っていない。NetworkManager の `dns-mgr: DNS plugin did not become ready` の警告は、待たされた結果で、原因ではなかった
+  - `skjar-ui@.service` は `After=systemd-user-sessions.service` で、これが `network.target` の後なので、UI もネットワークの準備を待つ。UI はネットワークを使わないので、フレームバッファ・タッチ・UART が揃えば出すように並べ直す
+  - 待ち時間を感じさせない案：RP2040 がキーの RGB で起動中の光り方を出す（CM0 の `HELLO` まで）。虹色の画面（`disable_splash=1`）とカーネルの文字・ロゴ（`quiet logo.nologo vt.global_cursor_default=0`）を消す。UI をネットワークより先に出す。それでも黒い時間が長ければ、Plymouth で SKJÁR のロゴ（パネルが縦長なので回す設定が要る）
+  - `skjar-weather` / `skjar-news` が、タイマー（起動の 1 分後）より前の起動直後に動いている。path ユニットが、起動時に `.request` があると動かしているらしい。起動直後の取得でよいか、やめるかを決める
+- [ ] HID over I²C を確かめる（ファームは [firmware/rp2040/](../firmware/rp2040/)、オーバーレイは [software/os/overlays/](../software/os/overlays/)。アドレス 0x2C、レジスタの番地とレポートは [protocol.md](protocol.md) の 2 章に試作の値を書いた）。確かめたら、値を決定にする
+  - 2026-11-12、XIAO RP2040 と Pi 4B（i2c-gpio、約 100 kHz）で、`i2c-hid` が `I2C HID v1.00 Keyboard [hid-over-i2c 1209:0001]` として認識し、`evtest` で物理キー（`KEY_Q`）の押した・離したが届いた。UI のタッチキー（F1、F6）も、UART の `TK` から RMK を通って I²C で届いた。UI の Pad（トラックパッド）も、`PTR` からマウス（`hid-over-i2c 1209:0001 Mouse`、`REL_X` / `REL_Y`）として届いた。ただし動きのレポートの間隔が 20〜30 ms（UI は 10 ms ごとに送る）で、I²C の速さで間引かれているらしい
+  - `delay-us` 2（約 250 kHz）も試した（2026-11-12）：認識はされるが、マウスの間隔は 20〜30 ms のままで、動かしている途中でレポートが止まった（dmesg にエラーなし）。100 kHz（`delay-us` 5）のままにする。間隔はパネルのタッチで決まっていた：Goodix（`10-005d Goodix Capacitive TouchScreen`）の報告がちょうど 24 ms ごと（約 42 回 / 秒）で、マウスのレポートはその 1 回に 1〜2 個（1 回の動きが ±127 を超えると分けて送る）。I²C は 1 レポート約 1.5 ms で余裕がある。24 ms ちょうどなので、パネルのドライバが一定の間隔で読む方式かもしれない（速くできるかは未確認）
+  - 止まったとき、RP2040 のログは `hid_i2c: queue full, dropping the oldest report` の繰り返し（Pi が読みに来ない）。Pi を再起動しても `i2c_hid_of` がキーボードを登録できず、RP2040 を抜き差しするまで戻らなかった。I²C の読み出しが 1 回こじれると、RP2040 の I²C のターゲットが固まるらしい。RP2040 側で立ち直る仕組み（読みに来ない・バスが止まったままなら I²C をやり直す、など）が要る
+  - 残り：Caps Lock の LED（出力レポート）、Consumer Control（音量キー）（`delay-us` 2 で約 250 kHz）、CM0（Zero 2 W）でも同じか
+  - RP2040 だけが再起動すると（ファームの書き換えなど）、キーが効かなくなる。RP2040 は `i2c-hid` の `RESET` を受けるまで入力を捨てるが、`i2c-hid` が `RESET` を送るのは見つけたときの 1 回だけ（2026-11-12、XIAO を書き換えたあとに起きた。`/sys/bus/i2c/drivers/i2c_hid_of/` の unbind / bind で戻った）。案：UI が UART で RP2040 の再起動に気づいたら（`ALIVE` の番号が 0 に戻る、`HELLO` を送り直す）、同じ unbind / bind をする
+- [ ] RMK のレポートの行き先に、USB と並べて HID over I²C を足す仕組み（RMK の改造か、上流への提案）
+- [ ] Vial を有効にする（RMK の `vial` と `storage`。PC への USB HID を作るときに合わせて。[design-decisions.md](design-decisions.md) の 3 章）。キーマップのフラッシュの領域と、Vial 用の JSON（`VIAL_JSON_PATH`）
+- [ ] キーボードモードのトラックパッド：UI の Pad タブ（指の判定、スクロールの帯、L / M / R）、UART の `PTR` / `WHEEL`、RP2040 のマウスのレポート（HID over I²C のレポート ID 3）は試作した。残り：実機のタッチパネルでのマルチタッチの確認と、速さ・加速・スクロールの量の調整、PC への USB HID、オートマウスレイヤーを使うか、トラックパッドを出力先が PC のときだけにするか
 - [ ] キーの RGB の明るさの上限（電流宣言ごと。全点灯で約 1.5 A）を実測で決める
+- [ ] CC の判定の時間の扱い（[design-decisions.md](design-decisions.md) の 2.3 には電圧の範囲しか決めていない）。数値は USB Type-C の規格のもの
+  - **つないだとき：** 相手は Rp を出してから最大 275 ms で VBUS を出す（tVBUSON）。相手が DRP なら、役割が決まるまで Rp が点いたり消えたりする。CC が 100〜200 ms 安定してから判定する（tCCDebounce）。RP2040 には VBUS を直接見る線がない。B は `PWR_ST` で間接的にわかるが、B から給電しているときに A の VBUS があるかは見えない
+  - **抜いたとき：** Rp はすぐ消えるが、VBUS はコンデンサのぶん遅れて下がる。CC が 10〜20 ms 消えたら抜けたとみなす（tPDDebounce）
+  - **つないだまま宣言が下がったとき**（PC が 3 A から 1.5 A に下げるなど）：受ける側は 60 ms 以内に電流を減らす（tSinkAdj）。下げる判定は速く、上げる判定はゆっくりにする
+  - Rp を VBUS から取っている安い充電器や変換ケーブル（56 kΩ）では、VBUS の立ち上がりや電圧の落ち込みにつれて CC の電圧も動く。判定がふらつかないよう、範囲の境目にヒステリシスを持たせる
+  - 起動したときは CM0 も LCD も初期状態が OFF なので、判定が済むまで待てば安全側に倒れる。危ないのは、動いている最中の変化（上の 3 つ目と、今より弱い電源を B につないだとき）
+  - 今より弱い電源を B につないだときは、CC_B を見て先回りで負荷を落とすと決めた（[design-decisions.md](design-decisions.md) の 2.4）。USB-A → C の変換ケーブルで、後追いの対処（`PWR_ST` の割り込みで LCD を切る）が間に合うかを実物で確かめる
 - [ ] CM0 の USB ブート要求のキーの組み合わせ（SW102 の代わり）
-- [ ] UI フレームワーク（LVGL か SDL2 か）
-- [ ] CM0 と RP2040 の間の UART でやり取りするデータの形式
+- [ ] タッチ UI の試作（LVGL、[software/ui/](../software/ui/)）を実機で確かめる：パネルとタッチの向き、描き換えの速さと CPU の負荷、バックライトのデバイス
+- [ ] タッチキー（Keys タブ、2 段 × 12 キー。[design-decisions.md](design-decisions.md) の 4 章）の使い勝手：実物の画面で 18.32 mm のピッチと、外側の列のずれ（約 4 mm）が気にならないか。レイヤー 1・2 のタッチキーの割り当て（いまは仮）
+- [ ] Vial でタッチキーを変えられるようにする：Vial 用の JSON に 7〜10 行目を 2 段 × 12 キーとして並べる、Vial で変えたあとに `TKL` を送り直す
+- [ ] Widget strip（Keys タブの、ヘッダーとタッチキーの間の 1920 × 80 px。[design-decisions.md](design-decisions.md) の 4 章）。ポモドーロ・タイマー、ニュースの電光掲示板、打鍵の速さ、天気は試作した。残り：
+  - **次の予定**（カレンダー）：連携の仕掛けを決める。候補は、iCal（.ics）の URL を取ってくる道具（ニュースや天気と同じく、ファイルに書いて UI が読む）、Google カレンダーの API（認証が要る）、PC 側から送る、など。非公開の予定の URL や認証情報をどこに置くか（リポジトリには入れない）も決める
+  - 天気：場所はウィジェットの一覧から選べるようにした（2026-11-10）。一覧にない場所を画面で入れるか（いまは `ui.conf` に書く）。打鍵の速さ：今日の打鍵数を、UI を起動し直しても残すか
+  - microSD の音楽の再生（再生・止める・次の曲、曲名の表示。音は TLV320DAC3100。曲を置く場所は、データのパーティション）
+  - ポモドーロ：時間（25 / 5 / 15 分）を変えられるようにするか、終わったときに音も鳴らすか、Keys 以外のタブにいるときに残り時間をヘッダーにも出すか
+  - ニュース：ジャンルはウィジェットの一覧から選べるようにした（2026-11-10）。一覧にない RSS を画面で足すか（いまは `fetch_news.py --feed <URL>`）。ルートを読み取り専用にしたあと、news.txt をデータのパーティションに置く。実機に IPA ゴシック（`fonts-ipafont-gothic`）を入れるのを、OS のイメージを作る手順に入れる。CM0 で日本語のフォントを丸ごと読むメモリ（IPA ゴシックで約 6 MB）と、字を描く重さ
+  - 実機のタッチパネルでのスワイプの具合（`widgets.c` の `SWIPE_START` / `SWIPE_MIN`）と、電光掲示板を流し続けたときの CPU の負荷
+- [ ] 隠し機能の動画（UI の時計を 5 回叩く）を実機で確かめる：CM0 で 30 fps で描けるか（640 × 480 を回して描く）、音とコマのずれ（aplay が鳴り始めるまでの遅れ）、キーのライトの向きと順番（LED の数珠つなぎの順は基板から求めた）、明るさの上限（いまは 1 色 48/255）
+- [ ] 背景の画像と半透明のボタン（試し。UI の System タブの Look）を続けるか：実機で描き換えの速さを見て決める。続けるなら、画像の選び方（UI から選ぶ、など）
+- [ ] 透過キーの表示：UI には一番上のレイヤーしか届かないので、透過キーは「今のレイヤー → レイヤー 0」の順に見ている。レイヤーを 2 つ以上重ねる使い方をするなら、有効なレイヤーの一覧を送る
+- [ ] CM0 と RP2040 の間の UART の形式は案を書いた（[protocol.md](protocol.md) の 1 章）。CM0 側（UI）と RP2040 側（`cm0_link.rs`）の試作がある。2026-11-12、XIAO RP2040 と Pi 4B で、`HELLO` から状態（`USB`、`OUT`、`LAYER`）のやり取りまで通じた（RP2040 が「PC がない」と言い続ける不具合を直した：USB の接続前に来たサスペンドの記録が残っていた）。タッチキー（`TK`）、`ACT`（Typing の打鍵数）、モードの切り替え（Open console で `OUT,CM0`）も通じた。出力レポート（Caps Lock の LED）も届いた。`USER` と Consumer Control（音量キー）は、XIAO ではレイヤー 2 のキーが押せないので未確認。`PWR` と、シャットダウンの依頼（I²C の電源キー）を出すきっかけは、CC と電源の判定を作るときに足す
+  - **モードの決め方を作り直した（2026-11-12）：** Open console で UI が閉じて `ALIVE` が止まると、3 秒後にキーボードモードに戻ってしまう穴があった。RP2040 がモードを決め、「UI が出ているか（`HELLO` / `ALIVE` / `BYE`）」と「CM0 のカーネルが I²C を読みに来るか」から送り先を決める形にした（[protocol.md](protocol.md) の 2.6）。実機で確かめること：Open console ですぐコンソールにキーが行くか、UI が落ちても PC へのキーが途切れないか、UI が落ち続けたらコンソールに移るか、Pi で `systemctl kill` で UI を固めたとき、ウォッチドッグで起動し直すか、`KEY_POWER` で `poweroff` するか（systemd-logind が i2c-hid のキーボードを電源キーとして見るか）。UI の起動時間は Zero 2 W で約 0.9 秒（落ちてから戻るまで約 2 秒）だったので、UI がいないとみなすまでを 3 秒にした
 - [ ] CM0 のウォッチドッグ（「動作中」の信号が途絶えたときの扱い）
-- [ ] キーボードのファームウェア（QMK など）。CM0 向けに、I²C ターゲットのドライバと HID over I²C の処理を自作する（QMK なら、出力先を USB と切り替える仕組みに組み込む）。CM0 が OFF のときに電流を流し込まないよう、`KB_SDA` / `KB_SCL` / `KB_INT` では次を守る：High を出さない（`KB_INT` も出力値を 0 に固定し、出力の有効・無効の切り替えでオープンドレインを真似る）、内部プルアップを使わない（pico-sdk のサンプルの `gpio_pull_up()` を真似しない。初期設定のプルダウンも切る）
 - [ ] いきなりの電源断への備えの細部（方針は [design-decisions.md](design-decisions.md) の 1.5）：パーティションの分け方と容量、Overlay File System の設定、データの領域を書き込みにする・戻す仕組み、書き込み中の表示、OS の更新を Port B の給電があるときだけにする仕組み
