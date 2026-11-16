@@ -160,30 +160,30 @@ async fn main(spawner: Spawner) {
     rmk::state::set_usb_state(UsbState::Configured);
     spawner.spawn(report_bridge_task().unwrap());
 
-    // キーの RGB（GPIO14 RGB_DATA を PIO0 で、GPIO20 RGB_EN は High で電源 ON。初めは OFF）。
-    // Pico で試すときは、同じ GP14 / GP20 に WS2812 のテープ LED などをつなぐ
+    // キーの RGB（GPIO14 RGB_DATA を PIO0 で、GPIO15 RGB_EN は High で電源 ON。初めは OFF）。
+    // Pico で試すときは、同じ GP14 / GP15 に WS2812 のテープ LED などをつなぐ
     let mut pio = Pio::new(p.PIO0, Irqs);
     let ws2812 = PioWs2812Program::new(&mut pio.common);
     let leds = PioWs2812::new(&mut pio.common, pio.sm0, p.DMA_CH0, Irqs, p.PIN_14, &ws2812);
-    let rgb_power = Output::new(p.PIN_20, Level::Low);
+    let rgb_power = Output::new(p.PIN_15, Level::Low);
     spawner.spawn(rgb_task(leds, rgb_power).unwrap());
 
     // キーマトリクス（7 行 × 6 列、ダイオードは列 → 行）。キーマップは、これにタッチキーの 4 行を足した 11 行（keymap.rs）。
     // RMK の COL2ROW は、列を High に駆動して行を読む（行はプルダウン）。
     #[cfg(not(feature = "xiao"))]
     let rows = [
-        Input::new(p.PIN_10, Pull::Down), // ROW0
+        Input::new(p.PIN_12, Pull::Down), // ROW0
         Input::new(p.PIN_6, Pull::Down),  // ROW1
         Input::new(p.PIN_11, Pull::Down), // ROW2
         Input::new(p.PIN_7, Pull::Down),  // ROW3
-        Input::new(p.PIN_12, Pull::Down), // ROW4
+        Input::new(p.PIN_10, Pull::Down), // ROW4
         Input::new(p.PIN_8, Pull::Down),  // ROW5
         Input::new(p.PIN_9, Pull::Down),  // ROW6
     ];
     #[cfg(not(feature = "xiao"))]
     let cols = [
-        Output::new(p.PIN_4, Level::Low), // COL0
-        Output::new(p.PIN_5, Level::Low), // COL1
+        Output::new(p.PIN_5, Level::Low), // COL0
+        Output::new(p.PIN_4, Level::Low), // COL1
         Output::new(p.PIN_3, Level::Low), // COL2
         Output::new(p.PIN_2, Level::Low), // COL3
         Output::new(p.PIN_1, Level::Low), // COL4
@@ -206,7 +206,7 @@ async fn main(spawner: Spawner) {
     ];
     #[cfg(feature = "xiao")]
     let cols = [
-        Output::new(p.PIN_15, Level::Low), // COL0  （出ていない）
+        Output::new(p.PIN_20, Level::Low), // COL0  （出ていない）
         Output::new(p.PIN_4, Level::Low),  // COL1  D9
         Output::new(p.PIN_3, Level::Low),  // COL2  D10
         Output::new(p.PIN_18, Level::Low), // COL3  （出ていない）

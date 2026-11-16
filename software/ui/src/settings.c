@@ -10,6 +10,8 @@
 #define SEP "\\"
 #else
 #include <sys/stat.h>
+#include <pwd.h>
+#include <unistd.h>
 #define MKDIR(p) mkdir((p), 0755)
 #define SEP "/"
 #endif
@@ -31,6 +33,12 @@ static void default_path(void)
 #else
     const char *xdg = getenv("XDG_CONFIG_HOME");
     const char *home = getenv("HOME");
+    /* systemd のサービスには HOME が無い。fetch_*.py（Python の expanduser）と同じく、ユーザーの
+     * 情報からホームを引く（root なら /root）。そうしないと UI だけ /.config/skjar を見てしまう */
+    if (!home || !*home) {
+        const struct passwd *pw = getpwuid(getuid());
+        home = pw ? pw->pw_dir : NULL;
+    }
     if (xdg && *xdg)
         snprintf(dir_path, sizeof dir_path, "%s/skjar", xdg);
     else

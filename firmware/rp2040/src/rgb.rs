@@ -5,7 +5,7 @@
 //! [`IDLE_OFF`] たったら消して、LED の電源（`RGB_EN`）を切る。
 //!
 //! - データ線：GPIO14（`RGB_DATA`。PIO0 の SM0 と DMA_CH0 で出す）。基板では SN74AHCT1G125 で 5 V にする
-//! - 電源：GPIO20（`RGB_EN`。High で ON）。電源を切っている間、データ線は Low のまま（PIO は送り終わると Low）
+//! - 電源：GPIO15（`RGB_EN`。High で ON）。電源を切っている間、データ線は Low のまま（PIO は送り終わると Low）
 //! - 明るさの上限：全点灯で約 1.5 A になるので、ここでは 1 色あたり [`MAX_LEVEL`] に抑える。
 //!   電流宣言ごとの上限（docs/design-decisions.md の 2.4）は、普段の光らせ方を作るときに決める
 

@@ -8,6 +8,9 @@
 
 #include <stdbool.h>
 
+/* スライダーで下げられる下限（約 5 %）。0 にするとパネルが真っ暗になり、画面を見て戻せなくなる */
+#define BACKLIGHT_MIN 13
+
 bool backlight_open(void);
 
 /* 好みの明るさ（スライダーの値）と上限を受け、低い方を書き込む */
