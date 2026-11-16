@@ -47,13 +47,17 @@ Raspberry Pi Imager で、**Raspberry Pi OS Lite (64-bit)** を microSD に書�
 
 あとで Wi-Fi を足すときは、作り直さずに `sudo nmcli connection add type wifi con-name <名前> ssid "<SSID>" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "<パスワード>"`。
 
+その場で切り替えるなら `sudo nmcli --ask device wifi connect "<SSID>"`（パスワードを聞いてくるので履歴に残らない）。SSH が切れていても、4B はパネルに USB キーボードを挿して `Ctrl+Alt+F2` のコンソールから打てる。
+
+**SD カードの `network-config` を書き換えても効かない：** 最初の起動で、Wi-Fi の設定は NetworkManager の持ち物（`/etc/netplan/90-NM-*.yaml`）に移る。そのあとは、`meta-data` と `cmdline.txt` の instance-id を変えて cloud-init をもう一度動かしても、新しい Wi-Fi は書き出されなかった（2026-11-16、4B で確認）。
+
 ## 4. Pi で入れる
 
 ```sh
 sudo apt update && sudo apt full-upgrade -y
 sudo apt install -y git build-essential cmake pkg-config libevdev-dev device-tree-compiler \
                     evtest fonts-ipafont-gothic
-git clone -b software/rmk-lvgl-spike https://github.com/hringdrifi/skjar.git
+git clone https://github.com/hringdrifi/skjar.git
 cd skjar
 ```
 
@@ -171,6 +175,10 @@ sudo cp software/os/systemd/skjar-ui@.service /etc/systemd/system/
 sudo install -m 755 software/os/bin/skjar /usr/local/bin/skjar
 sudo systemctl disable serial-getty@ttyS0.service
 sudo systemctl enable skjar-ui@boot.service
+sudo install -D -m 644 software/os/systemd/skjar-watchdog.conf /etc/systemd/system.conf.d/skjar-watchdog.conf
+sudo systemctl daemon-reexec
 ```
 
-`skjar-ui@boot` は、Pico の USB が PC につながっていなければ（`USB,0`）、UI を出さずにコンソールへ行く。そのときはコンソールで `skjar` と打つ。試作のファームは PC に HID を出さないので、キーボードモードでもキーは Pi に届く（[firmware/rp2040/README.md](../../firmware/rp2040/README.md) の「いまの状態」）。
+`skjar-ui@boot` は、Pico の USB が PC につながっていなければ（`USB,0`）、UI を出さずにコンソールへ行く。そのときはコンソールで `skjar` と打つ。キーをどこへ送るか（PC か Pi か）は RP2040 が決める（[docs/protocol.md](../../docs/protocol.md) の 2.6）。UI が出ていて PC がつながっていれば PC、UI を閉じたら Pi のコンソール。
+
+`skjar-watchdog.conf` は、カーネルや systemd が固まったときに SoC の watchdog で再起動させる。`ls /dev/watchdog` があれば効く（Raspberry Pi OS は初期状態で有効）。
