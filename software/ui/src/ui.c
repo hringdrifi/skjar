@@ -776,7 +776,7 @@ static void create_media_panel(lv_obj_t *parent, lv_obj_t **panel)
     lv_label_set_text(l, "Backlight");
     lv_obj_set_style_image_recolor(sun, lv_obj_get_style_text_color(l, LV_PART_MAIN), 0);
     bl_slider = lv_slider_create(row);
-    lv_slider_set_range(bl_slider, 0, 255);
+    lv_slider_set_range(bl_slider, BACKLIGHT_MIN, 255);
     lv_slider_set_value(bl_slider, backlight_level(), LV_ANIM_OFF);
     lv_obj_set_flex_grow(bl_slider, 1);
     lv_obj_add_event_cb(bl_slider, bl_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);

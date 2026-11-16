@@ -89,6 +89,8 @@ static int clamp255(int v)
 void backlight_set_level(int l)
 {
     level = clamp255(l);
+    if (level < BACKLIGHT_MIN)
+        level = BACKLIGHT_MIN;
     apply();
 }
 
