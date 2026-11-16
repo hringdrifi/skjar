@@ -31,8 +31,9 @@ Before=getty@tty1.service
 # sends the keys to the console, because the UI's ALIVE stops (docs/protocol.md, 2.6).
 StartLimitIntervalSec=60
 StartLimitBurst=5
-# Once systemd has given up (or the UI failed in a way it does not restart), give tty1 back to the
-# login console. OnFailure only fires when the unit ends up failed, not while it waits to restart.
+# Give tty1 back to the login console when the UI fails. On the 4B's systemd this fires on every
+# failure, also before a restart (2026-11-16): the console then shows for about a second until the
+# restart stops it again through Conflicts=. Once systemd has given up, the console stays.
 OnFailure=getty@tty1.service
 
 [Service]
