@@ -41,7 +41,7 @@ RP2040 が I²C の HID デバイス（ターゲット）になり、CM0 の Lin
 | 項目 | 内容 |
 |---|---|
 | CM0 側 | `i2c-gpio`（ソフトウェアの I²C）。SDA = GPIO23、SCL = GPIO24（標準のオーバーレイの初期値）。速度は約 100 kHz |
-| RP2040 側 | I2C0 のターゲット。SDA = GPIO24、SCL = GPIO25 |
+| RP2040 側 | I2C0 のターゲット。SDA = GPIO4、SCL = GPIO9 |
 | 割り込み | `KB_INT`：RP2040 の GPIO13 → CM0 の GPIO25。**Low で通知**（レベル） |
 | プルアップ | `KB_SDA` / `KB_SCL` は 4.7 kΩ、`KB_INT` は 10 kΩ。どれも `+3V3_CM0` へ |
 | I²C のアドレス | 未定。このバスには RP2040 しかいないので、自由に決めてよい |

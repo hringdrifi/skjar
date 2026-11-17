@@ -33,6 +33,18 @@
 	(constraint clearance (min 0.2mm))
 	(condition "A.Type == 'Zone' && A.NetName == 'GND' && (B.NetClass == 'DSI' || B.NetClass == 'USB')"))
 
+# Port A (RP2040, 0.2 mm wide pair): 0.15 mm to the GND pour gives 93 ohm with the 0.15 mm pair gap
+# (same field solver and stackup as above; 0.2 mm would give 96 ohm, 0.13 mm 91 ohm). Port B keeps 0.25 / 0.15 / 0.2 mm.
+# Checked by refilling the zone: Port A 0.15 mm, Port B 0.2 mm, other nets 0.5 mm.
+(rule "GCPW: Port A pair to GND pour"
+	(constraint clearance (min 0.15mm))
+	(condition "A.Type == 'Zone' && A.NetName == 'GND' && (B.NetName == 'USB_A_D+' || B.NetName == 'USB_A_D-' || B.NetName == '/RP2040 Sheet/USB_DP' || B.NetName == '/RP2040 Sheet/USB_DN')"))
+
+(rule "Port A pair: 0.2 mm wide, 0.15 mm apart"
+	(constraint track_width (opt 0.2mm))
+	(constraint diff_pair_gap (opt 0.15mm))
+	(condition "A.NetName == 'USB_A_D+' || A.NetName == 'USB_A_D-' || A.NetName == '/RP2040 Sheet/USB_DP' || A.NetName == '/RP2040 Sheet/USB_DN'"))
+
 # DSI: 0.75 mm (3 x width) between different pairs, except where the pairs fan into
 # the 0.5 mm pitch pins of CM0 (U201) and J301. P to N stays at the netclass gap (0.2 mm).
 (rule "DSI: pair to pair"
