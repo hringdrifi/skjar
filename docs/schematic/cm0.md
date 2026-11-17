@@ -23,7 +23,7 @@
 |---|---|
 | Power | 5V（67, 68）→ `+5V`（10 µF ＋ 100 nF）。CM0_3.3V（41, 119）→ `+3V3_CM0`。GPIO_VREF（120）・SD_VREF（122）→ `+3V3_CM0`。CM0_1.8V（64, 65）→ `+1V8_CM0`（テストパッドのみ）。GND（43本）→ GND |
 | Display/Camera | DSI の 4 レーンとクロック → `DSI_*`（display へ）。SDA0 / SCL0 → `I2C_DSI_SDA` / `I2C_DSI_SCL`。CSI、HDMI、CVBS、CAM_GPIO は未接続 |
-| GPIO | GPIO2 / 3 → `I2C1_SDA` / `I2C1_SCL`。GPIO14 → `CM0_TXD`。GPIO15 ← `CM0_RXD`（バッファの出力）。GPIO18 / 19 ← `I2S_BCLK` / `I2S_LRCLK`（コーデックがクロックを出す）。GPIO21 → `I2S_DOUT`。GPIO17 ← `HP_DET`。GPIO22 → `CODEC_RST`。GPIO26 → `CM0_HALT`。GPIO27 ← `RTC_INT`。GPIO23 / 24 ↔ `KB_SDA` / `KB_SCL`（`i2c-gpio`。R208 / R209 で `+3V3_CM0` にプルアップ）。GPIO25 ← `KB_INT`（R210 で `+3V3_CM0` にプルアップ）。GPIO6 ← `TUSB_INT`（Port B の TUSB320 の割り込み。power シートの R18 でプルアップ）。ほかは未接続 |
+| GPIO | GPIO2 / 3 → `I2C1_SDA` / `I2C1_SCL`。GPIO14 → `CM0_TXD`。GPIO15 ← `CM0_RXD`（バッファの出力）。GPIO18 / 19 ← `I2S_BCLK` / `I2S_LRCLK`（コーデックがクロックを出す）。GPIO21 → `I2S_DOUT`。GPIO17 ← `HP_DET`。GPIO22 → `CODEC_RST`。GPIO10 → `CM0_HALT`。GPIO27 ← `RTC_INT`。GPIO23 / 24 ↔ `KB_SDA` / `KB_SCL`（`i2c-gpio`。R208 / R209 で `+3V3_CM0` にプルアップ）。GPIO25 ← `KB_INT`（R210 で `+3V3_CM0` にプルアップ）。GPIO6 ← `TUSB_INT`（Port B の TUSB320 の割り込み。power シートの R18 でプルアップ）。ほかは未接続 |
 | System | USB_P / USB_N ← `USB_B_D+` / `USB_B_D-`。GLOBAL_EN ← Q201。RUN_PG → `CM0_RUN_PG`。nRPI_BOOT ← Q202。WiFi_ON / BT_ON / LED_nACT → テストパッドのみ。SD_CLK / SD_CMD / SD_DAT0〜3 → microSD スロット（J201）。USB_OTG ← `USB_OTG`（power シートの Q3。Port B に機器が挿さると GND に引かれてホストになる）。NC は未接続 |
 
 ## 3. 電源の制御（GLOBAL_EN）

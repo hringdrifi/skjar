@@ -66,7 +66,7 @@
 - [ ] Port B のホスト：機器を挿したときに TPS2121 が Port A のまま動き続けるか、A を抜いたときにすぱっと切れるか、VBUS_B の電圧（D1 の後で 4.6 V 前後の見込み）
 
 ## ソフトウェア
-- [ ] Port B の DRP：TUSB320 のデバイスツリー（I2C1 の 0x47、割り込みは GPIO6。カーネルの `extcon-usbc-tusb320`）、サイバーデックモードで DRP（Try.SNK）にする仕組み、`dwc2` を `dr_mode=otg` にする設定
+- [ ] Port B の DRP：TUSB320 のデバイスツリー（I2C1 の 0x47、割り込みは GPIO6。カーネルの `extcon-usbc-tusb320`）、サイバーデッキモードで DRP（Try.SNK）にする仕組み、`dwc2` を `dr_mode=otg` にする設定
 - [ ] RP2040 のファーム：Port B の CC の電流の判定の境目を、USB-C の規格の値（0.2 / 0.66 / 1.23 V）にする（TUSB320 の Rd は ±10〜20%）
 - [ ] TLV320DAC3100 のデバイスツリーのオーバーレイ。下書きは [software/os/overlays/](../software/os/overlays/)。MCLK（12 MHz の発振器）を使い、コーデックをクロックを出す側にしたので、標準の `simple-audio-card` だけで動く見込み。実機で確かめる
 - [ ] 物理キーの出力先の切り替えの細部（方針は USB のマウントの状態を見て自動、キーの組み合わせかタッチ UI で手動、で決めた。[protocol.md](protocol.md) の 2.6）：手動のキーの組み合わせ、PC がスリープのときの扱い

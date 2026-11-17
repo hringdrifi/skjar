@@ -21,6 +21,7 @@ hardware/pcb/lib/3dmodels/*
 !hardware/pcb/lib/3dmodels/CP_EDLC_10x5mm_P7.50mm_Horizontal.step
 !hardware/pcb/lib/3dmodels/BatteryHolder_MYOUNG_MY-2032-08.step
 !hardware/pcb/lib/3dmodels/Texas_RUX_VQFN-HR-12_2.5x2mm_P0.5mm.step
+!hardware/pcb/lib/3dmodels/Texas_X2QFN-12_1.6x1.6mm_P0.4mm.step
 !hardware/pcb/lib/3dmodels/Oscillator_SMD_Abracon_ASE-4Pin_3.2x2.5mm.step
 
 # KiCad の一時ファイルと個人の表示設定

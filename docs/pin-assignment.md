@@ -111,7 +111,7 @@
 | GPIO23（101）/ GPIO24（98） | `KB_SDA` / `KB_SCL` | `i2c-gpio`（標準のオーバーレイの初期値）。4.7 kΩ で `+3V3_CM0` にプルアップ |
 | GPIO25（94） | `KB_INT` | キー入力の割り込み。10 kΩ で `+3V3_CM0` にプルアップ |
 | GPIO6（83） | `TUSB_INT` | Port B の TUSB320 の割り込み。10 kΩ で `+3V3_CM0` にプルアップ |
-| GPIO26（76） | `CM0_HALT` | `gpio-poweroff` |
+| GPIO10（97） | `CM0_HALT` | `gpio-poweroff`（`gpiopin=10`）。配線を F 層のまま CM0 の南東の角から入れるため、GPIO26（76）から移した（2026-11-16） |
 | GPIO27（104） | `RTC_INT` | |
 | SDA0（42）/ SCL0（43） | `I2C_DSI_SDA` / `I2C_DSI_SCL` | GPIO44 / 45。内部で 1.8 kΩ のプルアップあり |
 | DSI（2〜15） | `DSI_*` | |

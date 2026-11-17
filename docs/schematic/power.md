@@ -123,7 +123,7 @@ Port B の D+/D-  ─ USBLC6 ─→ cm0   （USB_B_D+/-）
 
 ## 8. Port B のホスト（DRP、TUSB320）
 
-Port B を USB-C の DRP にして、サイバーデックモードでは CM0 を USB ホストにする（2026-11-11。理由は [design-decisions.md](../design-decisions.md) の 1.1）。
+Port B を USB-C の DRP にして、サイバーデッキモードでは CM0 を USB ホストにする（2026-11-11。理由は [design-decisions.md](../design-decisions.md) の 1.1）。
 
 | 部品 | 内容 | LCSC |
 |---|---|---|
@@ -158,7 +158,7 @@ Port B を USB-C の DRP にして、サイバーデックモードでは CM0 �
 
 **動き**
 - **CM0 が OFF：** Q1 が切れて EN が High になり、U6 は止まって CC に Rd（5.1 kΩ ±20%）だけを出す。今までの R1 / R2 と同じ。
-- **CM0 が ON：** U6 が動き出し、PORT を読んで UFP で始まる（Rd、5.1 kΩ ±10%）。サイバーデックモードで、CM0 が I²C で DRP（Try.SNK）にする。CM0 が止まれば、次は UFP で始まる。
+- **CM0 が ON：** U6 が動き出し、PORT を読んで UFP で始まる（Rd、5.1 kΩ ±10%）。サイバーデッキモードで、CM0 が I²C で DRP（Try.SNK）にする。CM0 が止まれば、次は UFP で始まる。
 - **機器が挿さったとき（U6 がソース）：** ID が Low になり、
   - U7 が `HOST_B` を High にし、Q2 が PR1 を GND に引く。TPS2121 は A が有効なら IN2（Port A）を使い続ける（Table 9-3）。
   - Q3 が CM0 の USB_OTG を GND に引き、CM0 がホストになる。

@@ -5752,7 +5752,7 @@
 		(uuid "ce57b345-aecc-4711-a7f5-dd2b00e51444")
 	)
 	(no_connect
-		(at 231.14 97.79)
+		(at 261.62 102.87)
 		(uuid "d97e5919-1893-46ce-9210-a355e46a0bf0")
 	)
 	(no_connect
@@ -7453,17 +7453,17 @@
 	)
 	(global_label "CM0_HALT"
 		(shape output)
-		(at 261.62 102.87 0)
+		(at 231.14 97.79 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right)
 		)
 		(uuid "d600869e-21a1-4620-b6db-381c1d5a40ed")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 261.62 102.87 0)
+			(at 231.14 97.79 180)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

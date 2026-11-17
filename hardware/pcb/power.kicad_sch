@@ -4872,7 +4872,7 @@
 		)
 		(uuid "a7829885-d9a0-4a95-bf1e-a0b50c0c628d")
 	)
-	(text "サイバーデックモードで、CM0 が I²C で U6 を DRP（Try.SNK）にする。\n機器が挿さると U6 が ID を Low にし、U7 が HOST_B を High にする。\n  Q2：PR1 を GND に引く（TPS2121 は Port A を使う）\n  Q3：CM0 の USB_OTG を GND に引く（CM0 が USB ホストになる）\n  U8：ID が Low で PWR_ST も Low（Port A から給電）のときだけ、\n      U9 で VBUS_B に 5 V を出す（1.0 A で電流制限）\nCM0 が OFF の間は Q1 が切れて U6 は止まり、Rd だけを出す。\nD1：故障した充電器の高い電圧から U9（6 V まで）を守る。\nR1 / R2 は未実装。U6 を外すときだけ付ける。"
+	(text "サイバーデッキモードで、CM0 が I²C で U6 を DRP（Try.SNK）にする。\n機器が挿さると U6 が ID を Low にし、U7 が HOST_B を High にする。\n  Q2：PR1 を GND に引く（TPS2121 は Port A を使う）\n  Q3：CM0 の USB_OTG を GND に引く（CM0 が USB ホストになる）\n  U8：ID が Low で PWR_ST も Low（Port A から給電）のときだけ、\n      U9 で VBUS_B に 5 V を出す（1.0 A で電流制限）\nCM0 が OFF の間は Q1 が切れて U6 は止まり、Rd だけを出す。\nD1：故障した充電器の高い電圧から U9（6 V まで）を守る。\nR1 / R2 は未実装。U6 を外すときだけ付ける。"
 		(exclude_from_sim no)
 		(at 335.28 226.06 0)
 		(effects

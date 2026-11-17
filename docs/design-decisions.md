@@ -12,13 +12,13 @@ SKJÁR の設計で決めたことと、その理由をまとめる。最初の�
 | ポート | 通信 | 役割 |
 |---|---|---|
 | **Port A（KB）** | RP2040 の USB（Full Speed） | PC に HID キーボードとして接続する。給電にも使う |
-| **Port B（SYS）** | CM0 の USB（High Speed） | rpiboot での USB 起動と書き込み、開発用（シリアル / Ethernet gadget）。給電にも使う。サイバーデックモードでは USB 機器をつなぐホストにもなる（DRP） |
+| **Port B（SYS）** | CM0 の USB（High Speed） | rpiboot での USB 起動と書き込み、開発用（シリアル / Ethernet gadget）。給電にも使う。サイバーデッキモードでは USB 機器をつなぐホストにもなる（DRP） |
 
 - **理由：**
   - CM0 だけで HID を担うと、Linux が起動するまで（数秒〜十数秒）キーが効かない。BIOS や BitLocker の画面で使えず、Linux が止まるとキーボードも止まる。
   - hub IC を使って 1 ポートにまとめる案もあった。しかし、hub 越しの rpiboot の相性問題と、迂回用のスイッチが要ることから、2 ポートに分けた。
 - **Port B は DRP（USB-C の Dual Role Port）にする（2026-11-11）。** PC や充電器を挿せば今まで通りデバイス、USB メモリ・有線 LAN・USB シリアル・キーボードなどを挿せば CM0 がホストになる。Linux のドライバでそのまま使える。回路は [schematic/power.md](schematic/power.md) の 8 章。
-  - **CC は TUSB320LAI（C132554）。** ふだん（CM0 が OFF の間も）は TUSB320 を止めておき、Rd だけを出す（データシートの dead battery / shutdown の動作）。今までの Rd（R1 / R2）と同じ動きで、rpiboot、B からの給電、RP2040 の ADC による電流の判定と先回りの負荷制御（[2.4](#24-電流宣言ごとの動作)）はそのまま。CM0 が動いている間だけ TUSB320 を有効にし、サイバーデックモードで CM0 が I²C（I2C1、0x47）で DRP（Try.SNK）にする。
+  - **CC は TUSB320LAI（C132554）。** ふだん（CM0 が OFF の間も）は TUSB320 を止めておき、Rd だけを出す（データシートの dead battery / shutdown の動作）。今までの Rd（R1 / R2）と同じ動きで、rpiboot、B からの給電、RP2040 の ADC による電流の判定と先回りの負荷制御（[2.4](#24-電流宣言ごとの動作)）はそのまま。CM0 が動いている間だけ TUSB320 を有効にし、サイバーデッキモードで CM0 が I²C（I2C1、0x47）で DRP（Try.SNK）にする。
   - **役割はハードが決める：** 機器が挿さると TUSB320 の ID が Low になり、(1) TPS2121 の PR1 を GND に引いて Port A を使わせ、(2) CM0 の USB_OTG を GND に引いてホストにし、(3) Port A から給電中（ST が Low）のときだけ VBUS_B に 5 V を出す（SY6280、1.0 A で電流制限）。
   - **Port A からの給電が必須：** 本体が動いていて B が空いているなら、電源は A から来ている。なので、ホストのときに 5 V を出せないという場面は実際には起きない。A を抜くと TPS2121 が自分の VBUS_B に移るが、ST が High になって 5 V が切れ、今まで通りすぱっと電源が落ちる。
   - **以前やめた理由との関係：** 「TPS2121 が自分の出力を B からの給電と見て切り替える」は、PR1 を引くことで防ぐ（入力を切るスイッチは要らない）。TPS2121 は A が有効なら PR1 < VREF で IN2 を使い、A が無効なら PR1 に関係なく IN1 を使う（データシート Table 9-3）ので、誤って引いても B だけで動いているときは落ちない。
@@ -43,7 +43,7 @@ SKJÁR の設計で決めたことと、その理由をまとめる。最初の�
 - **CM0100000（Wi-Fi / Bluetooth あり、eMMC なしの CM0Lite）＋ microSD から起動する。**
   - 理由：本体が一番安い。容量をカードで選べる。電源断などで記憶媒体が故障しても、カードの交換で済む（eMMC は直付けなので CM0 ごと交換になる）。
   - Wi-Fi は音楽のストリーミング再生などに使うので、無線ありを選ぶ。
-  - サイバーデックでは定番の構成（ClockworkPi uConsole も CM4 Lite ＋ microSD）。
+  - サイバーデッキでは定番の構成（ClockworkPi uConsole も CM4 Lite ＋ microSD）。
 - **microSD のスロットは CM0 の SD 用のピン（122〜132 番）につなぐ。** SD_VREF は `+3V3_CM0`（3.3 V の信号）。
   - SD 用のピンは CM0Lite でしか使えない。eMMC 版の CM0 を載せた場合、スロットは使われず eMMC から起動する。基板はどちらにも対応する。
   - 速度は eMMC とほぼ同じ（どちらも SoC の同じ SD コントローラにつながり、20〜25 MB/s 程度）。
