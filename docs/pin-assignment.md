@@ -43,6 +43,7 @@
 | `RTC_INT` | peripherals → cm0 | RTC の割り込み（アラーム） |
 | `I2S_BCLK` / `I2S_LRCLK` | peripherals → cm0 | I²S のクロック。TLV320DAC3100 が 12 MHz の MCLK から作って出す（コーデックがマスター） |
 | `I2S_DOUT` | cm0 → peripherals | TLV320DAC3100 へのデジタル音声 |
+| `I2S_DIN` | peripherals → cm0 | マイク（ICS-43434）からのデジタル音声（2026-11-18） |
 | `CODEC_RST` | cm0 → peripherals | TLV320DAC3100 のリセット（Low でリセット。100 kΩ でプルダウン） |
 | `HP_DET` | peripherals → cm0 | イヤホンの検出（Low で挿入。100 kΩ で `+3V3_CM0` にプルアップ） |
 | `KB_SDA` / `KB_SCL` | rp2040 ↔ cm0 | キー入力の I²C（HID over I²C。CM0 側は `i2c-gpio`。4.7 kΩ で `+3V3_CM0` にプルアップ） |
@@ -105,6 +106,7 @@
 | GPIO15（108） | ← `RP_TXD` | UART の RX。バッファの出力を受ける |
 | GPIO18（105） | `I2S_BCLK` | PCM_CLK（入力。コーデックから受ける） |
 | GPIO19（79） | `I2S_LRCLK` | PCM_FS（入力。コーデックから受ける） |
+| GPIO20（74） | `I2S_DIN` | PCM_DIN（マイクから） |
 | GPIO21（73） | `I2S_DOUT` | PCM_DOUT |
 | GPIO17（107） | `HP_DET` | イヤホンの検出 |
 | GPIO22（102） | `CODEC_RST` | 音声 IC のリセット |
@@ -125,7 +127,7 @@
 | GPIO_VREF（120） | `+3V3_CM0` | 3.3V の信号にする |
 | SD_VREF（122） | `+3V3_CM0` | SD カードは 3.3 V の信号 |
 | SD_CLK / SD_CMD / SD_DAT0〜3（124〜131） | microSD スロット（J201） | CM0Lite 専用。eMMC 版では使われない |
-| GPIO0〜1、4〜5、7〜13、16、20 | 未使用 | テストパッドを付ける候補 |
+| GPIO0〜1、4〜5、7〜9、11〜13、16 | 未使用 | テストパッドを付ける候補 |
 
 ---
 

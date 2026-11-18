@@ -5639,9 +5639,28 @@
 		(at 91.44 198.12)
 		(uuid "2707d64a-f9c0-4c87-832e-bc84778e4162")
 	)
-	(no_connect
-		(at 261.62 87.63)
-		(uuid "2b71a9bd-d9fa-4f60-a567-2ef4b9c3c820")
+	(global_label "I2S_DIN"
+		(shape input)
+		(at 261.62 87.63 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f8fca85d-efe2-458a-984d-a5ddc6a86f7c")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 261.62 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 	)
 	(no_connect
 		(at 91.44 180.34)
@@ -8522,7 +8541,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "288819eb-7bc8-4ea4-b8cb-a961522b0597")
-		(property "Reference" "TP208"
+		(property "Reference" "TP206"
 			(at 228.6 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8581,7 +8600,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP208")
+					(reference "TP206")
 					(unit 1)
 				)
 			)
@@ -8858,7 +8877,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "35d20b9a-2bfe-4728-8bd9-a39ae013ae68")
-		(property "Reference" "TP205"
+		(property "Reference" "TP203"
 			(at 190.5 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8917,83 +8936,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP205")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+1V8")
-		(at 152.4 251.46 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "37398128-5939-43b4-8f6f-cee1ce17d459")
-		(property "Reference" "#PWR181"
-			(at 152.4 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+1V8_CM0"
-			(at 152.4 255.27 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 152.4 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 152.4 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 152.4 251.46 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "5fae1ba6-f0e2-4f00-91d9-4620a66b85a7")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "#PWR181")
+					(reference "TP203")
 					(unit 1)
 				)
 			)
@@ -9763,82 +9706,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:TestPoint")
-		(at 139.7 251.46 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "3b34a4a7-7769-4c4f-b4bd-4ece43a03e00")
-		(property "Reference" "TP201"
-			(at 139.7 244.602 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3_CM0"
-			(at 139.7 246.38 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
-			(at 144.78 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 144.78 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "test point"
-			(at 139.7 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "28dc3da4-ebe7-49a9-8e48-fc37577ded86")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP201")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Transistor_FET:2N7002")
 		(at 172.72 160.02 0)
 		(unit 1)
@@ -10347,7 +10214,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4f0a6f96-49ec-474f-b73d-ffd851e5c025")
-		(property "Reference" "TP204"
+		(property "Reference" "TP202"
 			(at 177.8 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10406,7 +10273,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP204")
+					(reference "TP202")
 					(unit 1)
 				)
 			)
@@ -11275,7 +11142,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6676b399-e676-434d-824e-f0dd15367caa")
-		(property "Reference" "TP203"
+		(property "Reference" "TP201"
 			(at 165.1 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11334,7 +11201,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP203")
+					(reference "TP201")
 					(unit 1)
 				)
 			)
@@ -11902,82 +11769,6 @@
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
 					(reference "#PWR245")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint")
-		(at 152.4 251.46 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "7b052a5c-c645-4c66-86d2-963b6f113929")
-		(property "Reference" "TP202"
-			(at 152.4 244.602 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+1V8_CM0"
-			(at 152.4 246.38 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.5mm"
-			(at 157.48 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 157.48 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "test point"
-			(at 152.4 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "73111d64-85aa-45c5-a76e-baa2f7224ff9")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP202")
 					(unit 1)
 				)
 			)
@@ -12561,7 +12352,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8d34b163-7e7d-42f9-9e34-270baecd3881")
-		(property "Reference" "TP210"
+		(property "Reference" "TP208"
 			(at 254 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12620,7 +12411,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP210")
+					(reference "TP208")
 					(unit 1)
 				)
 			)
@@ -12897,7 +12688,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "aac652b2-d4ba-426c-8b5f-5c143a8c7f90")
-		(property "Reference" "TP207"
+		(property "Reference" "TP205"
 			(at 215.9 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12956,7 +12747,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP207")
+					(reference "TP205")
 					(unit 1)
 				)
 			)
@@ -13126,7 +12917,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b1f2a3ce-7eb0-4976-b5b0-d224d5cd203c")
-		(property "Reference" "TP206"
+		(property "Reference" "TP204"
 			(at 203.2 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13185,7 +12976,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP206")
+					(reference "TP204")
 					(unit 1)
 				)
 			)
@@ -15005,82 +14796,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:+3V3")
-		(at 139.7 251.46 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "dfd7ce62-b547-4c30-8386-4c9641f4df3f")
-		(property "Reference" "#PWR180"
-			(at 139.7 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3_CM0"
-			(at 139.7 255.27 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 139.7 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 139.7 251.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 139.7 251.46 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "1c80c4e4-46d4-461c-9024-ef9a869af313")
-		)
-		(instances
-			(project "skjar"
-				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "#PWR180")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Regulator_Linear:AP2127K-3.3")
 		(at 187.96 63.5 0)
 		(unit 1)
@@ -15192,7 +14907,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e95f1739-492f-4bcc-b53e-d64f9240b5e6")
-		(property "Reference" "TP209"
+		(property "Reference" "TP207"
 			(at 241.3 244.602 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15251,7 +14966,7 @@
 		(instances
 			(project "skjar"
 				(path "/1040ccb5-ae9e-4b0f-85c7-cf44771f813b/71c1ef38-c96c-44f9-97fd-87bbb6a6c3c2"
-					(reference "TP209")
+					(reference "TP207")
 					(unit 1)
 				)
 			)

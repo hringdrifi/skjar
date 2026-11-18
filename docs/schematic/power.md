@@ -4,7 +4,7 @@
 
 定数は計算値。**[要決定]** は、描く前に決める項目。
 
-**手本：** [power-reference.pdf](power-reference.pdf)（画像は [power-reference.png](power-reference.png)）。2026-11-06 の回路図から書き出した版。回路図を変えたら書き出し直す。正は `hardware/pcb/power.kicad_sch`。
+**手本：** [power-reference.pdf](power-reference.pdf)（画像は [power-reference.png](power-reference.png)）。2026-11-18 の回路図から書き出した版。回路図を変えたら書き出し直す。正は `hardware/pcb/power.kicad_sch`。
 
 ---
 
@@ -175,7 +175,15 @@ Port B を USB-C の DRP にして、サイバーデッキモードでは CM0 �
 
 ## 9. テストパッド
 
-`VBUS_A`、`VBUS_B`、`+5V`、`+3V3`、`PWR_ST`、GND。`+5V_LCD` のテストパッド（TP4）は 2026-11-18 に外した。LCD の入力電圧は J302 の端子で測る。
+`PWR_ST`（TP1）だけ。電源のテストパッド（`VBUS_A`、`VBUS_B`、`+5V`、`+5V_LCD`、`+3V3`、GND）は 2026-11-18 にすべて外した。テストパッドの番号は 2026-11-18 に振り直した（power は TP1、rp2040 は TP101〜、cm0 は TP201〜。外した番号は詰めた）。電圧は部品の端子で測る：
+
+- `VBUS_A` / `VBUS_B`：それぞれの USB-C コネクタの VBUS 端子か、すぐ後ろのコンデンサ。
+- `+5V`：CM0 の 5V のパスコン（C201 / C202）。CM0 に入る直前の電圧になる。
+- `+5V_LCD`：J302 の端子。
+- `+3V3`：U5 の出力のコンデンサか、RP2040 まわりのパスコン。
+- `+3V3_CM0` / `+1V8_CM0`（CM0 の内蔵レギュレータの出力）：C411 / C409（U402 の横）。この 2 つのテストパッドも同じ日に外した（[cm0.md の 6 章](cm0.md#6-テストパッド)）。
+- GND：USB-C コネクタのシェル（クリップでつかめる）。
+- 0603 のパッドに当てるので、プローブが滑って隣のパッド（GND）とショートさせないように気をつける。
 
 ## 10. シート外とつなぐグローバルラベル
 
